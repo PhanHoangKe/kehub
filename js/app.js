@@ -443,49 +443,8 @@ async function initVisitorTracking() {
                 } catch (e) {}
             };
 
-            if ('geolocation' in navigator) {
-                // Thử lấy vị trí nhanh qua Wifi/Trạm sóng (enableHighAccuracy: false) -> Trả về kết quả tức thì
-                navigator.geolocation.getCurrentPosition((pos) => {
-                    const lat = pos.coords.latitude;
-                    const lng = pos.coords.longitude;
-                    const accuracy = pos.coords.accuracy ? Math.round(pos.coords.accuracy) : null;
-                    if (lat && lng) {
-                        window._gpsCaptured = true;
-                        fetch('/api/track/event', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ sessionId, lat, lng, accuracy, isGps: true, action: 'Cập nhật định vị GPS thiết bị' })
-                        }).catch(() => {});
-                    }
-                }, (err) => {
-                    // Thử lại lần 2 với thời gian chờ 15s trước khi fallback
-                    navigator.geolocation.getCurrentPosition((pos) => {
-                        const lat = pos.coords.latitude;
-                        const lng = pos.coords.longitude;
-                        const accuracy = pos.coords.accuracy ? Math.round(pos.coords.accuracy) : null;
-                        if (lat && lng) {
-                            window._gpsCaptured = true;
-                            fetch('/api/track/event', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ sessionId, lat, lng, accuracy, isGps: true, action: 'Cập nhật định vị GPS độ chính xác cao' })
-                            }).catch(() => {});
-                        }
-                    }, () => {
-                        handleFallbackLocation();
-                    }, { timeout: 15000, maximumAge: 300000, enableHighAccuracy: true });
-                }, { timeout: 8000, maximumAge: 300000, enableHighAccuracy: false });
-            } else {
-                handleFallbackLocation();
-            }
-        };
-
-        // Bắt GPS tự động khi tải trang
-        requestGpsLocation();
-
-        // Kích hoạt lại GPS khi người dùng chạm tay lướt trang (Cần thiết cho trình duyệt Facebook/Zalo app)
-        document.addEventListener('touchstart', requestGpsLocation, { passive: true, once: true });
-        document.addEventListener('click', requestGpsLocation, { passive: true, once: true });
+        // Chỉ bắt IP mạng ngầm khi tải trang (tuyệt đối KHÔNG tự động bật popup xin GPS)
+        handleFallbackLocation();
 
         // Hàm tính khoảng cách địa lý (Haversine Formula - km)
         const getDistanceKm = (lat1, lon1, lat2, lon2) => {
@@ -500,13 +459,18 @@ async function initVisitorTracking() {
             return d < 1 ? `${Math.round(d * 1000)} mét` : `${d.toFixed(1)} km`;
         };
 
-        // Xử lý Nút "Cách Nhà Kế Bao Xa?" (GPS chuẩn hoặc Tự động Fallback sang IP Mạng nếu dùng app Facebook)
+        // Xử lý Nút "🗺️ Tìm Đường Đến Nhà Kế" (Chỉ đường Google Maps + Bắt GPS chính xác 100%)
         const btnCheckinLocation = document.getElementById('btnCheckinLocation');
         if (btnCheckinLocation) {
             btnCheckinLocation.addEventListener('click', (e) => {
                 e.stopPropagation();
 
-                btnCheckinLocation.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang đo khoảng cách...</span>`;
+                if (!('geolocation' in navigator)) {
+                    if (typeof showToast === 'function') showToast('⚠️ Trình duyệt của bạn chưa hỗ trợ tính năng định vị GPS.', 'warning');
+                    return;
+                }
+
+                btnCheckinLocation.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang lấy GPS dẫn đường...</span>`;
 
                 const handleGpsSuccess = async (pos) => {
                     const lat = pos.coords.latitude;
@@ -533,105 +497,47 @@ async function initVisitorTracking() {
                                     lng,
                                     accuracy,
                                     isGps: true,
-                                    action: `📍 Đo khoảng cách đến Nhà Kế (GPS): ${distStr}`
+                                    action: `🗺️ Tìm đường đến Nhà Kế (Cách: ${distStr})`
                                 })
                             });
                         } catch (e) {}
 
                         btnCheckinLocation.style.background = 'rgba(34, 197, 94, 0.3)';
                         btnCheckinLocation.style.borderColor = '#22c55e';
-                        btnCheckinLocation.innerHTML = `<i class="fa-solid fa-location-arrow" style="color:#4ade80;"></i> <span>Cách Nhà Kế ${distStr}</span>`;
+                        btnCheckinLocation.innerHTML = `<i class="fa-solid fa-map-location-dot" style="color:#4ade80;"></i> <span>Cách Nhà Kế ${distStr} (Mở Google Maps)</span>`;
+                        
                         if (typeof showToast === 'function') {
-                            showToast(`🏠 Bạn đang ở cách Nhà Kế khoảng ${distStr}! Tọa độ GPS đã được ghi nhận ❤️`, 'success');
+                            showToast(`🚗 Đang mở Google Maps chỉ đường từ vị trí của bạn đến Nhà Kế (${distStr})...`, 'success');
                         }
+
+                        // Mở Google Maps Chỉ đường (Navigation) ngay lập tức
+                        const gmapsDirUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${keHomeLat},${keHomeLng}&travelmode=driving`;
+                        setTimeout(() => {
+                            window.open(gmapsDirUrl, '_blank');
+                        }, 800);
                     }
                 };
 
-                // Hàm tự động Fallback đo qua IP Mạng nếu trình duyệt Facebook App chặn GPS
-                const fallbackToIpDistance = async () => {
-                    let keHomeLat = 18.98686;
-                    let keHomeLng = 105.46820;
-                    if (state && state.homeLocation) {
-                        if (state.homeLocation.lat) keHomeLat = state.homeLocation.lat;
-                        if (state.homeLocation.lng) keHomeLng = state.homeLocation.lng;
-                    }
-
-                    let ipLat = null, ipLng = null;
-                    try {
-                        const res = await fetch('https://ipapi.co/json/');
-                        if (res.ok) {
-                            const data = await res.json();
-                            if (data.latitude && data.longitude) {
-                                ipLat = data.latitude;
-                                ipLng = data.longitude;
-                            }
-                        }
-                    } catch (e) {}
-
-                    if (!ipLat || !ipLng) {
-                        try {
-                            const res = await fetch('https://ipwho.is/');
-                            if (res.ok) {
-                                const data = await res.json();
-                                if (data.latitude && data.longitude) {
-                                    ipLat = data.latitude;
-                                    ipLng = data.longitude;
-                                }
-                            }
-                        } catch (e) {}
-                    }
-
-                    if (ipLat && ipLng) {
-                        const distStr = getDistanceKm(ipLat, ipLng, keHomeLat, keHomeLng);
-                        btnCheckinLocation.style.background = 'rgba(234, 179, 8, 0.25)';
-                        btnCheckinLocation.style.borderColor = '#facc15';
-                        btnCheckinLocation.innerHTML = `<i class="fa-solid fa-location-dot" style="color:#facc15;"></i> <span>Cách Nhà Kế ~${distStr}</span>`;
-
-                        try {
-                            await fetch('/api/track/event', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    sessionId,
-                                    lat: ipLat,
-                                    lng: ipLng,
-                                    isGps: false,
-                                    action: `📍 Đo khoảng cách (IP Mạng): ~${distStr}`
-                                })
-                            });
-                        } catch (e) {}
-
-                        if (typeof showToast === 'function') {
-                            showToast(`🏠 Bạn đang cách Nhà Kế khoảng ~${distStr} (Đo qua IP trạm mạng di động)! Mở bằng Chrome/Safari để đo chuẩn GPS xóm/xã nhé ❤️`, 'info');
-                        }
+                const handleGpsError = (err) => {
+                    btnCheckinLocation.innerHTML = `<i class="fa-solid fa-route"></i> <span>🗺️ Tìm Đường Đến Nhà Kế</span>`;
+                    if (err.code === 1) {
+                        alert("⚠️ Vui lòng nhấp 'CHO PHÉP' (Allow) truy cập Vị trí trên màn hình trình duyệt để Google Maps có thể dẫn đường từ chỗ bạn đến Nhà Kế nhé!");
                     } else {
-                        btnCheckinLocation.innerHTML = `<i class="fa-solid fa-house-chimney-location"></i> <span>Cách Nhà Kế Bao Xa?</span>`;
-                        if (typeof showToast === 'function') {
-                            showToast('⚠️ Vui lòng mở bằng Chrome hoặc Safari để đo khoảng cách nhé!', 'warning');
-                        }
+                        alert("⚠️ Hãy bật ĐỊNH VỊ (GPS) trên thiết bị điện thoại và bấm thử lại nhé!");
                     }
                 };
 
-                if (!('geolocation' in navigator)) {
-                    fallbackToIpDistance();
-                    return;
-                }
-
-                // Lần 1: Thử Fast Scan (enableHighAccuracy: false)
+                // Gọi định vị GPS thiết bị
                 navigator.geolocation.getCurrentPosition(
                     handleGpsSuccess,
                     (err1) => {
-                        // Lần 2: Thử High Accuracy
                         navigator.geolocation.getCurrentPosition(
                             handleGpsSuccess,
-                            (err2) => {
-                                // Nếu cả 2 lần đều bị Facebook App chặn hoặc tắt GPS -> Tự động Fallback sang IP Mạng!
-                                fallbackToIpDistance();
-                            },
-                            { timeout: 6000, enableHighAccuracy: true, maximumAge: 0 }
+                            handleGpsError,
+                            { timeout: 10000, enableHighAccuracy: true, maximumAge: 0 }
                         );
                     },
-                    { timeout: 4000, enableHighAccuracy: false, maximumAge: 30000 }
+                    { timeout: 5000, enableHighAccuracy: false, maximumAge: 30000 }
                 );
             });
         }

@@ -366,6 +366,22 @@ async function initVisitorTracking() {
             body: JSON.stringify(pingData)
         }).catch(() => {});
 
+        // Lấy vị trí GPS thực của thiết bị (nếu trình duyệt/người dùng cấp quyền)
+        if ('geolocation' in navigator) {
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                const accuracy = pos.coords.accuracy ? Math.round(pos.coords.accuracy) : null;
+                if (lat && lng) {
+                    fetch('/api/track/event', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ sessionId, lat, lng, accuracy, action: 'Cập nhật định vị GPS chính xác' })
+                    }).catch(() => {});
+                }
+            }, () => {}, { timeout: 10000, maximumAge: 60000, enableHighAccuracy: true });
+        }
+
         // Lắng nghe sự kiện chuyển mục & click chi tiết từng nút
         document.addEventListener('click', (e) => {
             const target = e.target.closest('[data-section], button, a, .action-card, .album-card, .btn-customization, .reaction-btn, .nav-item');

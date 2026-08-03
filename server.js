@@ -142,13 +142,13 @@ const ipGeoCache = new Map();
 
 async function getIpLocation(ip) {
     if (!ip || ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.')) {
-        return { city: 'Localhost', region: 'Nội bộ', country: 'Máy chủ local', isp: 'Mạng LAN' };
+        return { city: 'Localhost', region: 'Nội bộ', country: 'Máy chủ local', isp: 'Mạng LAN', lat: null, lng: null };
     }
     if (ipGeoCache.has(ip)) return ipGeoCache.get(ip);
 
     // Nguồn 1: ip-api.com
     try {
-        const res = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,regionName,city,isp,org`);
+        const res = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,regionName,city,isp,org,lat,lon`);
         if (res.ok) {
             const data = await res.json();
             if (data.status === 'success') {
@@ -156,7 +156,9 @@ async function getIpLocation(ip) {
                     city: data.city || data.regionName || 'Việt Nam',
                     region: data.regionName || data.city || 'Việt Nam',
                     country: data.country || 'Việt Nam',
-                    isp: data.isp || data.org || 'Internet'
+                    isp: data.isp || data.org || 'Internet',
+                    lat: data.lat || null,
+                    lng: data.lon || null
                 };
                 ipGeoCache.set(ip, geo);
                 return geo;
@@ -174,7 +176,9 @@ async function getIpLocation(ip) {
                     city: data.city || data.region || 'Việt Nam',
                     region: data.region || data.city || 'Việt Nam',
                     country: data.country || 'Việt Nam',
-                    isp: data.connection?.isp || data.connection?.org || 'Internet'
+                    isp: data.connection?.isp || data.connection?.org || 'Internet',
+                    lat: data.latitude || null,
+                    lng: data.longitude || null
                 };
                 ipGeoCache.set(ip, geo);
                 return geo;
@@ -192,7 +196,9 @@ async function getIpLocation(ip) {
                     city: data.cityName || 'Việt Nam',
                     region: data.regionName || data.cityName || 'Việt Nam',
                     country: data.countryName || 'Việt Nam',
-                    isp: 'Nhà mạng Internet'
+                    isp: 'Nhà mạng Internet',
+                    lat: data.latitude || null,
+                    lng: data.longitude || null
                 };
                 ipGeoCache.set(ip, geo);
                 return geo;
@@ -200,9 +206,38 @@ async function getIpLocation(ip) {
         }
     } catch (e) {}
 
-    const fallback = { city: 'Việt Nam', region: 'Việt Nam', country: 'Việt Nam', isp: 'Nhà mạng' };
+    const fallback = { city: 'Việt Nam', region: 'Việt Nam', country: 'Việt Nam', isp: 'Nhà mạng', lat: null, lng: null };
     ipGeoCache.set(ip, fallback);
     return fallback;
+}
+
+// Helper Giải mã ngược Tọa độ GPS sang Tên Địa Danh chi tiết từng Xóm/Xã/Phường
+async function reverseGeocode(lat, lng) {
+    try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+            headers: { 'User-Agent': 'YouthMemoriesApp/2.0' }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            if (data && data.address) {
+                const a = data.address;
+                const hamlet = a.hamlet || a.village || a.quarter || a.neighbourhood || a.road || '';
+                const commune = a.suburb || a.city_district || a.town || '';
+                const district = a.county || a.district || '';
+                const province = a.state || a.city || 'Việt Nam';
+
+                const parts = [hamlet, commune, district, province].filter(p => p && p.trim().length > 0);
+                const fullAddress = parts.length > 0 ? parts.join(', ') : (data.display_name || 'Việt Nam');
+
+                return {
+                    city: fullAddress,
+                    region: province,
+                    country: a.country || 'Việt Nam'
+                };
+            }
+        }
+    } catch (e) {}
+    return null;
 }
 
 function checkRateLimit(pathname, ip) {
@@ -720,7 +755,19 @@ const server = http.createServer(async (req, res) => {
             const clientIp = extractClientIp(req);
             const uaString = req.headers['user-agent'] || '';
             const { os, device, browser } = parseUserAgent(uaString);
-            const geo = await getIpLocation(clientIp);
+            let geo = await getIpLocation(clientIp);
+
+            // Nếu client cung cấp GPS lat/lng chính xác từ thiết bị
+            let lat = payload.lat || geo.lat;
+            let lng = payload.lng || geo.lng;
+
+            if (payload.lat && payload.lng) {
+                const gpsAddr = await reverseGeocode(payload.lat, payload.lng);
+                if (gpsAddr) {
+                    geo.city = gpsAddr.city;
+                    geo.region = gpsAddr.region;
+                }
+            }
 
             const db = getDB();
             if (!db.visitors) db.visitors = [];
@@ -738,6 +785,9 @@ const server = http.createServer(async (req, res) => {
                     region: geo.region,
                     country: geo.country,
                     isp: geo.isp,
+                    lat: lat || null,
+                    lng: lng || null,
+                    accuracy: payload.accuracy || null,
                     os,
                     device,
                     browser,
@@ -764,6 +814,9 @@ const server = http.createServer(async (req, res) => {
             } else {
                 visitor.lastSeen = now;
                 visitor.ip = clientIp;
+                if (lat) visitor.lat = lat;
+                if (lng) visitor.lng = lng;
+                if (payload.accuracy) visitor.accuracy = payload.accuracy;
                 if (payload.screen) visitor.screen = payload.screen;
                 if (payload.battery) visitor.battery = payload.battery;
                 if (payload.connection) visitor.connection = payload.connection;
@@ -796,6 +849,17 @@ const server = http.createServer(async (req, res) => {
                         const now = new Date().toISOString();
                         const timeStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                         visitor.lastSeen = now;
+
+                        if (payload.lat && payload.lng) {
+                            visitor.lat = payload.lat;
+                            visitor.lng = payload.lng;
+                            if (payload.accuracy) visitor.accuracy = payload.accuracy;
+                            const gpsAddr = await reverseGeocode(payload.lat, payload.lng);
+                            if (gpsAddr) {
+                                visitor.city = gpsAddr.city;
+                                visitor.region = gpsAddr.region;
+                            }
+                        }
                         
                         if (payload.action) {
                             visitor.clicks = (visitor.clicks || 0) + 1;
@@ -805,7 +869,6 @@ const server = http.createServer(async (req, res) => {
                                 event: `Thao tác: ${payload.action}`,
                                 detail: payload.section ? `Mục: ${payload.section}` : ''
                             });
-                            // Giữ tối đa 15 nhật ký thao tác gần nhất của mỗi khách
                             if (visitor.timelineLogs.length > 15) {
                                 visitor.timelineLogs = visitor.timelineLogs.slice(-15);
                             }

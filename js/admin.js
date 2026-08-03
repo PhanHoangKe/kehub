@@ -301,14 +301,20 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                     </div>`
                 ).join('');
 
+                const gmapBtn = (v.lat && v.lng) 
+                    ? `<a href="https://www.google.com/maps?q=${v.lat},${v.lng}" target="_blank" style="background:#0284c7;color:#ffffff;padding:3px 10px;border-radius:6px;font-size:0.75rem;font-weight:bold;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-left:6px;box-shadow:0 0 10px rgba(2,132,199,0.5);"><i class="fa-solid fa-map-location-dot"></i> 🗺️ Mở Google Maps</a>`
+                    : '';
+
+                const accuracyStr = v.accuracy ? `<span style="color:#4ade80;"> • Sai số: ~${v.accuracy}m</span>` : '';
+
                 card.innerHTML = `
-                    <div class="admin-item-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                        <span><i class="fa-solid fa-user-ninja" style="color:#a855f7;"></i> Khách #${index + 1} — <strong style="color:#f472b6;">${escapeHTML(v.city || 'Việt Nam')}</strong> (${escapeHTML(v.isp || 'Nhà mạng')}) ${statusBadge}</span>
+                    <div class="admin-item-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:4px;">
+                        <span><i class="fa-solid fa-user-ninja" style="color:#a855f7;"></i> Khách #${index + 1} — <strong style="color:#f472b6;">${escapeHTML(v.city || 'Việt Nam')}</strong> (${escapeHTML(v.isp || 'Nhà mạng')}) ${statusBadge} ${gmapBtn}</span>
                         <span style="font-size:0.78rem;color:#94a3b8;"><i class="fa-solid fa-clock"></i> ${timeStr}</span>
                     </div>
                     <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:6px;font-size:0.82rem;color:#cbd5e1;background:rgba(0,0,0,0.25);padding:10px;border-radius:8px;margin-bottom:8px;">
                         <div>🌐 <strong>IP Thật:</strong> <span style="font-family:monospace;color:#facc15;">${escapeHTML(v.ip)}</span></div>
-                        <div>📍 <strong>Tỉnh / Thành:</strong> ${escapeHTML(v.city)} (${escapeHTML(v.region || v.country)})</div>
+                        <div>📍 <strong>🏡 Vị trí chi tiết:</strong> <span style="color:#4ade80;font-weight:bold;">${escapeHTML(v.city)}</span> ${v.lat && v.lng ? `<br><small style="color:#38bdf8;">Tọa độ: ${v.lat.toFixed(5)}, ${v.lng.toFixed(5)}${accuracyStr}</small>` : ''}</div>
                         <div>📱 <strong>Thiết bị & OS:</strong> ${escapeHTML(v.device)} • ${escapeHTML(v.os)}</div>
                         <div>💻 <strong>Trình duyệt:</strong> ${escapeHTML(v.browser)}</div>
                         <div>🔗 <strong>Nguồn đến (Referrer):</strong> <span style="color:#38bdf8;word-break:break-all;">${escapeHTML(v.referrer)}</span></div>

@@ -237,6 +237,83 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
         return base64Data;
     }
 
+    async function loadAdminVisitorsList() {
+        const adminVisitorsList = document.getElementById('adminVisitorsList');
+        if (!adminVisitorsList) return;
+
+        const statOnlineNow = document.getElementById('admStatOnlineNow');
+        const statTotalVisitors = document.getElementById('admStatTotalVisitors');
+        const statTopDevice = document.getElementById('admStatTopDevice');
+        const statTopCity = document.getElementById('admStatTopCity');
+
+        try {
+            const token = localStorage.getItem('admin_token');
+            const headers = {};
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            const res = await fetch('/api/admin/visitors', { headers, credentials: 'include' });
+            if (!res.ok) {
+                adminVisitorsList.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;">Chưa xác thực Admin hoặc lỗi kết nối.</div>';
+                return;
+            }
+            const data = await res.json();
+            if (!data.success) return;
+
+            if (statOnlineNow) statOnlineNow.textContent = data.onlineCount || 0;
+            if (statTotalVisitors) statTotalVisitors.textContent = data.totalVisitors || 0;
+            if (statTopDevice) statTopDevice.textContent = data.topDevice || '-';
+            if (statTopCity) statTopCity.textContent = data.topCity || '-';
+
+            const visitors = data.visitors || [];
+            if (visitors.length === 0) {
+                adminVisitorsList.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;">Chưa có khách viếng thăm nào.</div>';
+                return;
+            }
+
+            adminVisitorsList.innerHTML = '';
+            const nowMs = Date.now();
+
+            visitors.forEach((v, index) => {
+                const card = document.createElement('div');
+                card.className = 'admin-item-card';
+                card.style.position = 'relative';
+
+                const lastSeenMs = new Date(v.lastSeen).getTime();
+                const isOnline = (nowMs - lastSeenMs) <= 5 * 60 * 1000;
+                const statusBadge = isOnline 
+                    ? `<span style="background:rgba(34,197,94,0.2);color:#4ade80;border:1px solid rgba(34,197,94,0.4);padding:2px 8px;border-radius:12px;font-size:0.75rem;font-weight:bold;">🟢 ĐANG ONLINE</span>`
+                    : `<span style="background:rgba(148,163,184,0.15);color:#94a3b8;padding:2px 8px;border-radius:12px;font-size:0.75rem;">⚪ Đã rời đi</span>`;
+
+                const timeStr = new Date(v.lastSeen).toLocaleString('vi-VN');
+                const durationMin = Math.floor((v.durationSeconds || 0) / 60);
+                const durationSec = (v.durationSeconds || 0) % 60;
+                const durationText = durationMin > 0 ? `${durationMin} phút ${durationSec}s` : `${durationSec}s`;
+
+                const sectionsStr = (v.sectionsVisited || []).map(s => `<span style="font-size:0.75rem;padding:2px 6px;background:rgba(255,255,255,0.06);border-radius:6px;color:#cbd5e1;">${escapeHTML(s)}</span>`).join(' ');
+
+                card.innerHTML = `
+                    <div class="admin-item-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <span><i class="fa-solid fa-user-ninja" style="color:#a855f7;"></i> Khách #${index + 1} — <strong>${escapeHTML(v.city || 'Việt Nam')}</strong> ${statusBadge}</span>
+                        <span style="font-size:0.78rem;color:#94a3b8;"><i class="fa-solid fa-clock"></i> ${timeStr}</span>
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:8px;font-size:0.83rem;color:#cbd5e1;">
+                        <div>📍 <strong>Vị trí & IP:</strong> ${escapeHTML(v.city)} (${escapeHTML(v.country)}) — <span style="font-size:0.75rem;color:#94a3b8;">${escapeHTML(v.ip)}</span></div>
+                        <div>📱 <strong>Thiết bị:</strong> ${escapeHTML(v.device)} (${escapeHTML(v.os)})</div>
+                        <div>🌐 <strong>Trình duyệt:</strong> ${escapeHTML(v.browser)}</div>
+                        <div>🔗 <strong>Nguồn đến:</strong> <span style="color:#38bdf8;">${escapeHTML(v.referrer)}</span></div>
+                        <div>⏱️ <strong>Thời gian ở lại:</strong> ${durationText} (${v.clicks || 1} thao tác)</div>
+                    </div>
+                    <div style="margin-top:8px;font-size:0.8rem;color:#94a3b8;">
+                        🎯 <strong>Các mục đã xem:</strong> <div style="display:inline-flex;gap:4px;flex-wrap:wrap;margin-top:4px;">${sectionsStr || 'Trang chủ'}</div>
+                    </div>
+                `;
+                adminVisitorsList.appendChild(card);
+            });
+        } catch (e) {
+            adminVisitorsList.innerHTML = '<div style="text-align:center;color:#dc2626;padding:24px;">Lỗi kết nối server tracking.</div>';
+        }
+    }
+
     // Admin Tabs Switching
     const adminTabBtns = document.querySelectorAll('.admin-tab-btn');
     const adminTabContents = document.querySelectorAll('.admin-tab-content');
@@ -250,8 +327,17 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             const targetTab = btn.getAttribute('data-tab');
             const targetContent = document.getElementById(targetTab);
             if (targetContent) targetContent.classList.add('active');
+
+            if (targetTab === 'tabVisitors') {
+                loadAdminVisitorsList();
+            }
         });
     });
+
+    const btnRefreshVisitors = document.getElementById('btnRefreshVisitors');
+    if (btnRefreshVisitors) {
+        btnRefreshVisitors.addEventListener('click', loadAdminVisitorsList);
+    }
 
     const urlParams = new URLSearchParams(window.location.search);
     const isAdmin = urlParams.get('admin') === 'true';

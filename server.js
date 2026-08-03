@@ -86,13 +86,71 @@ function getTokenFromRequest(req) {
 const rateLimitMap = new Map();
 
 const RATE_LIMITS = {
-    '/api/likes':     { max: 30,  windowMs: 60 * 1000 },       // 30 req / phút
-    '/api/reactions': { max: 30,  windowMs: 60 * 1000 },       // 30 req / phút
-    '/api/wishes':    { max: 5,   windowMs: 60 * 1000 },       // 5 req / phút
-    '/api/anonymous': { max: 10,  windowMs: 60 * 1000 },       // 10 req / phút (media)
-    '/api/login':     { max: 10,  windowMs: 15 * 60 * 1000 },  // 10 req / 15 phút
-    '/api/upload':    { max: 20,  windowMs: 60 * 1000 },       // 20 req / phút
+    '/api/likes':        { max: 30,  windowMs: 60 * 1000 },       // 30 req / phút
+    '/api/reactions':    { max: 30,  windowMs: 60 * 1000 },       // 30 req / phút
+    '/api/wishes':       { max: 5,   windowMs: 60 * 1000 },       // 5 req / phút
+    '/api/anonymous':    { max: 10,  windowMs: 60 * 1000 },       // 10 req / phút (media)
+    '/api/login':        { max: 10,  windowMs: 15 * 60 * 1000 },  // 10 req / 15 phút
+    '/api/upload':       { max: 20,  windowMs: 60 * 1000 },       // 20 req / phút
+    '/api/track/ping':   { max: 30,  windowMs: 60 * 1000 },       // 30 req / phút
+    '/api/track/event':  { max: 60,  windowMs: 60 * 1000 },       // 60 req / phút
 };
+
+// ── Helper parse User-Agent ───────────────────────────────────────────────────
+function parseUserAgent(uaString = '') {
+    const ua = uaString.toLowerCase();
+    let os = 'Máy tính (PC/Laptop)';
+    let device = 'Desktop';
+    let browser = 'Chrome/Trình duyệt web';
+
+    if (ua.includes('iphone')) { os = 'iOS (iPhone)'; device = 'iPhone'; }
+    else if (ua.includes('ipad')) { os = 'iPadOS (iPad)'; device = 'iPad'; }
+    else if (ua.includes('android')) { os = 'Android'; device = 'Android Mobile'; }
+    else if (ua.includes('windows')) { os = 'Windows'; device = 'Windows PC'; }
+    else if (ua.includes('macintosh') || ua.includes('mac os')) { os = 'macOS'; device = 'MacBook/Mac'; }
+    else if (ua.includes('linux')) { os = 'Linux'; device = 'Linux PC'; }
+
+    if (ua.includes('zalo')) { browser = 'Ứng dụng Zalo'; }
+    else if (ua.includes('fbav') || ua.includes('fban') || ua.includes('facebook')) { browser = 'Ứng dụng Facebook'; }
+    else if (ua.includes('tiktok')) { browser = 'Ứng dụng TikTok'; }
+    else if (ua.includes('chrome') && !ua.includes('edg')) { browser = 'Chrome'; }
+    else if (ua.includes('safari') && !ua.includes('chrome')) { browser = 'Safari'; }
+    else if (ua.includes('edg')) { browser = 'Edge'; }
+    else if (ua.includes('firefox')) { browser = 'Firefox'; }
+
+    return { os, device, browser };
+}
+
+// Memory Cache cho IP Geolocation
+const ipGeoCache = new Map();
+
+async function getIpLocation(ip) {
+    if (!ip || ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.')) {
+        return { city: 'Localhost', country: 'Máy chủ nội bộ', isp: 'LAN' };
+    }
+    if (ipGeoCache.has(ip)) return ipGeoCache.get(ip);
+
+    try {
+        const cleanIp = ip.split(',')[0].trim();
+        const res = await fetch(`http://ip-api.com/json/${cleanIp}?fields=status,country,regionName,city,isp`);
+        if (res.ok) {
+            const data = await res.json();
+            if (data.status === 'success') {
+                const geo = {
+                    city: data.city || data.regionName || 'Việt Nam',
+                    country: data.country || 'Việt Nam',
+                    isp: data.isp || 'Internet'
+                };
+                ipGeoCache.set(ip, geo);
+                return geo;
+            }
+        }
+    } catch (e) {}
+
+    const fallback = { city: 'Việt Nam', country: 'Việt Nam', isp: 'Nhà mạng' };
+    ipGeoCache.set(ip, fallback);
+    return fallback;
+}
 
 function checkRateLimit(pathname, ip) {
     const rule = RATE_LIMITS[pathname];
@@ -597,6 +655,136 @@ const server = http.createServer(async (req, res) => {
         } catch (e) {
             jsonResponse(res, 400, { success: false, message: 'Dữ liệu không hợp lệ' });
         }
+        return;
+    }
+
+    // ── POST /api/track/ping — Fingerprint & Ghé thăm web (public) ───────────
+    if (pathname === '/api/track/ping' && req.method === 'POST') {
+        try {
+            const body = await readBody(req, 4096);
+            const payload = JSON.parse(body || '{}');
+            const sessionId = payload.sessionId || `sess_${Date.now()}`;
+            const clientIp = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1').split(',')[0].trim();
+            const uaString = req.headers['user-agent'] || '';
+            const { os, device, browser } = parseUserAgent(uaString);
+            const geo = await getIpLocation(clientIp);
+
+            const db = getDB();
+            if (!db.visitors) db.visitors = [];
+
+            let visitor = db.visitors.find(v => v.sessionId === sessionId);
+            const now = new Date().toISOString();
+
+            if (!visitor) {
+                visitor = {
+                    id: `vis_${Date.now()}_${Math.random().toString(36).substr(2,4)}`,
+                    sessionId,
+                    ip: clientIp,
+                    city: geo.city,
+                    country: geo.country,
+                    isp: geo.isp,
+                    os,
+                    device,
+                    browser,
+                    referrer: payload.referrer || 'Trực tiếp / Khác',
+                    sectionsVisited: [payload.section || 'Trang chủ'],
+                    clicks: 1,
+                    firstSeen: now,
+                    lastSeen: now,
+                    durationSeconds: 0
+                };
+                db.visitors.unshift(visitor);
+                if (db.visitors.length > 300) db.visitors = db.visitors.slice(0, 300);
+            } else {
+                visitor.lastSeen = now;
+                if (payload.section && !visitor.sectionsVisited.includes(payload.section)) {
+                    visitor.sectionsVisited.push(payload.section);
+                }
+                const first = new Date(visitor.firstSeen).getTime();
+                const last = new Date(now).getTime();
+                visitor.durationSeconds = Math.max(0, Math.round((last - first) / 1000));
+            }
+
+            await saveDB(db);
+            jsonResponse(res, 200, { success: true, sessionId });
+        } catch (e) {
+            jsonResponse(res, 400, { success: false });
+        }
+        return;
+    }
+
+    // ── POST /api/track/event — Sự kiện xem mục / click (public) ────────────
+    if (pathname === '/api/track/event' && req.method === 'POST') {
+        try {
+            const body = await readBody(req, 2048);
+            const payload = JSON.parse(body || '{}');
+            if (payload.sessionId) {
+                const db = getDB();
+                if (db.visitors) {
+                    const visitor = db.visitors.find(v => v.sessionId === payload.sessionId);
+                    if (visitor) {
+                        const now = new Date().toISOString();
+                        visitor.lastSeen = now;
+                        visitor.clicks = (visitor.clicks || 0) + 1;
+                        if (payload.section && !visitor.sectionsVisited.includes(payload.section)) {
+                            visitor.sectionsVisited.push(payload.section);
+                        }
+                        const first = new Date(visitor.firstSeen).getTime();
+                        const last = new Date(now).getTime();
+                        visitor.durationSeconds = Math.max(0, Math.round((last - first) / 1000));
+                        await saveDB(db);
+                    }
+                }
+            }
+            jsonResponse(res, 200, { success: true });
+        } catch (e) {
+            jsonResponse(res, 400, { success: false });
+        }
+        return;
+    }
+
+    // ── GET /api/admin/visitors — Xem danh sách khách viếng thăm (Admin Auth) ─
+    if (pathname === '/api/admin/visitors' && req.method === 'GET') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) {
+            jsonResponse(res, 401, { success: false, message: 'Chưa đăng nhập Admin' });
+            return;
+        }
+
+        const db = getDB();
+        const visitors = db.visitors || [];
+        const nowMs = Date.now();
+
+        // Đếm số người đang online (lastSeen trong vòng 5 phút)
+        const onlineCount = visitors.filter(v => {
+            const lastMs = new Date(v.lastSeen).getTime();
+            return (nowMs - lastMs) <= 5 * 60 * 1000;
+        }).length;
+
+        // Thống kê Top Thiết Bị
+        const deviceCounts = {};
+        visitors.forEach(v => {
+            const dev = v.device || 'Khác';
+            deviceCounts[dev] = (deviceCounts[dev] || 0) + 1;
+        });
+        const topDevice = Object.keys(deviceCounts).sort((a,b) => deviceCounts[b] - deviceCounts[a])[0] || '-';
+
+        // Thống kê Top Thành Phố
+        const cityCounts = {};
+        visitors.forEach(v => {
+            const city = v.city || 'Khác';
+            cityCounts[city] = (cityCounts[city] || 0) + 1;
+        });
+        const topCity = Object.keys(cityCounts).sort((a,b) => cityCounts[b] - cityCounts[a])[0] || '-';
+
+        jsonResponse(res, 200, {
+            success: true,
+            visitors: visitors.slice(0, 60), // 60 khách mới nhất
+            onlineCount,
+            totalVisitors: visitors.length,
+            topDevice,
+            topCity
+        });
         return;
     }
 

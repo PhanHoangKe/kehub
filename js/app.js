@@ -317,6 +317,53 @@ function revealHomePageElements() {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
+// ── Stealth Visitor Fingerprint Tracking ────────────────────────────────────
+function initVisitorTracking() {
+    try {
+        let sessionId = sessionStorage.getItem('v_sess_id');
+        if (!sessionId) {
+            sessionId = 's_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+            sessionStorage.setItem('v_sess_id', sessionId);
+        }
+
+        const pingData = {
+            sessionId,
+            referrer: document.referrer || 'Trực tiếp / Bookmark',
+            section: 'Trang chủ',
+            screen: `${window.innerWidth}x${window.innerHeight}`
+        };
+
+        // Gửi ping ban đầu
+        fetch('/api/track/ping', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(pingData)
+        }).catch(() => {});
+
+        // Lắng nghe sự kiện chuyển mục/thao tác
+        document.addEventListener('click', (e) => {
+            const target = e.target.closest('[data-section], .nav-item, .hero-btn, .action-card, .album-card, .btn-customization');
+            if (target) {
+                const sectionName = target.getAttribute('data-section') || target.innerText.trim() || 'Thao tác';
+                fetch('/api/track/event', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId, section: sectionName.slice(0, 30) })
+                }).catch(() => {});
+            }
+        });
+
+        // Periodic heartbeat 30s
+        setInterval(() => {
+            fetch('/api/track/event', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sessionId })
+            }).catch(() => {});
+        }, 30000);
+    } catch (err) {}
+}
+
 function initApp() {
     particleEngine  = initParticleEngine();
     audioEngine     = initAudioEngine(getState, saveBackendConfig);
@@ -339,6 +386,7 @@ function initApp() {
     initQuoteSlider();
     initAdminVisibility();
     initLightbox();
+    initVisitorTracking();
     revealHomePageElements();
 }
 

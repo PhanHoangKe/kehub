@@ -723,6 +723,7 @@
             </div>
             <div class="admin-tab-nav">
                 <button class="admin-tab-btn active" data-tab="tabOverview"><i class="fa-solid fa-chart-line"></i> Tổng Quan</button>
+                <button class="admin-tab-btn" data-tab="tabVisitors"><i class="fa-solid fa-user-secret"></i> Khách Viếng Thăm</button>
                 <button class="admin-tab-btn" data-tab="tabAnonymous"><i class="fa-solid fa-envelope"></i> Hộp Thư Ẩn</button>
                 <button class="admin-tab-btn" data-tab="tabProfile"><i class="fa-solid fa-user-pen"></i> Hồ Sơ</button>
                 <button class="admin-tab-btn" data-tab="tabMusic"><i class="fa-solid fa-music"></i> Playlist</button>
@@ -765,6 +766,54 @@
                                 <div class="adm-stat-label">Ảnh Kỷ Niệm</div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- TAB: KHÁCH VIẾNG THĂM (VISITOR TRACKING) -->
+                <div id="tabVisitors" class="admin-tab-content">
+                    <div class="tab-subheading" style="display:flex;justify-content:space-between;align-items:center;">
+                        <span><i class="fa-solid fa-user-secret"></i> Theo Dõi Khách Viếng Thăm (Realtime Tracking)</span>
+                        <button type="button" id="btnRefreshVisitors" class="btn-backup-export" style="font-size:0.75rem;padding:4px 10px;">
+                            <i class="fa-solid fa-rotate"></i> Làm Mới
+                        </button>
+                    </div>
+                    
+                    <div class="admin-stats-grid" style="margin-bottom:18px;">
+                        <div class="adm-stat-card">
+                            <div class="adm-stat-icon green"><i class="fa-solid fa-bolt"></i></div>
+                            <div class="adm-stat-body">
+                                <div id="admStatOnlineNow" class="adm-stat-value">0</div>
+                                <div class="adm-stat-label">🟢 Đang Online (5 phút)</div>
+                            </div>
+                        </div>
+                        <div class="adm-stat-card">
+                            <div class="adm-stat-icon blue"><i class="fa-solid fa-users"></i></div>
+                            <div class="adm-stat-body">
+                                <div id="admStatTotalVisitors" class="adm-stat-value">0</div>
+                                <div class="adm-stat-label">Tổng Khách Ghé Thăm</div>
+                            </div>
+                        </div>
+                        <div class="adm-stat-card">
+                            <div class="adm-stat-icon gold"><i class="fa-solid fa-mobile-screen-button"></i></div>
+                            <div class="adm-stat-body">
+                                <div id="admStatTopDevice" class="adm-stat-value" style="font-size:1.1rem;">-</div>
+                                <div class="adm-stat-label">Thiết Bị Phổ Biến</div>
+                            </div>
+                        </div>
+                        <div class="adm-stat-card">
+                            <div class="adm-stat-icon purple"><i class="fa-solid fa-location-dot"></i></div>
+                            <div class="adm-stat-body">
+                                <div id="admStatTopCity" class="adm-stat-value" style="font-size:1.1rem;">-</div>
+                                <div class="adm-stat-label">Tỉnh / Thành Phố Top</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-subheading" style="font-size:0.88rem;margin-bottom:10px;">
+                        <i class="fa-solid fa-list-check"></i> Danh Sách Khách Vừa Ghé Thăm Web (Ẩn)
+                    </div>
+                    <div id="adminVisitorsList" class="visitor-list-container" style="display:flex;flex-direction:column;gap:10px;max-height:420px;overflow-y:auto;">
+                        <div style="text-align:center;color:#94a3b8;padding:24px;font-size:0.88rem;">Đang nạp dữ liệu khách viếng thăm...</div>
                     </div>
                 </div>
 

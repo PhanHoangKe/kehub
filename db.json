@@ -1,0 +1,39 @@
+{
+  "config": {
+    "name": "Kế",
+    "photoUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80",
+    "photoFallbackUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80",
+    "audioUrl": "https://assets.mixkit.co/music/preview/mixkit-beautiful-dream-493.mp3",
+    "quote1": "Thank you for being here.",
+    "quote2": "The best is yet to come.",
+    "quote3": "Chúc bạn có 1 ngày thật vui vẻ và 1 đời bình an.",
+    "favMusic": "Lofi Piano & Acoustic Sunset",
+    "favMovie": "Interstellar & About Time",
+    "favBook": "Nhà Giả Kim (The Alchemist)",
+    "favDrink": "Cà Phê Muối & Trà Ô Long Đêm",
+    "birthdayDate": "2001-10-15",
+    "displayMode": "vinyl",
+    "linkFB": "https://facebook.com",
+    "linkMessenger": "https://m.me",
+    "linkZalo": "https://zalo.me",
+    "linkTikTok": "https://tiktok.com",
+    "linkInstagram": "https://instagram.com"
+  },
+  "wishes": [
+    {
+      "id": 1,
+      "author": "Bạn Thân",
+      "message": "Chúc Kế luôn vững tin trên con đường đã chọn, tuổi mới bứt phá rực rỡ nhé!",
+      "time": "Vừa xong",
+      "style": "note-gold"
+    },
+    {
+      "id": 2,
+      "author": "Người Ghé Thăm",
+      "message": "Trang web của bạn rất chill và đẹp xuất sắc. Chúc Kế một đời bình an!",
+      "time": "Hôm nay",
+      "style": "note-rose"
+    }
+  ],
+  "hearts": 128
+}

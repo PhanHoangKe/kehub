@@ -1,0 +1,16 @@
+# Biến môi trường — chứa password, secrets
+.env
+
+# Dữ liệu người dùng runtime — không overwrite khi deploy
+data/
+
+# File upload của người dùng
+uploads/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db

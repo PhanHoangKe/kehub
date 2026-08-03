@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh Xuân của Kế | Student Youth Portfolio Hub</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description"
+        content="Chào mừng bạn đến với góc nhỏ Thanh Xuân Học Đường của Kế. Nơi lưu giữ ký ức trường lớp, thành tích, bạn bè, nhật ký & nguồn cảm hứng sống!">
+    <meta name="keywords" content="Kế, Học Sinh, Trường Lớp, Thành Tích, Bạn Bè, Nhật Ký, Thanh Xuân">
+    <meta name="author" content="Kế">
+    <meta property="og:title" content="Thanh Xuân của Kế | Student Youth Portfolio Hub">
+    <meta property="og:description"
+        content="Chào mừng bạn đến với góc nhỏ Thanh Xuân Học Đường của Kế. Nơi lưu giữ ký ức trường lớp, thành tích, bạn bè, nhật ký & nguồn cảm hứng sống!">
+    <meta property="og:image" content="assets/avatar.jpg">
+
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/navigation.css">
+    <link rel="stylesheet" href="css/student_modules.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+
+<body>
+    <!-- Canvas Hiệu Ứng Hạt Nền Sống Động -->
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- Ambient Lighting Orbs -->
+    <div class="ambient-backdrop"></div>
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+
+    <!-- Vertical Floating Mood Widget Dock (Góc Phải Màn Hình) -->
+    <div class="vertical-mood-dock">
+        <span class="mood-dock-title">CHỦ ĐỀ</span>
+        <button class="mood-btn-circle active" data-mood="auto" data-tooltip="Thời Tiết Thực">
+            <i class="fa-solid fa-wand-magic-sparkles icon-realtime"></i>
+        </button>
+        <button class="mood-btn-circle" data-mood="sunset" data-tooltip="Hoàng Hôn & Lofi">
+            <i class="fa-solid fa-cloud-sun icon-sunset"></i>
+        </button>
+        <button class="mood-btn-circle" data-mood="rain" data-tooltip="Mưa Đêm & Acoustic">
+            <i class="fa-solid fa-cloud-showers-heavy icon-rain"></i>
+        </button>
+        <button class="mood-btn-circle" data-mood="space" data-tooltip="Ngàn Sao & Vũ Trụ">
+            <i class="fa-solid fa-meteor icon-space"></i>
+        </button>
+    </div>
+
+    <!-- Header Navigation Bar -->
+    <header class="top-header">
+        <div class="brand-logo">
+            <i class="fa-solid fa-graduation-cap glow-icon"></i> YOUTH MEMORIES HUB
+        </div>
+
+        <div class="header-right-group" style="flex-direction: column; align-items: flex-end; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <div id="capsuleSealBadge" class="capsule-seal-badge" style="display: none;" title="Viên nang thời gian tốt nghiệp đã được niêm phong vĩnh viễn">
+                    <i class="fa-solid fa-graduation-cap"></i> <span id="capsuleSealText">VIÊN NANG ĐÃ NIÊM PHONG</span>
+                </div>
+
+                <div id="weatherBadge" class="weather-badge" title="Thời tiết ngoài trời">
+                    <i class="fa-solid fa-temperature-half"></i> <span id="weatherText">Đang tải thời tiết...</span>
+                </div>
+
+                <div class="header-actions">
+                    <button id="btnToggleDisplay" class="action-btn" title="Đổi hiệu ứng (Đĩa than / Khung 3D Floating)">
+                        <i class="fa-solid fa-rotate"></i>
+                        <span class="btn-text">Đĩa than</span>
+                    </button>
+                    <button id="btnCustomization" class="action-btn admin-only" style="display: none;"
+                        title="Mở trang quản trị">
+                        <i class="fa-solid fa-sliders"></i>
+                        <span class="btn-text">Quản trị</span>
+                    </button>
+                </div>
+            </div>
+
+            <button id="btnOpenAnonymous" class="action-btn anonymous-btn">
+                <span class="anonymous-btn-glow"></span>
+                <span class="anonymous-btn-icon"><i class="fa-solid fa-user-secret"></i></span>
+                <span class="anonymous-btn-text">Gửi Tin Nhắn Ẩn Danh</span>
+                <span class="anonymous-btn-sparkle">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container - SPA Multi-View Pages Container -->
+    <main class="main-container">
+        <div class="view-pages-wrapper">
+
+            <!-- PAGE 1: TRANG CHỦ (HOME PROFILE) -->
+            <div id="page-home" class="view-page active">
+                <section class="intro-text-section">
+                    <h2 id="textGreeting" class="fade-text delay-1">Hello...</h2>
+                    <h1 id="textName" class="fade-text delay-2">My name is <span class="highlight-name"></span>.</h1>
+                </section>
+
+                <section class="photo-display-section" id="photoDisplaySection">
+                    <!-- Mode 1: Đĩa Than (Vinyl Player) -->
+                    <div class="vinyl-wrapper mode-active" id="vinylMode">
+                        <div class="vinyl-arm" id="vinylArm">
+                            <div class="arm-base"></div>
+                            <div class="arm-body"></div>
+                            <div class="arm-needle"></div>
+                        </div>
+                        <div class="vinyl-disc-container">
+                            <div class="vinyl-disc" id="vinylDisc">
+                                <div class="vinyl-grooves"></div>
+                                <div class="vinyl-center">
+                                    <img id="userPhotoVinyl"
+                                        src=""
+                                        alt="Ảnh đại diện">
+                                    <div class="vinyl-camera-badge" id="btnQuickDiscPhoto" title="Chạm để đổi ảnh đĩa (Giống Facebook)">
+                                        <i class="fa-solid fa-camera"></i>
+                                    </div>
+                                    <div class="vinyl-hole"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="vinyl-shadow"></div>
+                    </div>
+
+                    <!-- Mode 2: Khung Ảnh 3D Nổi (Floating Glass 3D Tilt) -->
+                    <div class="glass-card-wrapper" id="glassCardMode">
+                        <div class="glass-card" id="glassCard">
+                            <div class="glass-card-border"></div>
+                            <div class="glass-card-image-box">
+                                <img id="userPhotoGlass"
+                                    src=""
+                                    alt="Ảnh đại diện">
+                                <div class="glass-camera-badge" id="btnQuickGlassPhoto" title="Chạm để đổi ảnh đĩa (Giống Facebook)">
+                                    <i class="fa-solid fa-camera"></i> <span>Đổi Ảnh</span>
+                                </div>
+                                <div class="image-overlay-sparkle"></div>
+                            </div>
+                            <div class="glass-card-glow"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="quotes-section fade-text delay-3">
+                    <p id="quoteLine1" class="quote-primary"></p>
+                    <p id="quoteLine2" class="quote-secondary"></p>
+                    <p id="quoteLine3" class="quote-tertiary"></p>
+
+                    <div class="quote-sub-slider">
+                        <p id="dynamicQuote" class="sub-quote"></p>
+                    </div>
+                </section>
+
+                <section class="social-bio-section fade-text delay-3" id="socialBioSection">
+                    <div class="social-bio-card">
+                        <div class="bio-welcome-badge">
+                            <i class="fa-brands fa-facebook"></i> Kết nối & theo dõi mình nhé!
+                        </div>
+
+                        <div class="social-links-grid">
+                            <a href="#" target="_blank" id="linkFB" class="social-pill social-fb" title="Trang Facebook cá nhân">
+                                <i class="fa-brands fa-facebook-f"></i> <span>Facebook</span>
+                            </a>
+                            <a href="#" target="_blank" id="linkMessenger" class="social-pill social-messenger" title="Messenger">
+                                <i class="fa-brands fa-facebook-messenger"></i> <span>Messenger</span>
+                            </a>
+                            <a href="#" target="_blank" id="linkZalo" class="social-pill social-zalo" title="Zalo">
+                                <i class="fa-solid fa-comment-dots"></i> <span>Zalo</span>
+                            </a>
+                            <a href="#" target="_blank" id="linkTikTok" class="social-pill social-tiktok" title="TikTok">
+                                <i class="fa-brands fa-tiktok"></i> <span>TikTok</span>
+                            </a>
+                            <a href="#" target="_blank" id="linkInstagram" class="social-pill social-instagram" title="Instagram">
+                                <i class="fa-brands fa-instagram"></i> <span>Instagram</span>
+                            </a>
+                            <button id="btnCopyShareLink" class="social-pill social-share" title="Sao chép đường dẫn trang web này">
+                                <i class="fa-solid fa-share-nodes"></i> <span>Chia Sẻ Link</span>
+                            </button>
+                        </div>
+
+                        <div class="heart-like-box">
+                            <button id="btnLikeHeart" class="btn-like-heart">
+                                <i class="fa-solid fa-heart heart-icon"></i>
+                                <span>Thả Tim Ủng Hộ</span>
+                            </button>
+                            <div class="heart-count-display">
+                                <span id="heartCounterNumber">0</span> trái tim đã được gửi tặng
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Hũ Thư Cảm Hứng Hôm Nay -->
+                <section class="fortune-jar-section fade-text delay-3" id="fortuneJarSection">
+                    <div class="fortune-jar-container">
+                        <div class="jar-icon-wrapper">
+                            <i class="fa-solid fa-jar glow-jar-icon"></i>
+                            <i class="fa-solid fa-sparkles jar-sparkle"></i>
+                        </div>
+                        <div class="fortune-info">
+                            <h3>HŨ THƯ CẢM HƯỚNG HÔM NAY</h3>
+                            <p>Nhấp vào nút bên dưới để rút 1 lá thư mang lời chúc & thông điệp tích cực dành cho bạn!</p>
+                            <button id="btnDrawFortune" class="btn-draw-fortune">
+                                <i class="fa-solid fa-envelope-open-text"></i> Rút Một Thông Điệp
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="fortuneCardModal" class="fortune-card-pop">
+                        <div class="fortune-pop-content">
+                            <button id="btnCloseFortune" class="close-fortune-btn">&times;</button>
+                            <i class="fa-solid fa-quote-left fortune-quote-icon"></i>
+                            <span class="fortune-badge">THÔNG ĐIỆP DÀNH TẶNG BẠN</span>
+                            <p id="fortuneText" class="fortune-body">"Đừng lo lắng về tốc độ của bạn, miễn là bạn không dừng lại. Mọi nỗ lực hôm nay đều đang nảy mầm."</p>
+                            <span class="fortune-author">— Nhắn gửi đến bạn</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- PAGE 2: TRƯỜNG LỚP & BẠN BÈ TRI KỶ -->
+            <div id="page-school" class="view-page">
+                <div class="page-header-box">
+                    <div class="page-title-group">
+                        <h2><i class="fa-solid fa-graduation-cap"></i> TRƯỜNG HỌC, LỚP HỌC & HỘI BẠN THÂN</h2>
+                        <p>Kỷ niệm dưới mái trường & những người bạn tri kỷ đồng hành</p>
+                    </div>
+                    <button class="btn-back-home" onclick="window.switchPage('home')">
+                        <i class="fa-solid fa-arrow-left"></i> Trang Chủ
+                    </button>
+                </div>
+
+                <!-- Banner Thông Tin Trường Lớp -->
+                <div class="school-banner-card">
+                    <div class="school-info-group">
+                        <div class="school-icon-badge"><i class="fa-solid fa-school"></i></div>
+                        <div class="school-details">
+                            <h3 id="schoolTitleText"></h3>
+                            <p id="classTitleText"></p>
+                        </div>
+                    </div>
+                    <div class="school-slogan-box" id="classSloganText"></div>
+                </div>
+
+                <!-- Section Bạn Bè Tri Kỷ -->
+                <section class="friends-section">
+                    <div class="section-title-box">
+                        <i class="fa-solid fa-users glow-icon"></i>
+                        <h3 class="section-title">HỘI BẠN THÂN & TRI KỶ</h3>
+                        <p class="section-subtitle">Những gương mặt luôn sát cánh trong những năm tháng thanh xuân</p>
+                    </div>
+                    <div class="friends-grid" id="friendsGrid"></div>
+                </section>
+            </div>
+
+            <!-- PAGE 3: THÀNH TÍCH & CÂU LẠC BỘ -->
+            <div id="page-achievements" class="view-page">
+                <div class="page-header-box">
+                    <div class="page-title-group">
+                        <h2><i class="fa-solid fa-trophy"></i> THÀNH TÍCH & CÂU LẠC BỘ</h2>
+                        <p>Bằng khen, giải thưởng & các hoạt động ngoại khóa ấn tượng</p>
+                    </div>
+                    <button class="btn-back-home" onclick="window.switchPage('home')">
+                        <i class="fa-solid fa-arrow-left"></i> Trang Chủ
+                    </button>
+                </div>
+
+                <section class="achievements-section" style="margin-bottom: 48px;">
+                    <div class="section-title-box">
+                        <i class="fa-solid fa-award glow-icon"></i>
+                        <h3 class="section-title">THÀNH TÍCH & BẰNG KHEN</h3>
+                        <p class="section-subtitle">Những dấu ấn nỗ lực trong học tập & cuộc sống</p>
+                    </div>
+                    <div class="achievements-grid" id="achievementsGrid"></div>
+                </section>
+
+                <section class="clubs-section">
+                    <div class="section-title-box">
+                        <i class="fa-solid fa-people-group glow-icon"></i>
+                        <h3 class="section-title">CÂU LẠC BỘ & HOẠT ĐỘNG NGOẠI KHÓA</h3>
+                        <p class="section-subtitle">Môi trường rèn luyện kỹ năng & bứt phá giới hạn</p>
+                    </div>
+                    <div class="clubs-grid" id="clubsGrid"></div>
+                </section>
+            </div>
+
+            <!-- PAGE 4: BỘ SƯU TẬP ÁNH NHÌN & DẤU CHÂN THANH XUÂN -->
+            <div id="page-gallery" class="view-page">
+                <div class="page-header-box">
+                    <div class="page-title-group">
+                        <h2><i class="fa-solid fa-photo-film"></i> BỘ SƯU TẬP ÁNH NHÌN & DẤU CHÂN</h2>
+                        <p>Khoảnh khắc đời thường, những chuyến đi & góc máy yêu thích của Kế</p>
+                    </div>
+                    <button class="btn-back-home" onclick="window.switchPage('home')">
+                        <i class="fa-solid fa-arrow-left"></i> Trang Chủ
+                    </button>
+                </div>
+
+                <section class="gallery-section" style="margin-bottom: 48px;">
+                    <div class="section-title-box">
+                        <i class="fa-solid fa-images glow-icon"></i>
+                        <h3 class="section-title">KHOẢNH KHẮC ÁNH NHÌN THANH XUÂN</h3>
+                    </div>
+                    <div class="gallery-grid" id="galleryGrid"></div>
+                    <div class="pager-container" id="galleryPager"></div>
+                </section>
+
+                <section class="journey-section">
+                    <div class="section-title-box">
+                        <i class="fa-solid fa-compass glow-icon"></i>
+                        <h3 class="section-title">DẤU CHÂN THANH XUÂN</h3>
+                    </div>
+                    <div class="journey-grid" id="journeyGrid"></div>
+                    <div class="pager-container" id="journeyPager"></div>
+                </section>
+            </div>
+
+            <!-- PAGE 5: NHẬT KÝ THANH XUÂN -->
+            <div id="page-diary" class="view-page">
+                <div class="page-header-box">
+                    <div class="page-title-group">
+                        <h2><i class="fa-solid fa-book-bookmark"></i> NHẬT KÝ THANH XUÂN</h2>
+                        <p>Dòng suy nghĩ mỗi ngày, những xúc cảm & bài học cuộc sống</p>
+                    </div>
+                    <button class="btn-back-home" onclick="window.switchPage('home')">
+                        <i class="fa-solid fa-arrow-left"></i> Trang Chủ
+                    </button>
+                </div>
+
+                <section class="diary-section">
+                    <div class="section-title-box">
+                        <i class="fa-solid fa-pen-fancy glow-icon"></i>
+                        <h3 class="section-title">NHẬT KÝ & DÒNG SUY NGHĨ</h3>
+                        <p class="section-subtitle">Nơi lưu giữ cảm xúc & những góc nhìn cá nhân</p>
+                    </div>
+                    <div class="diary-timeline" id="diaryTimeline"></div>
+                </section>
+            </div>
+
+            <!-- PAGE 6: GU CÁ NHÂN & STYLE HUB -->
+            <div id="page-taste" class="view-page">
+                <div class="page-header-box">
+                    <div class="page-title-group">
+                        <h2><i class="fa-solid fa-sparkles"></i> GU CÁ NHÂN & STYLE HUB</h2>
+                        <p>Phong cách thời trang, gu người yêu, âm nhạc, phim ảnh & góc chill</p>
+                    </div>
+                    <button class="btn-back-home" onclick="window.switchPage('home')">
+                        <i class="fa-solid fa-arrow-left"></i> Trang Chủ
+                    </button>
+                </div>
+
+                <section class="favorites-section">
+                    <div class="section-title-box">
+                        <i class="fa-solid fa-heart glow-icon"></i>
+                        <h3 class="section-title">GU CÁ NHÂN & DẤU ẤN PHONG CÁCH</h3>
+                    </div>
+                    <div class="favorites-grid">
+                        <div class="favorite-card-flip">
+                            <div class="card-flip-inner">
+                                <div class="card-front">
+                                    <div class="fav-icon-wrapper"><i class="fa-solid fa-headphones"></i></div>
+                                    <div class="fav-info">
+                                        <span class="fav-label">BÀI NHẠC YÊU THÍCH</span>
+                                        <h4 id="favMusicText" class="fav-value"></h4>
+                                        <span class="hint-flip-text"><i class="fa-solid fa-rotate"></i> Lật thẻ xem suy nghĩ</span>
+                                    </div>
+                                </div>
+                                <div class="card-back">
+                                    <i class="fa-solid fa-quote-left quote-bg-icon"></i>
+                                    <h5>CẢM HỨNG ÂM NHẠC</h5>
+                                    <p class="fav-desc">Giai điệu thư giãn nuôi dưỡng tâm hồn, giúp Kế tập trung tuyệt đối cho những đêm sáng tạo.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="favorite-card-flip">
+                            <div class="card-flip-inner">
+                                <div class="card-front">
+                                    <div class="fav-icon-wrapper"><i class="fa-solid fa-film"></i></div>
+                                    <div class="fav-info">
+                                        <span class="fav-label">BỘ PHIM YÊU THÍCH</span>
+                                        <h4 id="favMovieText" class="fav-value"></h4>
+                                        <span class="hint-flip-text"><i class="fa-solid fa-rotate"></i> Lật thẻ xem suy nghĩ</span>
+                                    </div>
+                                </div>
+                                <div class="card-back">
+                                    <i class="fa-solid fa-quote-left quote-bg-icon"></i>
+                                    <h5>CẢM HỨNG ĐIỆN ẢNH</h5>
+                                    <p class="fav-desc">"Tình yêu là thứ duy nhất vượt qua ranh giới không gian & thời gian." Hãy trân trọng từng phút giây trôi qua.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="favorite-card-flip">
+                            <div class="card-flip-inner">
+                                <div class="card-front">
+                                    <div class="fav-icon-wrapper"><i class="fa-solid fa-book-open"></i></div>
+                                    <div class="fav-info">
+                                        <span class="fav-label">CUỐN SÁCH YÊU THÍCH</span>
+                                        <h4 id="favBookText" class="fav-value"></h4>
+                                        <span class="hint-flip-text"><i class="fa-solid fa-rotate"></i> Lật thẻ xem suy nghĩ</span>
+                                    </div>
+                                </div>
+                                <div class="card-back">
+                                    <i class="fa-solid fa-quote-left quote-bg-icon"></i>
+                                    <h5>BÀI HỌC CUỘC SỐNG</h5>
+                                    <p class="fav-desc">"Khi bạn khao khát một điều gì, cả vũ trụ sẽ hợp lực giúp bạn đạt được điều đó."</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="favorite-card-flip">
+                            <div class="card-flip-inner">
+                                <div class="card-front">
+                                    <div class="fav-icon-wrapper"><i class="fa-solid fa-mug-hot"></i></div>
+                                    <div class="fav-info">
+                                        <span class="fav-label">ĐỒ UỐNG YÊU THÍCH</span>
+                                        <h4 id="favDrinkText" class="fav-value"></h4>
+                                        <span class="hint-flip-text"><i class="fa-solid fa-rotate"></i> Lật thẻ xem suy nghĩ</span>
+                                    </div>
+                                </div>
+                                <div class="card-back">
+                                    <i class="fa-solid fa-quote-left quote-bg-icon"></i>
+                                    <h5>HƯƠNG VỊ THANH XUÂN</h5>
+                                    <p class="fav-desc">Một chút mặn mòi của muối, vị đắng dịu của cà phê & hương thơm thanh mát nạp đầy năng lượng.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- GU PHONG CÁCH ĂN MẶC -->
+                        <div class="favorite-card-flip">
+                            <div class="card-flip-inner">
+                                <div class="card-front">
+                                    <div class="fav-icon-wrapper"><i class="fa-solid fa-shirt"></i></div>
+                                    <div class="fav-info">
+                                        <span class="fav-label">PHONG CÁCH ĂN MẶC</span>
+                                        <h4 id="favFashionText" class="fav-value"></h4>
+                                        <span class="hint-flip-text"><i class="fa-solid fa-rotate"></i> Lật thẻ xem suy nghĩ</span>
+                                    </div>
+                                </div>
+                                <div class="card-back">
+                                    <i class="fa-solid fa-quote-left quote-bg-icon"></i>
+                                    <h5>GU THỜI TRANG</h5>
+                                    <p class="fav-desc">Sơ mi Linen mộc mạc, quần tây form suông thanh lịch với tông màu trung tính ấm áp.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- GU NGƯỜI YÊU / TRI KỶ -->
+                        <div class="favorite-card-flip">
+                            <div class="card-flip-inner">
+                                <div class="card-front">
+                                    <div class="fav-icon-wrapper"><i class="fa-solid fa-heart-pulse"></i></div>
+                                    <div class="fav-info">
+                                        <span class="fav-label">GU NGƯỜI YÊU & TRI KỶ</span>
+                                        <h4 id="favLoverText" class="fav-value"></h4>
+                                        <span class="hint-flip-text"><i class="fa-solid fa-rotate"></i> Lật thẻ xem suy nghĩ</span>
+                                    </div>
+                                </div>
+                                <div class="card-back">
+                                    <i class="fa-solid fa-quote-left quote-bg-icon"></i>
+                                    <h5>MẪU NGƯỜI LÝ TƯỞNG</h5>
+                                    <p class="fav-desc">Tâm hồn tinh tế, biết lắng nghe thấu hiểu & cùng chung niềm đam mê giai điệu âm nhạc.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- GU LỐI SỐNG & GÓC CHILL -->
+                        <div class="favorite-card-flip">
+                            <div class="card-flip-inner">
+                                <div class="card-front">
+                                    <div class="fav-icon-wrapper"><i class="fa-solid fa-compass"></i></div>
+                                    <div class="fav-info">
+                                        <span class="fav-label">LỐI SỐNG & GÓC CHILL</span>
+                                        <h4 id="favLifestyleText" class="fav-value"></h4>
+                                        <span class="hint-flip-text"><i class="fa-solid fa-rotate"></i> Lật thẻ xem suy nghĩ</span>
+                                    </div>
+                                </div>
+                                <div class="card-back">
+                                    <i class="fa-solid fa-quote-left quote-bg-icon"></i>
+                                    <h5>NHỊP SỐNG TỰ DO</h5>
+                                    <p class="fav-desc">Thích không gian tiệm sách cũ, góc cà phê ngắm hoàng hôn & những chuyến đi phượt ngẫu hứng.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- GU TÔNG MÀU AESTHETIC -->
+                        <div class="favorite-card-flip">
+                            <div class="card-flip-inner">
+                                <div class="card-front">
+                                    <div class="fav-icon-wrapper"><i class="fa-solid fa-palette"></i></div>
+                                    <div class="fav-info">
+                                        <span class="fav-label">TÔNG MÀU AESTHETIC</span>
+                                        <h4 id="favColorText" class="fav-value"></h4>
+                                        <span class="hint-flip-text"><i class="fa-solid fa-rotate"></i> Lật thẻ xem suy nghĩ</span>
+                                    </div>
+                                </div>
+                                <div class="card-back">
+                                    <i class="fa-solid fa-quote-left quote-bg-icon"></i>
+                                    <h5>BẢNG MÀU THANH XUÂN</h5>
+                                    <p class="fav-desc">Sự kết hợp giữa dải màu vệt nắng hoàng hôn rực rỡ và tông nâu trầm lắng hoài niệm.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- PAGE 6: MỤC TIÊU & ĐẾM NGƯỢC CỘT MỐC -->
+            <div id="page-goals" class="view-page">
+                <div class="page-header-box">
+                    <div class="page-title-group">
+                        <h2><i class="fa-solid fa-bullseye"></i> MỤC TIÊU & ĐẾM NGƯỢC CỘT MỐC</h2>
+                        <p>Những giấc mơ hướng tới & đồng hồ thời gian đếm ngược thanh xuân</p>
+                    </div>
+                    <button class="btn-back-home" onclick="window.switchPage('home')">
+                        <i class="fa-solid fa-arrow-left"></i> Trang Chủ
+                    </button>
+                </div>
+
+                <section class="goals-section" style="margin-bottom: 48px;">
+                    <div class="section-title-box">
+                        <i class="fa-solid fa-rocket glow-icon"></i>
+                        <h3 class="section-title">MỤC TIÊU & BUCKET LIST TƯƠNG LAI</h3>
+                    </div>
+                    <div class="goals-grid" id="goalsGrid"></div>
+                </section>
+
+                <section class="time-capsule-section">
+                    <div class="section-title-box">
+                        <i class="fa-solid fa-hourglass-half glow-icon"></i>
+                        <h3 class="section-title">ĐẾM NGƯỢC CỘT MỐC THANH XUÂN</h3>
+                    </div>
+
+                    <div class="milestone-tabs">
+                        <button class="milestone-btn active" data-target="birthday" title="Sinh nhật sắp tới của Kế">
+                            <i class="fa-solid fa-cake-candles"></i> Sinh Nhật Kế
+                        </button>
+                        <button class="milestone-btn" data-target="2030" title="Cột mốc bứt phá năm 2030">
+                            <i class="fa-solid fa-rocket"></i> Cột Mốc 2030
+                        </button>
+                        <button class="milestone-btn" data-target="newyear" title="Chào đón năm mới">
+                            <i class="fa-solid fa-champagne-glasses"></i> Năm Mới
+                        </button>
+                    </div>
+
+                    <div class="countdown-container">
+                        <div class="countdown-card">
+                            <span id="cntDays" class="cnt-number">000</span>
+                            <span class="cnt-label">Ngày</span>
+                        </div>
+                        <div class="countdown-sep">:</div>
+                        <div class="countdown-card">
+                            <span id="cntHours" class="cnt-number">00</span>
+                            <span class="cnt-label">Giờ</span>
+                        </div>
+                        <div class="countdown-sep">:</div>
+                        <div class="countdown-card">
+                            <span id="cntMinutes" class="cnt-number">00</span>
+                            <span class="cnt-label">Phút</span>
+                        </div>
+                        <div class="countdown-sep">:</div>
+                        <div class="countdown-card">
+                            <span id="cntSeconds" class="cnt-number">00</span>
+                            <span class="cnt-label">Giây</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- PAGE 7: SỔ LƯU BÚT -->
+            <div id="page-guestbook" class="view-page">
+                <div class="page-header-box">
+                    <div class="page-title-group">
+                        <h2><i class="fa-solid fa-comments"></i> BỨC TƯỜNG LỜI CHÚC & SỔ LƯU BÚT</h2>
+                        <p>Gửi lại những lời nhắn gửi thương yêu, truyền cảm hứng đến Kế nhé!</p>
+                    </div>
+                    <button class="btn-back-home" onclick="window.switchPage('home')">
+                        <i class="fa-solid fa-arrow-left"></i> Trang Chủ
+                    </button>
+                </div>
+
+                <section class="guestbook-section">
+                    <div class="guestbook-form-box">
+                        <div class="gb-input-row">
+                            <input type="text" id="inputWishAuthor" placeholder="Tên của bạn..." max="30">
+                            <input type="text" id="inputWishMessage" placeholder="Lời nhắn gửi đến Kế..." max="150">
+                            <button id="btnSubmitWish" class="btn-send-wish">
+                                <i class="fa-solid fa-paper-plane"></i> Gửi Lời Chúc
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="guestbookWall" class="guestbook-wall-grid"></div>
+                </section>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Left Vertical Floating Navigation Dock Bar -->
+    <nav id="appNavDock" class="app-nav-dock">
+        <span class="nav-dock-title">MENU</span>
+        <button class="nav-dock-btn active" data-page="home" data-label="Trang Chủ" title="Trang Chủ">
+            <i class="fa-solid fa-house"></i> <span>Trang Chủ</span>
+        </button>
+        <button class="nav-dock-btn" data-page="school" data-label="Trường Lớp & Bạn Bè" title="Trường Lớp & Bạn Bè">
+            <i class="fa-solid fa-graduation-cap"></i> <span>Trường Lớp</span>
+        </button>
+        <button class="nav-dock-btn" data-page="achievements" data-label="Thành Tích & CLB" title="Thành Tích & CLB">
+            <i class="fa-solid fa-trophy"></i> <span>Thành Tích</span>
+        </button>
+        <button class="nav-dock-btn" data-page="gallery" data-label="Bộ Sưu Tập Ảnh" title="Bộ Sưu Tập & Dấu Chân">
+            <i class="fa-solid fa-images"></i> <span>Ảnh & Kỷ Niệm</span>
+        </button>
+        <button class="nav-dock-btn" data-page="diary" data-label="Nhật Ký Thanh Xuân" title="Nhật Ký Thanh Xuân">
+            <i class="fa-solid fa-book-open"></i> <span>Nhật Ký</span>
+        </button>
+        <button class="nav-dock-btn" data-page="taste" data-label="Gu Cá Nhân & Style Hub" title="Gu Cá Nhân & Style Hub">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Gu Cá Nhân</span>
+        </button>
+        <button class="nav-dock-btn" data-page="goals" data-label="Mục Tiêu & Cột Mốc" title="Mục Tiêu & Đếm Ngược">
+            <i class="fa-solid fa-bullseye"></i> <span>Mục Tiêu</span>
+        </button>
+        <button class="nav-dock-btn" data-page="guestbook" data-label="Sổ Lưu Bút" title="Sổ Lưu Bút">
+            <i class="fa-solid fa-comments"></i> <span>Lưu Bút</span>
+        </button>
+    </nav>
+
+    <!-- Trình phát nhạc Audio Player Widget -->
+    <div class="music-player-bar">
+        <div class="song-info">
+            <div class="album-art-thumb">
+                <img id="playerThumb"
+                    src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80"
+                    alt="Thumb">
+            </div>
+            <div class="song-details">
+                <span id="trackTitle" class="track-title">Giai Điệu Thanh Xuân</span>
+                <span id="trackArtist" class="track-artist">Acoustic Piano & Chill Chill</span>
+            </div>
+        </div>
+
+        <div class="player-controls">
+            <button id="btnPrevQuote" class="mini-btn" title="Trích dẫn trước"><i class="fa-solid fa-backward-step"></i></button>
+            <button id="btnPlayPause" class="play-btn" title="Phát / Tạm dừng nhạc"><i class="fa-solid fa-pause"></i></button>
+            <button id="btnNextQuote" class="mini-btn" title="Trích dẫn tiếp theo"><i class="fa-solid fa-forward-step"></i></button>
+            <button id="btnPlaylistToggle" class="playlist-btn" title="Danh sách nhạc & Đổi bài"><i class="fa-solid fa-list-ul"></i></button>
+        </div>
+
+        <div id="playlistPopup" class="playlist-popup">
+            <div class="playlist-header">
+                <h5><i class="fa-solid fa-compact-disc"></i> BỘ BÀI HÁT THANH XUÂN</h5>
+                <button id="btnClosePlaylist" class="close-pl-btn">&times;</button>
+            </div>
+            <ul class="playlist-items" id="playlistItems"></ul>
+        </div>
+    </div>
+
+    <!-- Modal Admin Control Center -->
+    <div id="customModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-gauge-high"></i> Trung Tâm Quản Trị</h3>
+                <div class="admin-header-badge">
+                    <span class="admin-badge-pill"><i class="fa-solid fa-shield-halved"></i> Admin</span>
+                    <button id="btnCloseModal" class="close-btn"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+            <div class="admin-tab-nav">
+                <button class="admin-tab-btn active" data-tab="tabOverview"><i class="fa-solid fa-chart-line"></i> Tổng Quan</button>
+                <button class="admin-tab-btn" data-tab="tabAnonymous"><i class="fa-solid fa-envelope"></i> Hộp Thư Ẩn</button>
+                <button class="admin-tab-btn" data-tab="tabProfile"><i class="fa-solid fa-user-pen"></i> Hồ Sơ</button>
+                <button class="admin-tab-btn" data-tab="tabMusic"><i class="fa-solid fa-music"></i> Playlist</button>
+                <button class="admin-tab-btn" data-tab="tabFavorites"><i class="fa-solid fa-heart"></i> Sở Thích</button>
+                <button class="admin-tab-btn" data-tab="tabMilestones"><i class="fa-solid fa-map-pin"></i> Dấu Chân</button>
+                <button class="admin-tab-btn" data-tab="tabGallery"><i class="fa-solid fa-images"></i> Thư Viện Ảnh</button>
+            </div>
+            <div class="modal-body">
+                <!-- TAB 0: TỔNG QUAN -->
+                <div id="tabOverview" class="admin-tab-content active">
+                    <div class="tab-subheading"><i class="fa-solid fa-chart-pie"></i> Bảng Giám Sát Hệ Thống</div>
+
+                    <div class="admin-stats-grid">
+                        <div class="adm-stat-card">
+                            <div class="adm-stat-icon blue"><i class="fa-solid fa-comments"></i></div>
+                            <div class="adm-stat-body">
+                                <div id="admStatWishes" class="adm-stat-value">0</div>
+                                <div class="adm-stat-label">Lời Chúc Lưu Bút</div>
+                            </div>
+                        </div>
+                        <div class="adm-stat-card">
+                            <div class="adm-stat-icon red"><i class="fa-solid fa-heart"></i></div>
+                            <div class="adm-stat-body">
+                                <div id="admStatHearts" class="adm-stat-value">0</div>
+                                <div class="adm-stat-label">Lượt Thả Tim</div>
+                            </div>
+                        </div>
+                        <div class="adm-stat-card">
+                            <div class="adm-stat-icon yellow"><i class="fa-solid fa-music"></i></div>
+                            <div class="adm-stat-body">
+                                <div id="admStatTracks" class="adm-stat-value">0</div>
+                                <div class="adm-stat-label">Bài Hát Playlist</div>
+                            </div>
+                        </div>
+                        <div class="adm-stat-card">
+                            <div class="adm-stat-icon purple"><i class="fa-solid fa-images"></i></div>
+                            <div class="adm-stat-body">
+                                <div id="admStatGallery" class="adm-stat-value">0</div>
+                                <div class="adm-stat-label">Ảnh Kỷ Niệm</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-info-box">
+                        <h4><i class="fa-solid fa-circle-info"></i> Mô Hình Quản Trị 3 Vai Trò</h4>
+                        <ul>
+                            <li><strong>🛡️ System Admin</strong> — Quản lý tổng quan, duyệt lời chúc, niêm phong viên nang & giám sát chỉ số.</li>
+                            <li><strong>👤 User (Chủ Portfolio)</strong> — Cập nhật thông tin cá nhân, ảnh kỷ niệm & âm nhạc.</li>
+                            <li><strong>👁️ Viewer (Khách ghé thăm)</strong> — Xem nội dung public, gửi lời chúc, thả tim & phát nhạc.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- TAB: HỘP THƯ ẨN DANH -->
+                <div id="tabAnonymous" class="admin-tab-content">
+                    <div class="tab-subheading"><i class="fa-solid fa-envelope-open-text"></i> Hộp Thư Ẩn Danh (Chỉ Bạn Đọc Được)</div>
+                    <div id="adminAnonymousList" style="display:flex;flex-direction:column;gap:10px;max-height:420px;overflow-y:auto;">
+                        <div style="text-align:center;color:#94a3b8;padding:24px;font-size:0.88rem;">Đang tải tin nhắn...</div>
+                    </div>
+                </div>
+
+                <!-- TAB: HỒ SƠ CÁ NHÂN -->
+                <div id="tabProfile" class="admin-tab-content">
+                    <div class="form-section-card">
+                        <div class="form-section-title"><i class="fa-solid fa-id-card"></i> Thông Tin Cơ Bản</div>
+                        <div class="form-grid-2">
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-user"></i> Tên hiển thị</label>
+                                <input type="text" id="inputName" placeholder="Ví dụ: Nguyễn Văn Kế">
+                            </div>
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-school"></i> Tên trường học</label>
+                                <input type="text" id="inputSchoolName" placeholder="Ví dụ: THPT Chu Văn An">
+                            </div>
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-chalkboard"></i> Lớp học & Niên khóa</label>
+                                <input type="text" id="inputClassName" placeholder="Ví dụ: 12A1 · 2022–2025">
+                            </div>
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-quote-left"></i> Slogan lớp</label>
+                                <input type="text" id="inputClassSlogan" placeholder="Ví dụ: Thanh xuân có hạn...">
+                            </div>
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-cake-candles"></i> Ngày sinh (YYYY-MM-DD)</label>
+                                <input type="date" id="inputBirthdayDate">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section-card">
+                        <div class="form-section-title"><i class="fa-solid fa-camera"></i> Ảnh Đại Diện</div>
+                        <div class="form-grid-2">
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-upload"></i> Tải ảnh từ máy</label>
+                                <input type="file" id="inputPhoto" accept="image/*">
+                            </div>
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-link"></i> Hoặc dán link URL ảnh</label>
+                                <input type="text" id="inputPhotoUrl" placeholder="https://...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section-card">
+                        <div class="form-section-title"><i class="fa-solid fa-wind"></i> Video TikTok Bóng Bóng Bay</div>
+                        <div class="input-group">
+                            <label><i class="fa-brands fa-tiktok"></i> Link Video TikTok / YouTube Short</label>
+                            <input type="text" id="inputBalloonTiktokUrl" placeholder="Dán link TikTok (ví dụ: https://www.tiktok.com/@username/video/...) hoặc YouTube link...">
+                            <span class="input-desc" style="font-size: 0.75rem; color: #64748b; margin-top: 4px; display: block;">
+                                <i class="fa-solid fa-circle-info"></i> Dán link TikTok vào đây để hiển thị một bong bóng bay lơ lửng ở góc trên bên trái. Khi người dùng bấm vào bong bóng sẽ phát video này. Để trống để ẩn bong bóng.
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="form-section-card">
+                        <div class="form-section-title"><i class="fa-solid fa-pen-fancy"></i> Trích Dẫn & Lời Chào</div>
+                        <div class="input-group">
+                            <label>Trích dẫn dòng 1</label>
+                            <input type="text" id="inputQuote1" placeholder="Thank you for being here.">
+                        </div>
+                        <div class="input-group">
+                            <label>Trích dẫn dòng 2</label>
+                            <input type="text" id="inputQuote2" placeholder="The best is yet to come.">
+                        </div>
+                        <div class="input-group">
+                            <label>Lời chúc mặc định (dòng 3)</label>
+                            <input type="text" id="inputQuote3" placeholder="Chúc bạn có 1 ngày thật vui vẻ...">
+                        </div>
+                    </div>
+
+                    <div class="form-section-card">
+                        <div class="form-section-title"><i class="fa-solid fa-link"></i> Mạng Xã Hội (Liên Kết Chân Trang)</div>
+                        <div class="form-grid-2">
+                            <div class="input-group">
+                                <label><i class="fa-brands fa-facebook"></i> Facebook URL</label>
+                                <input type="url" id="inputLinkFacebook" placeholder="https://facebook.com/...">
+                            </div>
+                            <div class="input-group">
+                                <label><i class="fa-brands fa-facebook-messenger"></i> Messenger URL</label>
+                                <input type="url" id="inputLinkMessenger" placeholder="https://m.me/...">
+                            </div>
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-comment-dots"></i> Zalo URL</label>
+                                <input type="url" id="inputLinkZalo" placeholder="https://zalo.me/...">
+                            </div>
+                            <div class="input-group">
+                                <label><i class="fa-brands fa-tiktok"></i> TikTok URL</label>
+                                <input type="url" id="inputLinkTiktok" placeholder="https://tiktok.com/@...">
+                            </div>
+                            <div class="input-group">
+                                <label><i class="fa-brands fa-instagram"></i> Instagram URL</label>
+                                <input type="url" id="inputLinkInstagram" placeholder="https://instagram.com/...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Viên Nang Tốt Nghiệp -->
+                    <div class="capsule-lock-admin-box">
+                        <div class="capsule-lock-title">
+                            <i class="fa-solid fa-graduation-cap"></i> Lễ Niêm Phong Viên Nang Tốt Nghiệp
+                        </div>
+                        <p class="capsule-lock-desc">
+                            Đến ngày tốt nghiệp, bấm niêm phong để khóa toàn bộ dữ liệu (nhật ký, ảnh lớp, thành tích, lời chúc) <strong>vĩnh viễn</strong> — bảo tồn nguyên vẹn cho 10–20 năm sau mở lại.
+                        </p>
+                        <div class="input-group">
+                            <label><i class="fa-solid fa-calendar-check"></i> Ngày tốt nghiệp</label>
+                            <input type="date" id="inputGraduationDate">
+                        </div>
+                        <div class="capsule-status-info" id="capsuleStatusInfo">
+                            Trạng thái: <span class="status-unlocked"><i class="fa-solid fa-lock-open"></i> Đang mở chỉnh sửa</span>
+                        </div>
+                        <button type="button" id="btnSealCapsule" class="btn-seal-capsule">
+                            <i class="fa-solid fa-stamp"></i> Thực Hiện Lễ Niêm Phong Thanh Xuân
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TAB: PLAYLIST ÂM NHẠC -->
+                <div id="tabMusic" class="admin-tab-content">
+                    <div class="tab-subheading"><i class="fa-solid fa-list-music"></i> Quản Lý Playlist (Không Giới Hạn)</div>
+                    <div class="admin-items-container" id="musicPlaylistAdminList"></div>
+                    <button class="btn-add-item" id="btnAddPlaylistTrack"><i class="fa-solid fa-plus"></i> Thêm Bài Hát Mới</button>
+                </div>
+
+                <!-- TAB: SỞ THÍCH & GU CÁ NHÂN -->
+                <div id="tabFavorites" class="admin-tab-content">
+                    <div class="form-section-card">
+                        <div class="form-section-title"><i class="fa-solid fa-sparkles"></i> Gu & Sở Thích Cá Nhân</div>
+                        <div class="form-grid-2">
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-headphones"></i> Bài nhạc yêu thích</label>
+                                <input type="text" id="inputFavMusic">
+                            </div>
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-film"></i> Bộ phim yêu thích</label>
+                                <input type="text" id="inputFavMovie">
+                            </div>
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-book-open"></i> Cuốn sách yêu thích</label>
+                                <input type="text" id="inputFavBook">
+                            </div>
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-mug-hot"></i> Đồ uống yêu thích</label>
+                                <input type="text" id="inputFavDrink">
+                            </div>
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-shirt"></i> Phong cách ăn mặc</label>
+                                <input type="text" id="inputFavFashion" placeholder="Minimalist, Vintage, Streetwear...">
+                            </div>
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-heart-pulse"></i> Gu người yêu lý tưởng</label>
+                                <input type="text" id="inputFavLover" placeholder="Chân thành, thấu hiểu...">
+                            </div>
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-compass"></i> Lối sống & Góc chill</label>
+                                <input type="text" id="inputFavLifestyle" placeholder="Cà phê mộc, acoustic...">
+                            </div>
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-palette"></i> Tông màu Aesthetic</label>
+                                <input type="text" id="inputFavColor" placeholder="Sunset Gold, Mocha Brown...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: DẤU CHÂN THANH XUÂN -->
+                <div id="tabMilestones" class="admin-tab-content">
+                    <div class="tab-subheading"><i class="fa-solid fa-map-location-dot"></i> Quản Lý Dấu Chân Thanh Xuân</div>
+                    <div class="admin-items-container" id="journeyAdminList"></div>
+                    <button class="btn-add-item" id="btnAddJourneyCard"><i class="fa-solid fa-plus"></i> Thêm Cột Mốc Mới</button>
+                </div>
+
+                <!-- TAB: THƯ VIỆN ẢNH -->
+                <div id="tabGallery" class="admin-tab-content">
+                    <div class="tab-subheading"><i class="fa-solid fa-photo-film"></i> Quản Lý Bộ Sưu Tập Ảnh</div>
+                    <div class="admin-items-container" id="galleryAdminList"></div>
+                    <button class="btn-add-item" id="btnAddGalleryPhoto"><i class="fa-solid fa-plus"></i> Thêm Ảnh Mới</button>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-footer-cancel" id="btnCancelSettings">Hủy</button>
+                <button id="btnSaveSettings" class="btn-footer-save">
+                    <i class="fa-solid fa-floppy-disk"></i> Lưu Thay Đổi
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal Gửi Tin Nhắn Ẩn Danh -->
+    <div id="anonymousModal" class="modal-overlay anonymous-modal">
+        <div class="big-tree-outside big-tree-right">
+            <div class="big-tree-sway">
+
+                <!-- Rễ cây nổi -->
+                <div class="tree-root root-l1"></div>
+                <div class="tree-root root-l2"></div>
+                <div class="tree-root root-r1"></div>
+                <div class="tree-root root-r2"></div>
+
+                <!-- Thân cây 3 lớp tạo chiều sâu -->
+                <div class="trunk-shadow"></div>
+                <div class="trunk-back"></div>
+                <div class="trunk-mid"></div>
+                <div class="trunk-front"></div>
+                <!-- Vân gỗ -->
+                <div class="trunk-bark bark-1"></div>
+                <div class="trunk-bark bark-2"></div>
+                <div class="trunk-bark bark-3"></div>
+                <div class="trunk-highlight"></div>
+
+                <!-- Cành cấp 1 — dày, gốc to đầu nhọn -->
+                <div class="t3-branch br-1a"></div>
+                <div class="t3-branch br-1b"></div>
+                <div class="t3-branch br-2a"></div>
+                <div class="t3-branch br-2b"></div>
+                <div class="t3-branch br-3a"></div>
+                <div class="t3-branch br-3b"></div>
+                <div class="t3-branch br-4a"></div>
+
+                <!-- Cành cấp 2 — mảnh hơn -->
+                <div class="t3-twig tw-1a"></div>
+                <div class="t3-twig tw-1b"></div>
+                <div class="t3-twig tw-2a"></div>
+                <div class="t3-twig tw-2b"></div>
+                <div class="t3-twig tw-3a"></div>
+                <div class="t3-twig tw-3b"></div>
+                <div class="t3-twig tw-4a"></div>
+                <div class="t3-twig tw-4b"></div>
+
+                <!-- Tán lá (JS render vào đây) -->
+                <div class="tree-leaves big-tree-leaves" id="bigTreeLeaves"></div>
+
+                <!-- Chậu 3D -->
+                <div class="pot3d">
+                    <div class="pot3d-rim"></div>
+                    <div class="pot3d-body">
+                        <div class="pot3d-shine"></div>
+                        <div class="pot3d-shadow-inner"></div>
+                    </div>
+                    <div class="pot3d-base"></div>
+                    <div class="pot3d-ground-shadow"></div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="fallen-leaves-layer-outside" id="fallenLeavesLayer"></div>
+
+        <div class="modal-box anonymous-modal-box">
+            <div class="anonymous-modal-orb orb-a"></div>
+            <div class="anonymous-modal-orb orb-b"></div>
+
+            <div class="modal-header anonymous-modal-header">
+                <div class="anonymous-modal-title-wrap">
+                    <div class="anonymous-modal-icon-circle">
+                        <i class="fa-solid fa-user-secret"></i>
+                    </div>
+                    <div>
+                        <h3>GỬI TIN NHẮN ẨN DANH</h3>
+                        <p class="anonymous-modal-subtitle"><i class="fa-solid fa-lock"></i> Mã hóa đầu cuối · Chỉ chủ sở hữu đọc được</p>
+                    </div>
+                </div>
+                <button id="btnCloseAnonymousModal" class="close-btn anonymous-close-btn">&times;</button>
+            </div>
+            <div class="modal-body anonymous-modal-body">
+                <div class="anonymous-tip-banner">
+                    <i class="fa-solid fa-lightbulb"></i>
+                    <span>Gửi lời nhắn, cảm xúc hay điều thầm kín bạn chưa dám nói. Tất cả đều hoàn toàn bí mật.</span>
+                </div>
+                <div class="anonymous-textarea-wrap">
+                    <textarea id="inputAnonymousMessage" rows="5" class="anonymous-textarea" placeholder="Viết điều gì đó thầm kín gửi đến Kế..."></textarea>
+                    <div class="anonymous-textarea-footer">
+                        <span class="anonymous-char-count"><span id="anonymousCharCount">0</span> / 500</span>
+                        <span class="anonymous-badge">
+                            <i class="fa-solid fa-shield-halved"></i> End-to-end
+                        </span>
+                    </div>
+                </div>
+                <!-- ── Media Attachment Bar ──────────────────────── -->
+                <div class="anon-media-bar">
+                    <div class="anon-media-bar-label">
+                        <i class="fa-solid fa-paperclip"></i> Đính kèm (tuỳ chọn)
+                    </div>
+                    <div class="anon-media-actions">
+                        <!-- Ghi âm -->
+                        <button type="button" id="btnAnonRecord" class="anon-media-btn" title="Ghi âm giọng nói">
+                            <i class="fa-solid fa-microphone"></i>
+                            <span>Ghi Âm</span>
+                        </button>
+                        <!-- Chọn ảnh / video từ thiết bị -->
+                        <button type="button" id="btnAnonPickFile" class="anon-media-btn" title="Chọn ảnh hoặc video">
+                            <i class="fa-solid fa-image"></i>
+                            <span>Ảnh / Video</span>
+                        </button>
+                        <input type="file" id="anonFileInput" accept="image/*,video/*" style="display:none;">
+                    </div>
+
+                    <!-- Recording status bar -->
+                    <div id="anonRecordStatus" class="anon-record-status" style="display:none;">
+                        <span class="rec-dot"></span>
+                        <span id="anonRecordTimer" class="rec-timer">00:00</span>
+                        <button type="button" id="btnAnonStopRecord" class="anon-media-btn anon-media-btn--stop">
+                            <i class="fa-solid fa-stop"></i> Dừng
+                        </button>
+                        <button type="button" id="btnAnonCancelRecord" class="anon-media-btn anon-media-btn--cancel">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
+                    <!-- Attachment preview area -->
+                    <div id="anonMediaPreview" class="anon-media-preview" style="display:none;">
+                        <div class="anon-preview-inner">
+                            <!-- Filled by JS -->
+                        </div>
+                        <button type="button" id="btnAnonRemoveMedia" class="anon-remove-media" title="Xoá đính kèm">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button id="btnSubmitAnonymous" class="anonymous-submit-btn">
+                    <span class="btn-inner">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>Gửi Ẩn Danh Ngay</span>
+                        <i class="fa-solid fa-sparkles btn-sparkle-right"></i>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lightbox Popup Xem Ảnh HD -->
+    <div id="lightboxModal" class="lightbox-modal">
+        <span id="btnCloseLightbox" class="close-lightbox">&times;</span>
+        <img id="lightboxImg" class="lightbox-content" src="" alt="HD Photo">
+        <div id="lightboxCaption" class="lightbox-caption"></div>
+    </div>
+
+    <audio id="bgAudio" loop preload="auto"></audio>
+
+    <!-- Thanh Lưu Trực Tiếp Trên Mobile -->
+    <div id="inlineSaveBar" class="inline-save-bar" style="display: none;">
+        <span><i class="fa-solid fa-wand-magic-sparkles"></i> ĐANG Ở CHẾ ĐỘ SỬA TRỰC TIẾP</span>
+        <button id="btnInlineSave" class="btn-inline-save"><i class="fa-solid fa-floppy-disk"></i> LƯU THAY ĐỔI</button>
+    </div>
+
+    <!-- Toast Notification Popup -->
+    <div id="toastNotification" class="toast-notification">
+        <i class="fa-solid fa-sparkles toast-icon"></i>
+        <span id="toastMessage">Thông báo</span>
+    </div>
+
+    <!-- Floating Mini TikTok Video & Audio Player Widget -->
+    <div id="tiktokPlayerWidget" class="tiktok-player-widget">
+        <div class="tiktok-widget-header">
+            <span><i class="fa-brands fa-tiktok"></i> TikTok Player</span>
+            <button id="btnCloseTikTokWidget" title="Thu nhỏ"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="tiktokFrameBox" class="tiktok-frame-box"></div>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+
+</html>

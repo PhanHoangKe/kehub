@@ -1,0 +1,96 @@
+/* ==========================================================================
+   YOUTH MEMORIES - CSS VARIABLES & CORE STYLES
+   ========================================================================== */
+
+:root {
+    --bg-dark: #05060e;
+    --accent-amber: #f59e0b;
+    --accent-gold: #fbbf24;
+    --accent-rose: #f43f5e;
+    --accent-cyan: #38bdf8;
+    --accent-purple: #a855f7;
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.88);
+    --text-muted: rgba(255, 255, 255, 0.55);
+    --glass-bg: rgba(18, 20, 38, 0.65);
+    --glass-border: rgba(255, 255, 255, 0.18);
+    --glass-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+    --font-heading: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+    --font-body: 'Plus Jakarta Sans', sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    position: relative;
+}
+
+/* Canvas Background & Ambient Lighting */
+#particleCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.ambient-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 30%, rgba(20, 24, 55, 0.7) 0%, rgba(5, 6, 14, 0.95) 75%);
+    z-index: 2;
+    pointer-events: none;
+}
+
+.glow-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.35;
+    z-index: 2;
+    pointer-events: none;
+    animation: floatGlow 14s infinite alternate ease-in-out;
+}
+
+.orb-1 {
+    width: 450px;
+    height: 450px;
+    background: radial-gradient(circle, #7c3aed, #f43f5e);
+    top: -100px;
+    left: -100px;
+}
+
+.orb-2 {
+    width: 550px;
+    height: 550px;
+    background: radial-gradient(circle, #0284c7, #f59e0b);
+    bottom: -150px;
+    right: -100px;
+    animation-delay: -7s;
+}
+
+@keyframes floatGlow {
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+    100% {
+        transform: translate(60px, 40px) scale(1.15);
+    }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "youth-memories-backend",
+  "version": "1.1.0",
+  "description": "Backend Server cho Thanh Xuân Của Kế",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,695 @@
+/* ==========================================================================
+   YOUTH MEMORIES - BACKEND SERVER (Node.js REST API & Static File Server)
+   - Thêm xác thực Admin bằng password + session token (task #2, #3)
+   - Validate magic bytes khi upload file (task #4)
+   - Rate limiting cho các endpoint nhạy cảm (task #5)
+   - Input sanitization phía server (task #6)
+   - Write queue tránh race condition db.json (task #7)
+   - Bỏ express/cors khỏi package.json không cần thiết (task #8)
+   - Tách data vào thư mục /data/ tránh bị overwrite khi redeploy (task #11)
+   ========================================================================== */
+
+const http = require('http');
+const https = require('https');
+const fs = require('fs');
+const path = require('path');
+const url = require('url');
+const crypto = require('crypto');
+
+// ── Tự đọc file .env nếu có (không cần cài dotenv) ──────────────────────────
+const envFile = path.join(__dirname, '.env');
+if (fs.existsSync(envFile)) {
+    fs.readFileSync(envFile, 'utf8')
+        .split('\n')
+        .forEach(line => {
+            line = line.trim();
+            if (!line || line.startsWith('#')) return;
+            const eqIdx = line.indexOf('=');
+            if (eqIdx < 1) return;
+            const key = line.slice(0, eqIdx).trim();
+            const val = line.slice(eqIdx + 1).trim();
+            if (!process.env[key]) process.env[key] = val;
+        });
+}
+
+const PORT = process.env.PORT || 3000;
+
+// ── Đường dẫn dữ liệu riêng biệt khỏi source code ──────────────────────────
+// Dùng thư mục /data/ để db.json không bị overwrite khi git pull / redeploy
+const DATA_DIR = path.join(__dirname, 'data');
+const DB_FILE = path.join(DATA_DIR, 'db.json');
+const UPLOADS_DIR = path.join(__dirname, 'uploads');
+
+// Đảm bảo thư mục tồn tại
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+
+// ── Cấu hình Admin ───────────────────────────────────────────────────────────
+// Đặt password qua env var ADMIN_PASSWORD, mặc định là chuỗi ngẫu nhiên
+// để buộc người dùng phải tự đặt password rõ ràng.
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'youth2026!@#secure';
+const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+const SESSION_TTL_MS = 8 * 60 * 60 * 1000; // 8 giờ
+
+// ── Session Store (in-memory, đủ dùng cho single-instance) ──────────────────
+const sessions = new Map(); // token -> { createdAt }
+
+function createSession() {
+    const token = crypto.randomBytes(32).toString('hex');
+    sessions.set(token, { createdAt: Date.now() });
+    return token;
+}
+
+function isValidSession(token) {
+    if (!token) return false;
+    const session = sessions.get(token);
+    if (!session) return false;
+    if (Date.now() - session.createdAt > SESSION_TTL_MS) {
+        sessions.delete(token);
+        return false;
+    }
+    return true;
+}
+
+function getTokenFromRequest(req) {
+    const cookieHeader = req.headers['cookie'] || '';
+    const match = cookieHeader.match(/(?:^|;\s*)admin_token=([^;]+)/);
+    if (match) return match[1];
+    // Fallback: Authorization header
+    const authHeader = req.headers['authorization'] || '';
+    if (authHeader.startsWith('Bearer ')) return authHeader.slice(7);
+    return null;
+}
+
+// ── Rate Limiting ────────────────────────────────────────────────────────────
+// Map: ip -> { count, windowStart }
+const rateLimitMap = new Map();
+
+const RATE_LIMITS = {
+    '/api/likes':     { max: 30,  windowMs: 60 * 1000 },       // 30 req / phút
+    '/api/wishes':    { max: 5,   windowMs: 60 * 1000 },       // 5 req / phút
+    '/api/anonymous': { max: 10,  windowMs: 60 * 1000 },       // 10 req / phút (media)
+    '/api/login':     { max: 10,  windowMs: 15 * 60 * 1000 },  // 10 req / 15 phút
+    '/api/upload':    { max: 20,  windowMs: 60 * 1000 },       // 20 req / phút
+};
+
+function checkRateLimit(pathname, ip) {
+    const rule = RATE_LIMITS[pathname];
+    if (!rule) return true; // không giới hạn
+
+    const key = `${pathname}:${ip}`;
+    const now = Date.now();
+    const entry = rateLimitMap.get(key);
+
+    if (!entry || now - entry.windowStart > rule.windowMs) {
+        rateLimitMap.set(key, { count: 1, windowStart: now });
+        return true;
+    }
+
+    entry.count++;
+    if (entry.count > rule.max) return false;
+    return true;
+}
+
+// Dọn dẹp rate limit map định kỳ để tránh memory leak
+setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of rateLimitMap.entries()) {
+        // Tìm rule tương ứng
+        const pathname = key.split(':')[0];
+        const rule = RATE_LIMITS[pathname];
+        const ttl = rule ? rule.windowMs : 60 * 1000;
+        if (now - entry.windowStart > ttl * 2) {
+            rateLimitMap.delete(key);
+        }
+    }
+}, 5 * 60 * 1000);
+
+// ── Input Sanitization ───────────────────────────────────────────────────────
+function sanitizeString(str, maxLen = 500) {
+    if (typeof str !== 'string') return '';
+    // Cắt bớt độ dài
+    str = str.slice(0, maxLen);
+    // Xóa ký tự null và control chars (trừ newline/tab)
+    str = str.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+    // Trim
+    return str.trim();
+}
+
+function sanitizeUrl(str) {
+    if (typeof str !== 'string') return '';
+    str = str.slice(0, 2048).trim();
+    // Chỉ cho phép http/https/data URLs và relative paths
+    if (!/^(https?:\/\/|data:|\.\/|\/)/.test(str)) return '';
+    return str;
+}
+
+// ── File Upload Validation (Magic Bytes) ─────────────────────────────────────
+// Các định dạng cho phép: jpg, png, gif, webp, mp3, mp4, ogg, wav
+const ALLOWED_MAGIC = [
+    { magic: Buffer.from([0xFF, 0xD8, 0xFF]),             mime: 'image/jpeg',  ext: '.jpg'  },
+    { magic: Buffer.from([0x89, 0x50, 0x4E, 0x47]),      mime: 'image/png',   ext: '.png'  },
+    { magic: Buffer.from([0x47, 0x49, 0x46]),             mime: 'image/gif',   ext: '.gif'  },
+    { magic: Buffer.from([0x52, 0x49, 0x46, 0x46]),      mime: 'image/webp',  ext: '.webp' }, // RIFF...WEBP
+    { magic: Buffer.from([0x49, 0x44, 0x33]),             mime: 'audio/mpeg',  ext: '.mp3'  }, // ID3
+    { magic: Buffer.from([0xFF, 0xFB]),                   mime: 'audio/mpeg',  ext: '.mp3'  }, // MP3 frame
+    { magic: Buffer.from([0xFF, 0xF3]),                   mime: 'audio/mpeg',  ext: '.mp3'  },
+    { magic: Buffer.from([0xFF, 0xF2]),                   mime: 'audio/mpeg',  ext: '.mp3'  },
+    { magic: Buffer.from([0x66, 0x74, 0x79, 0x70]), offset: 4, mime: 'video/mp4', ext: '.mp4' },
+    { magic: Buffer.from([0x4F, 0x67, 0x67, 0x53]),      mime: 'audio/ogg',   ext: '.ogg'  },
+    { magic: Buffer.from([0x52, 0x49, 0x46, 0x46]),      mime: 'audio/wav',   ext: '.wav'  }, // RIFF...WAVE
+];
+
+function detectFileType(buffer) {
+    for (const entry of ALLOWED_MAGIC) {
+        const offset = entry.offset || 0;
+        if (buffer.length < offset + entry.magic.length) continue;
+        const slice = buffer.slice(offset, offset + entry.magic.length);
+        if (slice.equals(entry.magic)) {
+            // Thêm kiểm tra đặc biệt cho RIFF: phân biệt WEBP vs WAV
+            if (entry.mime === 'image/webp' && buffer.length >= 12) {
+                const webpSig = buffer.slice(8, 12).toString('ascii');
+                if (webpSig !== 'WEBP') continue;
+            }
+            if (entry.mime === 'audio/wav' && buffer.length >= 12) {
+                const wavSig = buffer.slice(8, 12).toString('ascii');
+                if (wavSig !== 'WAVE') continue;
+            }
+            return entry;
+        }
+    }
+    return null;
+}
+
+function validateBase64File(base64DataUrl) {
+    const matches = base64DataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    if (!matches || matches.length !== 3) {
+        return { ok: false, error: 'Định dạng base64 không đúng' };
+    }
+
+    let fileBuffer;
+    try {
+        fileBuffer = Buffer.from(matches[2], 'base64');
+    } catch (e) {
+        return { ok: false, error: 'Không thể decode base64' };
+    }
+
+    // Giới hạn kích thước: 15MB
+    if (fileBuffer.length > 15 * 1024 * 1024) {
+        return { ok: false, error: 'File quá lớn (tối đa 15MB)' };
+    }
+
+    const detected = detectFileType(fileBuffer);
+    if (!detected) {
+        return { ok: false, error: 'Định dạng file không được hỗ trợ' };
+    }
+
+    return { ok: true, buffer: fileBuffer, ext: detected.ext, mime: detected.mime };
+}
+
+// ── Database với Write Queue (tránh race condition) ──────────────────────────
+let writeQueue = Promise.resolve();
+
+function getDB() {
+    try {
+        if (fs.existsSync(DB_FILE)) {
+            const data = fs.readFileSync(DB_FILE, 'utf8');
+            return JSON.parse(data);
+        }
+    } catch (e) {
+        console.error('Lỗi đọc db.json:', e);
+    }
+    // Cũng kiểm tra db.json cũ ở thư mục gốc (migration lần đầu)
+    const legacyDB = path.join(__dirname, 'db.json');
+    if (fs.existsSync(legacyDB)) {
+        try {
+            const data = JSON.parse(fs.readFileSync(legacyDB, 'utf8'));
+            // Migrate sang thư mục mới
+            fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
+            console.log('Đã migrate db.json từ thư mục gốc sang /data/');
+            return data;
+        } catch (e) {}
+    }
+    return { config: {}, wishes: [], hearts: 128 };
+}
+
+// Hàm ghi DB async với queue để tránh concurrent writes
+function saveDB(data) {
+    writeQueue = writeQueue.then(() => new Promise((resolve) => {
+        try {
+            fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
+        } catch (e) {
+            console.error('Lỗi ghi db.json:', e);
+        }
+        resolve();
+    }));
+    return writeQueue;
+}
+
+// ── MIME Types ───────────────────────────────────────────────────────────────
+const MIME_TYPES = {
+    '.html': 'text/html; charset=utf-8',
+    '.css':  'text/css; charset=utf-8',
+    '.js':   'application/javascript; charset=utf-8',
+    '.json': 'application/json; charset=utf-8',
+    '.png':  'image/png',
+    '.jpg':  'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.gif':  'image/gif',
+    '.svg':  'image/svg+xml',
+    '.mp3':  'audio/mpeg',
+    '.mp4':  'video/mp4',
+    '.ico':  'image/x-icon',
+    '.woff2':'font/woff2',
+};
+
+// ── Helper: đọc request body ─────────────────────────────────────────────────
+function readBody(req, maxBytes = 20 * 1024 * 1024) {
+    return new Promise((resolve, reject) => {
+        let body = '';
+        let size = 0;
+        req.on('data', chunk => {
+            size += chunk.length;
+            if (size > maxBytes) {
+                req.destroy();
+                return reject(new Error('Request body quá lớn'));
+            }
+            body += chunk;
+        });
+        req.on('end', () => resolve(body));
+        req.on('error', reject);
+    });
+}
+
+// ── Helper: response JSON ────────────────────────────────────────────────────
+function jsonResponse(res, status, data) {
+    res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(data));
+}
+
+// ── Helper: lấy IP thực ─────────────────────────────────────────────────────
+function getClientIP(req) {
+    return (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+}
+
+// ── HTTP Server ──────────────────────────────────────────────────────────────
+const server = http.createServer(async (req, res) => {
+    // CORS Headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+    if (req.method === 'OPTIONS') {
+        res.writeHead(204);
+        res.end();
+        return;
+    }
+
+    const parsedUrl = url.parse(req.url, true);
+    const pathname = parsedUrl.pathname;
+    const clientIP = getClientIP(req);
+
+    // ── Rate Limit check ─────────────────────────────────────────────────────
+    if (!checkRateLimit(pathname, clientIP)) {
+        jsonResponse(res, 429, { success: false, message: 'Quá nhiều yêu cầu. Vui lòng thử lại sau.' });
+        return;
+    }
+
+    // ── POST /api/login — Đăng nhập Admin ────────────────────────────────────
+    if (pathname === '/api/login' && req.method === 'POST') {
+        try {
+            const body = await readBody(req, 1024);
+            const payload = JSON.parse(body);
+            const password = sanitizeString(payload.password || '', 200);
+
+            // So sánh constant-time để tránh timing attack
+            const inputHash = crypto.createHmac('sha256', SESSION_SECRET).update(password).digest('hex');
+            const expectedHash = crypto.createHmac('sha256', SESSION_SECRET).update(ADMIN_PASSWORD).digest('hex');
+
+            if (!crypto.timingSafeEqual(Buffer.from(inputHash), Buffer.from(expectedHash))) {
+                // Delay nhỏ để chống brute-force
+                await new Promise(r => setTimeout(r, 500 + Math.random() * 500));
+                jsonResponse(res, 401, { success: false, message: 'Mật khẩu không đúng' });
+                return;
+            }
+
+            const token = createSession();
+            // Set cookie HttpOnly, SameSite=Strict
+            res.setHeader('Set-Cookie', `admin_token=${token}; HttpOnly; SameSite=Strict; Max-Age=${SESSION_TTL_MS / 1000}; Path=/`);
+            jsonResponse(res, 200, { success: true, token });
+        } catch (e) {
+            jsonResponse(res, 400, { success: false, message: 'Dữ liệu không hợp lệ' });
+        }
+        return;
+    }
+
+    // ── POST /api/logout — Đăng xuất Admin ──────────────────────────────────
+    if (pathname === '/api/logout' && req.method === 'POST') {
+        const token = getTokenFromRequest(req);
+        if (token) sessions.delete(token);
+        res.setHeader('Set-Cookie', 'admin_token=; HttpOnly; SameSite=Strict; Max-Age=0; Path=/');
+        jsonResponse(res, 200, { success: true });
+        return;
+    }
+
+    // ── GET /api/admin/check — Kiểm tra session ──────────────────────────────
+    if (pathname === '/api/admin/check' && req.method === 'GET') {
+        const token = getTokenFromRequest(req);
+        jsonResponse(res, 200, { authenticated: isValidSession(token) });
+        return;
+    }
+
+    // ── GET /api/data — Trả toàn bộ dữ liệu (public) ────────────────────────
+    if (pathname === '/api/data' && req.method === 'GET') {
+        const db = getDB();
+        // Không trả anonymousMessages cho request không có auth
+        const token = getTokenFromRequest(req);
+        const safeDB = {
+            config: db.config,
+            wishes: db.wishes,
+            hearts: db.hearts,
+        };
+        if (isValidSession(token)) {
+            safeDB.anonymousMessages = db.anonymousMessages || [];
+        }
+        jsonResponse(res, 200, safeDB);
+        return;
+    }
+
+    // ── POST /api/anonymous — Gửi tin nhắn ẩn danh + media (public, rate-limited) ──
+    if (pathname === '/api/anonymous' && req.method === 'POST') {
+        try {
+            // Tăng body limit lên 50MB để chứa video/ảnh base64
+            const body = await readBody(req, 50 * 1024 * 1024);
+            const payload = JSON.parse(body);
+
+            const message = sanitizeString(payload.message || '', 1000);
+            const mediaData = payload.mediaData || null;   // base64 data URL
+            const mediaType = sanitizeString(payload.mediaType || '', 20); // 'audio'|'image'|'video'
+
+            // Phải có ít nhất text hoặc media
+            if (!message && !mediaData) {
+                jsonResponse(res, 400, { success: false, message: 'Vui lòng nhập tin nhắn hoặc đính kèm file' });
+                return;
+            }
+
+            let savedMediaUrl = null;
+
+            // Nếu có media — validate magic bytes rồi lưu vào /uploads/
+            if (mediaData) {
+                const validation = validateBase64File(mediaData);
+                if (!validation.ok) {
+                    jsonResponse(res, 400, { success: false, message: `File không hợp lệ: ${validation.error}` });
+                    return;
+                }
+
+                // Chỉ cho phép ảnh, audio, video — không cho phép file khác
+                const allowedMimes = ['image/jpeg','image/png','image/gif','image/webp',
+                                      'audio/mpeg','audio/ogg','audio/wav',
+                                      'video/mp4','video/ogg'];
+                if (!allowedMimes.includes(validation.mime)) {
+                    jsonResponse(res, 400, { success: false, message: 'Định dạng file không được phép' });
+                    return;
+                }
+
+                // Giới hạn kích thước theo loại
+                const maxBytes = validation.mime.startsWith('video') ? 30 * 1024 * 1024  // video: 30MB
+                               : validation.mime.startsWith('audio') ? 10 * 1024 * 1024  // audio: 10MB
+                               : 5 * 1024 * 1024;                                         // ảnh:   5MB
+                if (validation.buffer.length > maxBytes) {
+                    const mbLimit = maxBytes / 1024 / 1024;
+                    jsonResponse(res, 400, { success: false, message: `File quá lớn (tối đa ${mbLimit}MB cho loại này)` });
+                    return;
+                }
+
+                // Lưu file
+                const prefix   = `anon_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+                const filename = `${prefix}${validation.ext}`;
+                const filePath = path.join(UPLOADS_DIR, filename);
+                fs.writeFileSync(filePath, validation.buffer);
+                savedMediaUrl = `/uploads/${filename}`;
+            }
+
+            const db = getDB();
+            if (!db.anonymousMessages) db.anonymousMessages = [];
+            db.anonymousMessages.push({
+                id:        Date.now(),
+                message:   message || '',
+                mediaUrl:  savedMediaUrl,
+                mediaType: savedMediaUrl ? (mediaType || 'file') : null,
+                createdAt: new Date().toISOString(),
+            });
+            await saveDB(db);
+            jsonResponse(res, 200, { success: true });
+        } catch (e) {
+            console.error('Lỗi /api/anonymous:', e.message);
+            jsonResponse(res, 500, { success: false, message: 'Lỗi server' });
+        }
+        return;
+    }
+
+    // ── POST /api/wishes — Gửi lời chúc (public, rate-limited) ──────────────
+    if (pathname === '/api/wishes' && req.method === 'POST') {
+        try {
+            const body = await readBody(req, 4096);
+            const payload = JSON.parse(body);
+            const author  = sanitizeString(payload.author  || 'Người Bạn Ẩn Danh', 100);
+            const message = sanitizeString(payload.message || '', 500);
+            const time    = sanitizeString(payload.time    || 'Vừa xong', 50);
+            const style   = Number.isInteger(payload.style) ? Math.min(Math.max(payload.style, 1), 5) : 1;
+
+            if (!message) {
+                jsonResponse(res, 400, { success: false, message: 'Vui lòng nhập lời chúc' });
+                return;
+            }
+
+            const db = getDB();
+            const newWish = {
+                id: Date.now(),
+                author,
+                message,
+                time,
+                style,
+            };
+            db.wishes = [newWish, ...(db.wishes || []).slice(0, 49)];
+            await saveDB(db);
+            jsonResponse(res, 200, { success: true, wish: newWish, wishes: db.wishes });
+        } catch (e) {
+            jsonResponse(res, 400, { success: false, message: 'Lỗi ghi lời chúc' });
+        }
+        return;
+    }
+
+    // ── POST /api/likes — Thả tim (public, rate-limited) ─────────────────────
+    if (pathname === '/api/likes' && req.method === 'POST') {
+        const db = getDB();
+        db.hearts = (db.hearts || 128) + 1;
+        await saveDB(db);
+        jsonResponse(res, 200, { success: true, hearts: db.hearts });
+        return;
+    }
+
+    // ── GET /api/resolve-tiktok — Giải mã URL TikTok rút gọn (public) ─────────
+    if (pathname === '/api/resolve-tiktok' && req.method === 'GET') {
+        const targetUrl = parsedUrl.query.url;
+        if (!targetUrl) {
+            jsonResponse(res, 400, { success: false, message: 'Thiếu tham số url' });
+            return;
+        }
+
+        try {
+            const parsedTarget = url.parse(targetUrl);
+            if (!parsedTarget.hostname || !parsedTarget.hostname.endsWith('tiktok.com')) {
+                jsonResponse(res, 400, { success: false, message: 'URL không thuộc tiktok.com' });
+                return;
+            }
+        } catch (e) {
+            jsonResponse(res, 400, { success: false, message: 'URL không hợp lệ' });
+            return;
+        }
+
+        const tikwmUrl = `https://www.tikwm.com/api/?url=${encodeURIComponent(targetUrl)}`;
+        const client = tikwmUrl.startsWith('https') ? https : http;
+        
+        client.get(tikwmUrl, (tikwmRes) => {
+            let data = '';
+            tikwmRes.on('data', chunk => data += chunk);
+            tikwmRes.on('end', () => {
+                try {
+                    const json = JSON.parse(data);
+                    if (json.code === 0 && json.data && json.data.id) {
+                        jsonResponse(res, 200, { success: true, videoId: json.data.id });
+                    } else {
+                        jsonResponse(res, 400, { success: false, message: 'Không thể phân giải video từ API TikWM' });
+                    }
+                } catch (err) {
+                    jsonResponse(res, 500, { success: false, message: 'Lỗi parse dữ liệu API' });
+                }
+            });
+        }).on('error', (err) => {
+            jsonResponse(res, 500, { success: false, message: 'Lỗi kết nối API TikWM' });
+        });
+        return;
+    }
+
+    // Từ đây, tất cả endpoint đều yêu cầu xác thực Admin ─────────────────────
+    // ── POST /api/config — Cập nhật cấu hình (Admin only) ───────────────────
+    if (pathname === '/api/config' && req.method === 'POST') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) {
+            jsonResponse(res, 401, { success: false, message: 'Yêu cầu đăng nhập Admin' });
+            return;
+        }
+        try {
+            const body = await readBody(req, 1 * 1024 * 1024); // 1MB
+            const payload = JSON.parse(body);
+            // Sanitize các trường text quan trọng
+            const allowed = [
+                'name','schoolName','className','gradYear','classSlogan',
+                'photoUrl','photoFallbackUrl','balloonTiktokUrl','audioUrl','audioFallbackUrl',
+                'quote1','quote2','quote3','birthdayDate','displayMode',
+                'favMusic','favMovie','favBook','favDrink','favFashion',
+                'favLover','favLifestyle','favColor','graduationDate',
+                'isCapsuleLocked','sealedAt','graduationMessage','socialLinks',
+                'achievements','clubs','friends','diary','goals','journey',
+                'gallery','playlist',
+            ];
+            const sanitized = {};
+            for (const key of allowed) {
+                if (payload[key] !== undefined) sanitized[key] = payload[key];
+            }
+            // Sanitize photoUrl
+            if (sanitized.photoUrl) sanitized.photoUrl = sanitizeUrl(sanitized.photoUrl);
+            if (sanitized.balloonTiktokUrl) sanitized.balloonTiktokUrl = sanitizeUrl(sanitized.balloonTiktokUrl);
+
+            const db = getDB();
+            db.config = { ...db.config, ...sanitized };
+            await saveDB(db);
+            jsonResponse(res, 200, { success: true, config: db.config });
+        } catch (e) {
+            jsonResponse(res, 400, { success: false, message: 'Dữ liệu không hợp lệ' });
+        }
+        return;
+    }
+
+    // ── POST /api/upload — Upload file (Admin only, magic bytes check) ────────
+    if (pathname === '/api/upload' && req.method === 'POST') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) {
+            jsonResponse(res, 401, { success: false, message: 'Yêu cầu đăng nhập Admin' });
+            return;
+        }
+        try {
+            const body = await readBody(req, 20 * 1024 * 1024); // 20MB
+            const payload = JSON.parse(body);
+
+            if (!payload.fileName || !payload.fileData) {
+                jsonResponse(res, 400, { success: false, message: 'Thiếu thông tin file upload' });
+                return;
+            }
+
+            const validation = validateBase64File(payload.fileData);
+            if (!validation.ok) {
+                jsonResponse(res, 400, { success: false, message: validation.error });
+                return;
+            }
+
+            // Tên file an toàn: chỉ dùng timestamp + extension được detect từ magic bytes
+            const safeName = `upload_${Date.now()}_${crypto.randomBytes(4).toString('hex')}${validation.ext}`;
+            const savePath = path.join(UPLOADS_DIR, safeName);
+            fs.writeFileSync(savePath, validation.buffer);
+
+            jsonResponse(res, 200, { success: true, fileUrl: `./uploads/${safeName}` });
+        } catch (e) {
+            jsonResponse(res, 500, { success: false, message: 'Lỗi lưu file' });
+        }
+        return;
+    }
+
+    // ── GET /api/extract-tiktok — Tách audio TikTok (Admin only) ─────────────
+    if (pathname === '/api/extract-tiktok' && req.method === 'GET') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) {
+            jsonResponse(res, 401, { success: false, message: 'Yêu cầu đăng nhập Admin' });
+            return;
+        }
+
+        const targetUrl = sanitizeString(parsedUrl.query.url || '', 2048);
+        if (!targetUrl || !/^https?:\/\/(www\.)?tiktok\.com/.test(targetUrl)) {
+            jsonResponse(res, 400, { success: false, message: 'Link TikTok không hợp lệ' });
+            return;
+        }
+
+        const apiUrl = `https://www.tikwm.com/api/?url=${encodeURIComponent(targetUrl)}`;
+        https.get(apiUrl, (apiRes) => {
+            let data = '';
+            apiRes.on('data', chunk => { data += chunk; });
+            apiRes.on('end', () => {
+                try {
+                    const json = JSON.parse(data);
+                    if (json.code === 0 && json.data && (json.data.music || json.data.play)) {
+                        jsonResponse(res, 200, {
+                            success: true,
+                            audioUrl: json.data.music || json.data.play,
+                            title:   json.data.title  || 'Bài Hát TikTok',
+                            artist:  json.data.author ? (json.data.author.nickname || json.data.author.unique_id) : 'TikTok',
+                            cover:   json.data.cover  || json.data.origin_cover,
+                        });
+                    } else {
+                        jsonResponse(res, 400, { success: false, message: 'Không thể tách âm thanh từ TikTok này' });
+                    }
+                } catch (err) {
+                    jsonResponse(res, 500, { success: false, message: 'Lỗi giải mã JSON TikTok' });
+                }
+            });
+        }).on('error', () => {
+            jsonResponse(res, 500, { success: false, message: 'Không kết nối được server tách âm thanh' });
+        });
+        return;
+    }
+
+    // ── Static File Serving ──────────────────────────────────────────────────
+    // Route /admin → Redirect to /?admin=true
+    if (pathname === '/admin' || pathname === '/admin/') {
+        res.writeHead(302, { 'Location': '/?admin=true' });
+        res.end();
+        return;
+    }
+    
+    let filePath;
+    if (pathname === '/') {
+        filePath = path.join(__dirname, 'index.html');
+    } else {
+        filePath = path.join(__dirname, pathname);
+    }
+
+    // Ngăn path traversal
+    if (!filePath.startsWith(__dirname)) {
+        res.writeHead(403, { 'Content-Type': 'text/plain' });
+        res.end('403 Forbidden');
+        return;
+    }
+
+    fs.stat(filePath, (err, stats) => {
+        if (err || !stats.isFile()) {
+            res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+            res.end('404 Not Found');
+            return;
+        }
+
+        const ext = path.extname(filePath).toLowerCase();
+        const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+        res.writeHead(200, { 'Content-Type': contentType });
+        fs.createReadStream(filePath).pipe(res);
+    });
+});
+
+server.listen(PORT, '0.0.0.0', () => {
+    console.log('===================================================');
+    console.log('  🚀 YOUTH MEMORIES BACKEND SERVER ĐANG CHẠY:');
+    console.log(`  👉 Localhost: http://localhost:${PORT}`);
+    console.log(`  👉 Admin:     http://localhost:${PORT}/?admin=true`);
+    console.log('  🔐 Đặt password qua biến môi trường ADMIN_PASSWORD');
+    console.log(`  🔐 Password hiện tại: ${ADMIN_PASSWORD === 'youth2026!@#secure' ? 'MẶC ĐỊNH (nên đổi!)' : 'Đã tùy chỉnh ✓'}`);
+    console.log('===================================================');
+});

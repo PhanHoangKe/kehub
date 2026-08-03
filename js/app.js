@@ -1,0 +1,297 @@
+/**
+ * app.js - Entry Point khởi chạy toàn bộ hệ thống Youth Memory Showcase SPA
+ */
+import { KE_CONFIG } from './config.js';
+import { initParticleEngine } from './particles.js';
+import { initAudioEngine } from './audio.js';
+import { initCountdownEngine } from './countdown.js';
+import { initWeatherEngine } from './weather.js';
+import { initGuestbookEngine } from './guestbook.js';
+import { initAdminEngine } from './admin.js';
+import { initNavigationEngine } from './navigation.js';
+import { initBalloonEngine } from './balloon.js';
+import { initInlineEditEngine, initQuickTouchModals } from './inline-edit.js';
+import { showToast } from './toast.js';
+import {
+    renderCapsuleSeal,
+    renderSchoolBanner,
+    renderAchievements,
+    renderClubs,
+    renderFriends,
+    renderDiary,
+    renderGoals,
+    renderGallery,
+    renderJourney,
+} from './renderers.js';
+
+// ── Global State ─────────────────────────────────────────────────────────────
+let state = { ...KE_CONFIG };
+
+// Xóa cache localStorage cũ có dữ liệu mẫu (chạy 1 lần sau khi clean)
+const _cacheVersion = 'v2_clean';
+if (localStorage.getItem('youth_cache_version') !== _cacheVersion) {
+    localStorage.removeItem('youth_memories_state');
+    localStorage.setItem('youth_cache_version', _cacheVersion);
+}
+
+export function getState() { return state; }
+export function setState(newState) { state = { ...state, ...newState }; }
+
+// ── Lưu state ────────────────────────────────────────────────────────────────
+export async function saveBackendConfig(configData) {
+    localStorage.setItem('youth_memories_state', JSON.stringify(configData));
+    try {
+        await fetch('/api/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(configData),
+            credentials: 'include',
+        });
+    } catch (e) { /* offline fallback đã được localStorage xử lý */ }
+}
+
+// ── Engine references ────────────────────────────────────────────────────────
+let particleEngine;
+let audioEngine;
+let guestbookEngine;
+let navEngine;
+let balloonEngine;
+
+// ── Áp dụng state vào DOM ────────────────────────────────────────────────────
+export function applyStateToDOM() {
+    const highlightName = document.querySelector('.highlight-name');
+    if (highlightName) highlightName.textContent = state.name;
+
+    // Ảnh đại diện
+    const photoSrc = state.photoUrl;
+    const userPhotoVinyl = document.getElementById('userPhotoVinyl');
+    const userPhotoGlass = document.getElementById('userPhotoGlass');
+    const playerThumb    = document.getElementById('playerThumb');
+    if (userPhotoVinyl) userPhotoVinyl.src = photoSrc;
+    if (userPhotoGlass) userPhotoGlass.src = photoSrc;
+    if (playerThumb)    playerThumb.src    = photoSrc;
+
+    // Quote lines
+    const quoteLine1 = document.getElementById('quoteLine1');
+    const quoteLine2 = document.getElementById('quoteLine2');
+    const quoteLine3 = document.getElementById('quoteLine3');
+    if (quoteLine1) quoteLine1.textContent = state.quote1 || '';
+    if (quoteLine2) quoteLine2.textContent = state.quote2 || '';
+    if (quoteLine3) quoteLine3.textContent = state.quote3 || '';
+
+    // Sở thích
+    const favFields = ['favMusic','favMovie','favBook','favDrink','favFashion','favLover','favLifestyle','favColor'];
+    favFields.forEach(key => {
+        const el = document.getElementById(`${key}Text`);
+        if (el) el.textContent = state[key] || KE_CONFIG[key];
+    });
+
+    // Social links — chỉ set href nếu có giá trị thật
+    const socialLinks = state.socialLinks || {};
+    const socialMap = { linkFB: 'facebook', linkMessenger: 'messenger', linkZalo: 'zalo', linkTikTok: 'tiktok', linkInstagram: 'instagram' };
+    Object.entries(socialMap).forEach(([elemId, key]) => {
+        const el = document.getElementById(elemId);
+        if (el) {
+            const val = socialLinks[key] || '';
+            el.href = val || '#';
+            el.style.opacity = val ? '1' : '0.4';
+            el.style.pointerEvents = val ? '' : 'none';
+        }
+    });
+
+    // Gọi các renderers đã tách
+    renderCapsuleSeal(state);
+    renderSchoolBanner(state);
+    renderAchievements(state);
+    renderClubs(state);
+    renderFriends(state);
+    renderDiary(state);
+    renderGoals(state);
+    renderGallery(state);
+    renderJourney(state);
+
+    if (audioEngine && audioEngine.renderPlaylist) audioEngine.renderPlaylist();
+    if (balloonEngine && balloonEngine.updateBalloonVisibility) balloonEngine.updateBalloonVisibility();
+}
+
+// ── Tải dữ liệu từ backend ───────────────────────────────────────────────────
+async function loadBackendData() {
+    try {
+        const res = await fetch('/api/data', { credentials: 'include' });
+        if (res.ok) {
+            const db = await res.json();
+            if (db.config && Object.keys(db.config).length > 0) {
+                state = { ...KE_CONFIG, ...db.config };
+            }
+            if (db.wishes && Array.isArray(db.wishes) && guestbookEngine && guestbookEngine.renderWishCard) {
+                const guestbookWall = document.getElementById('guestbookWall');
+                if (guestbookWall) guestbookWall.innerHTML = '';
+                db.wishes.forEach(w => guestbookEngine.renderWishCard(w.author, w.message, w.time, w.style));
+            }
+        } else {
+            loadFromLocalStorage();
+        }
+    } catch (e) {
+        console.log('Fallback sang LocalStorage.');
+        loadFromLocalStorage();
+    } finally {
+        applyStateToDOM();
+        if (audioEngine && audioEngine.renderPlaylist) audioEngine.renderPlaylist();
+    }
+}
+
+function loadFromLocalStorage() {
+    const saved = localStorage.getItem('youth_memories_state');
+    if (saved) {
+        try { state = { ...KE_CONFIG, ...JSON.parse(saved) }; } catch (err) { /* giữ default */ }
+    }
+}
+
+// ── Display Mode Toggle (Đĩa Than / Khung 3D) ────────────────────────────────
+function initDisplayModeToggle() {
+    const btnToggleDisplay = document.getElementById('btnToggleDisplay');
+    const vinylMode        = document.getElementById('vinylMode');
+    const glassCardMode    = document.getElementById('glassCardMode');
+    if (!btnToggleDisplay) return;
+
+    let currentMode = state.displayMode || 'vinyl';
+
+    function applyDisplayMode(mode) {
+        currentMode = mode;
+        state.displayMode = mode;
+        if (vinylMode && glassCardMode) {
+            const isGlass = mode === 'glass';
+            vinylMode.style.display     = isGlass ? 'none' : 'flex';
+            glassCardMode.style.display = isGlass ? 'flex' : 'none';
+            const btnText = btnToggleDisplay.querySelector('.btn-text');
+            if (btnText) btnText.textContent = isGlass ? 'Khung 3D' : 'Đĩa Than';
+        }
+    }
+
+    applyDisplayMode(currentMode);
+    btnToggleDisplay.addEventListener('click', () => {
+        applyDisplayMode(currentMode === 'vinyl' ? 'glass' : 'vinyl');
+        saveBackendConfig(state);
+    });
+}
+
+// ── Fortune Jar ───────────────────────────────────────────────────────────────
+function initFortuneJar() {
+    const btnDrawFortune  = document.getElementById('btnDrawFortune');
+    const fortuneCardModal = document.getElementById('fortuneCardModal');
+    const btnCloseFortune  = document.getElementById('btnCloseFortune');
+    const fortuneText      = document.getElementById('fortuneText');
+
+    const fortunes = [
+        '"Đừng lo lắng về tốc độ của bạn, miễn là bạn không dừng lại. Mọi nỗ lực hôm nay đều đang nảy mầm."',
+        '"Thanh xuân giống như một cơn mưa rào, dù bạn từng bị cảm lạnh vì tắm mưa, bạn vẫn muốn quay lại lần nữa."',
+        '"Hãy sống như một loài hoa dại, tự tin tỏa sáng giữa đất trời dù không ai chăm sóc."',
+        '"Mỗi buổi sáng thức dậy là một cơ hội mới để bạn viết tiếp câu chuyện tuyệt vời của đời mình."',
+        '"Thành công không phải là điểm đến, mà là hành trình bạn đang đi mỗi ngày."',
+        '"Nụ cười của bạn là ánh mặt trời xua tan mọi mây mù. Hãy luôn mỉm cười nhé!"',
+    ];
+
+    if (btnDrawFortune && fortuneCardModal) {
+        btnDrawFortune.addEventListener('click', () => {
+            if (fortuneText) fortuneText.textContent = fortunes[Math.floor(Math.random() * fortunes.length)];
+            fortuneCardModal.classList.add('active');
+        });
+    }
+    if (btnCloseFortune && fortuneCardModal) {
+        btnCloseFortune.addEventListener('click', () => fortuneCardModal.classList.remove('active'));
+    }
+}
+
+// ── Quote Slider ──────────────────────────────────────────────────────────────
+function initQuoteSlider() {
+    const btnPrevQuote = document.getElementById('btnPrevQuote');
+    const btnNextQuote = document.getElementById('btnNextQuote');
+    const dynamicQuote = document.getElementById('dynamicQuote');
+
+    const quotes = [
+        '"Tuổi trẻ là quãng thời gian rực rỡ nhất, nơi mỗi khoảnh khắc đều là một bản nhạc."',
+        '"Hành trình vạn dặm bắt đầu từ một bước chân nhỏ bé."',
+        '"Những người bạn tốt giống như những ngôi sao, không phải lúc nào cũng thấy nhưng luôn ở đó."',
+        '"Cuộc sống là 10% những gì xảy ra với bạn và 90% cách bạn phản ứng với nó."',
+        '"Hãy lưu giữ những kỷ niệm đẹp, để mỗi khi nhìn lại ta mỉm cười vì đã sống hết mình."',
+    ];
+    let quoteIdx = 0;
+
+    function updateQuote(idx) {
+        quoteIdx = (idx + quotes.length) % quotes.length;
+        if (dynamicQuote) {
+            dynamicQuote.style.opacity = '0';
+            setTimeout(() => {
+                dynamicQuote.textContent = quotes[quoteIdx];
+                dynamicQuote.style.opacity = '1';
+            }, 200);
+        }
+    }
+
+    if (btnPrevQuote) btnPrevQuote.addEventListener('click', () => updateQuote(quoteIdx - 1));
+    if (btnNextQuote) btnNextQuote.addEventListener('click', () => updateQuote(quoteIdx + 1));
+}
+
+// ── Admin Visibility ──────────────────────────────────────────────────────────
+function initAdminVisibility() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('admin') === 'true') {
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'flex');
+    }
+}
+
+// ── Lightbox ──────────────────────────────────────────────────────────────────
+function initLightbox() {
+    const lightboxModal    = document.getElementById('lightboxModal');
+    const btnCloseLightbox = document.getElementById('btnCloseLightbox');
+    if (btnCloseLightbox && lightboxModal) {
+        btnCloseLightbox.addEventListener('click', () => lightboxModal.classList.remove('active'));
+    }
+    // Đóng khi click ngoài ảnh
+    if (lightboxModal) {
+        lightboxModal.addEventListener('click', (e) => {
+            if (e.target === lightboxModal) lightboxModal.classList.remove('active');
+        });
+    }
+}
+
+// ── Reveal animations ─────────────────────────────────────────────────────────
+function revealHomePageElements() {
+    document.getElementById('textGreeting')?.classList.add('show');
+    document.getElementById('textName')?.classList.add('show');
+    document.getElementById('vinylMode')?.classList.add('show');
+    document.getElementById('glassCardMode')?.classList.add('show');
+    document.querySelectorAll('.fade-text').forEach(el => el.classList.add('show'));
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+function initApp() {
+    particleEngine  = initParticleEngine();
+    audioEngine     = initAudioEngine(getState, saveBackendConfig);
+    guestbookEngine = initGuestbookEngine();
+    navEngine       = initNavigationEngine();
+    balloonEngine   = initBalloonEngine(getState, saveBackendConfig, audioEngine);
+
+    window.switchPage = navEngine.switchPage;
+
+    initCountdownEngine(getState);
+    initWeatherEngine((mood) => { if (particleEngine) particleEngine.setMood(mood); });
+
+    initAdminEngine(getState, setState, saveBackendConfig, applyStateToDOM);
+    initInlineEditEngine(getState, saveBackendConfig);
+    initQuickTouchModals(getState, saveBackendConfig, applyStateToDOM, audioEngine);
+
+    loadBackendData();
+    initDisplayModeToggle();
+    initFortuneJar();
+    initQuoteSlider();
+    initAdminVisibility();
+    initLightbox();
+    revealHomePageElements();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}

@@ -136,9 +136,10 @@ function sanitizeString(str, maxLen = 500) {
     return str.trim();
 }
 
-function sanitizeUrl(str) {
+function sanitizeUrl(str, maxLen = 7 * 1024 * 1024) {
     if (typeof str !== 'string') return '';
-    str = str.slice(0, 2048).trim();
+    str = str.trim();
+    if (str.length > maxLen) return '';
     // Chỉ cho phép http/https/data URLs và relative paths
     if (!/^(https?:\/\/|data:|\.\/|\/)/.test(str)) return '';
     return str;
@@ -671,7 +672,13 @@ const server = http.createServer(async (req, res) => {
             const savePath = path.join(UPLOADS_DIR, safeName);
             fs.writeFileSync(savePath, validation.buffer);
 
-            jsonResponse(res, 200, { success: true, fileUrl: `./uploads/${safeName}` });
+            // Nếu là hình ảnh, trả về Data URL để lưu trực tiếp vào JSON DB (bảo đảm tồn tại vĩnh viễn trên Cloud)
+            if (validation.mime.startsWith('image/')) {
+                const dataUrl = `data:${validation.mime};base64,${validation.buffer.toString('base64')}`;
+                jsonResponse(res, 200, { success: true, fileUrl: dataUrl });
+            } else {
+                jsonResponse(res, 200, { success: true, fileUrl: `./uploads/${safeName}` });
+            }
         } catch (e) {
             jsonResponse(res, 500, { success: false, message: 'Lỗi lưu file' });
         }

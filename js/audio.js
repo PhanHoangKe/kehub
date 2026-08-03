@@ -236,5 +236,6 @@ export function initAudioEngine(getState, saveBackendConfig) {
         });
     }
 
+    updatePlayStateUI(false);
     return { playAudio, pauseAudio, playTrackAtIndex, renderPlaylist };
 }

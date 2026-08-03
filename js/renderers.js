@@ -140,9 +140,15 @@ export function renderGoals(state) {
     `).join('');
 }
 
-// ── Gallery với Pagination ────────────────────────────────────────────────────
+// ── Gallery với Pagination + Lightbox Slideshow + Swipe ──────────────────────
 const GALLERY_PAGE_SIZE = 8;
 let galleryCurrentPage = 1;
+
+// Danh sách ảnh toàn bộ hiện tại để slideshow dùng
+let _galleryAllItems = [];
+let _lightboxCurrentIdx = 0;
+let _slideshowTimer = null;
+let _slideshowActive = false;
 
 export function renderGallery(state) {
     const galleryGrid = document.getElementById('galleryGrid');
@@ -150,6 +156,8 @@ export function renderGallery(state) {
     if (!galleryGrid || !Array.isArray(state.gallery)) return;
 
     const items = state.gallery ? state.gallery.filter(i => i.url) : [];
+    _galleryAllItems = items; // cập nhật để lightbox dùng
+
     const totalPages = Math.max(1, Math.ceil(items.length / GALLERY_PAGE_SIZE));
     galleryCurrentPage = Math.min(galleryCurrentPage, totalPages);
 
@@ -163,20 +171,22 @@ export function renderGallery(state) {
     const pageItems = items.slice(start, start + GALLERY_PAGE_SIZE);
 
     galleryGrid.innerHTML = '';
-    pageItems.forEach(item => {
-        const fullCaption = `${item.caption || 'Khoảnh khắc Kế'}${item.date ? ` (${item.date})` : ''}${item.location ? ` - 📍 ${item.location}` : ''}`;
+    pageItems.forEach((item, pageIdx) => {
+        const globalIdx = start + pageIdx;
+        const fullCaption = `${item.caption || 'Khoảnh khắc'}${item.date ? ` • ${item.date}` : ''}${item.location ? ` • 📍 ${item.location}` : ''}`;
         const div = document.createElement('div');
         div.className = 'gallery-item';
         div.innerHTML = `
             <img src="${item.url}" alt="${escapeHTML(item.caption || 'Ảnh')}"
+                 loading="lazy"
                  onerror="this.src='https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80'">
             <div class="gallery-overlay">
                 <i class="fa-solid fa-expand expand-icon"></i>
                 <span>${escapeHTML(item.caption || 'Xem HD')}</span>
-                ${item.date ? `<small style="font-size:0.75rem;opacity:0.8;display:block;"><i class="fa-regular fa-calendar"></i> ${escapeHTML(item.date)}</small>` : ''}
+                ${item.date ? `<small><i class="fa-regular fa-calendar"></i> ${escapeHTML(item.date)}</small>` : ''}
             </div>
         `;
-        div.addEventListener('click', () => openLightbox(item.url, fullCaption));
+        div.addEventListener('click', () => openLightbox(globalIdx));
         galleryGrid.appendChild(div);
     });
 
@@ -184,20 +194,115 @@ export function renderGallery(state) {
         galleryCurrentPage = page;
         renderGallery(state);
     });
+
+    // Khởi tạo lightbox controls (chỉ 1 lần)
+    initLightboxControls();
 }
 
-function openLightbox(src, caption) {
+// ── Lightbox mở theo index ────────────────────────────────────────────────────
+function openLightbox(idx) {
     const modal = document.getElementById('lightboxModal');
+    if (!modal || !_galleryAllItems.length) return;
+    _lightboxCurrentIdx = Math.max(0, Math.min(idx, _galleryAllItems.length - 1));
+    _renderLightboxSlide(_lightboxCurrentIdx);
+    modal.classList.add('active');
+    stopSlideshow();
+}
+
+function _renderLightboxSlide(idx) {
+    const item = _galleryAllItems[idx];
+    if (!item) return;
     const img = document.getElementById('lightboxImg');
     const capElem = document.getElementById('lightboxCaption');
-    if (img) img.src = src;
-    if (capElem) capElem.textContent = caption;
-    if (modal) modal.classList.add('active');
+    const counter = document.getElementById('lightboxCounter');
+    const fallback = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80';
+
+    if (img) {
+        img.style.opacity = '0';
+        img.src = item.url;
+        img.onerror = () => { img.src = fallback; };
+        img.onload = () => { img.style.opacity = '1'; };
+    }
+    const fullCaption = `${item.caption || 'Khoảnh khắc'}${item.date ? ` • ${item.date}` : ''}${item.location ? ` • 📍 ${item.location}` : ''}`;
+    if (capElem) capElem.textContent = fullCaption;
+    if (counter) counter.textContent = `${idx + 1} / ${_galleryAllItems.length}`;
 }
 
-// ── Journey với Pagination ────────────────────────────────────────────────────
-const JOURNEY_PAGE_SIZE = 6;
-let journeyCurrentPage = 1;
+function lightboxPrev() {
+    if (!_galleryAllItems.length) return;
+    _lightboxCurrentIdx = (_lightboxCurrentIdx - 1 + _galleryAllItems.length) % _galleryAllItems.length;
+    _renderLightboxSlide(_lightboxCurrentIdx);
+}
+
+function lightboxNext() {
+    if (!_galleryAllItems.length) return;
+    _lightboxCurrentIdx = (_lightboxCurrentIdx + 1) % _galleryAllItems.length;
+    _renderLightboxSlide(_lightboxCurrentIdx);
+}
+
+function startSlideshow() {
+    if (_slideshowActive) return;
+    _slideshowActive = true;
+    const btn = document.getElementById('btnLightboxSlideshow');
+    if (btn) { btn.innerHTML = '<i class="fa-solid fa-pause"></i>'; btn.title = 'Dừng slideshow'; }
+    _slideshowTimer = setInterval(() => lightboxNext(), 3000);
+}
+
+function stopSlideshow() {
+    _slideshowActive = false;
+    if (_slideshowTimer) { clearInterval(_slideshowTimer); _slideshowTimer = null; }
+    const btn = document.getElementById('btnLightboxSlideshow');
+    if (btn) { btn.innerHTML = '<i class="fa-solid fa-play"></i>'; btn.title = 'Tự động slideshow'; }
+}
+
+let _lightboxInited = false;
+function initLightboxControls() {
+    if (_lightboxInited) return;
+    _lightboxInited = true;
+
+    const modal = document.getElementById('lightboxModal');
+    const btnClose = document.getElementById('btnCloseLightbox');
+    const btnPrev = document.getElementById('btnLightboxPrev');
+    const btnNext = document.getElementById('btnLightboxNext');
+    const btnSlideshow = document.getElementById('btnLightboxSlideshow');
+
+    if (btnClose) btnClose.addEventListener('click', () => { modal.classList.remove('active'); stopSlideshow(); });
+    if (modal) modal.addEventListener('click', e => { if (e.target === modal) { modal.classList.remove('active'); stopSlideshow(); } });
+    if (btnPrev) btnPrev.addEventListener('click', e => { e.stopPropagation(); lightboxPrev(); stopSlideshow(); });
+    if (btnNext) btnNext.addEventListener('click', e => { e.stopPropagation(); lightboxNext(); stopSlideshow(); });
+    if (btnSlideshow) btnSlideshow.addEventListener('click', e => { e.stopPropagation(); _slideshowActive ? stopSlideshow() : startSlideshow(); });
+
+    // Keyboard
+    document.addEventListener('keydown', e => {
+        if (!modal || !modal.classList.contains('active')) return;
+        if (e.key === 'ArrowLeft')  { lightboxPrev(); stopSlideshow(); }
+        if (e.key === 'ArrowRight') { lightboxNext(); stopSlideshow(); }
+        if (e.key === 'Escape')     { modal.classList.remove('active'); stopSlideshow(); }
+        if (e.key === ' ')          { e.preventDefault(); _slideshowActive ? stopSlideshow() : startSlideshow(); }
+    });
+
+    // Touch swipe trên mobile
+    let _touchStartX = 0;
+    let _touchStartY = 0;
+    const imgEl = document.getElementById('lightboxImg');
+    if (imgEl) {
+        imgEl.addEventListener('touchstart', e => {
+            _touchStartX = e.touches[0].clientX;
+            _touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        imgEl.addEventListener('touchend', e => {
+            const dx = e.changedTouches[0].clientX - _touchStartX;
+            const dy = e.changedTouches[0].clientY - _touchStartY;
+            if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+                if (dx < 0) lightboxNext(); else lightboxPrev();
+                stopSlideshow();
+            }
+        }, { passive: true });
+    }
+}
+
+// ── Journey Timeline dọc với scroll-reveal ───────────────────────────────────
+let _journeyRevealObserver = null;
 
 export function renderJourney(state) {
     const journeyGrid = document.getElementById('journeyGrid');
@@ -205,8 +310,6 @@ export function renderJourney(state) {
     if (!journeyGrid || !Array.isArray(state.journey)) return;
 
     const items = state.journey ? state.journey.filter(c => c.title || c.url) : [];
-    const totalPages = Math.max(1, Math.ceil(items.length / JOURNEY_PAGE_SIZE));
-    journeyCurrentPage = Math.min(journeyCurrentPage, totalPages);
 
     if (!items.length) {
         journeyGrid.innerHTML = '<p class="empty-state-hint"><i class="fa-solid fa-plus-circle"></i> Chưa có dấu chân. </p>';
@@ -214,33 +317,127 @@ export function renderJourney(state) {
         return;
     }
 
-    const start = (journeyCurrentPage - 1) * JOURNEY_PAGE_SIZE;
-    const pageItems = items.slice(start, start + JOURNEY_PAGE_SIZE);
+    // Huỷ observer cũ trước khi render lại
+    if (_journeyRevealObserver) {
+        _journeyRevealObserver.disconnect();
+        _journeyRevealObserver = null;
+    }
 
     const fallback = 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=600&q=80';
-    journeyGrid.innerHTML = pageItems.map(card => `
-        <div class="journey-card">
-            <div class="journey-img-box">
-                <img src="${card.url || fallback}" alt="${escapeHTML(card.title || 'Hành trình')}"
-                     onerror="this.src='${fallback}'">
-                <span class="journey-tag">
-                    <i class="fa-solid fa-location-dot"></i> ${escapeHTML(card.tag || 'Dấu Chân Thanh Xuân')}${card.date ? ` • ${card.date}` : ''}
-                </span>
-            </div>
-            <div class="journey-details">
-                <h4>${escapeHTML(card.title || 'Kỷ Niệm')}</h4>
-                <p>${escapeHTML(card.desc || '')}</p>
-            </div>
-        </div>
-    `).join('');
 
-    renderPager(journeyPager, journeyCurrentPage, totalPages, (page) => {
-        journeyCurrentPage = page;
-        renderJourney(state);
-    });
+    journeyGrid.className = 'journey-timeline';
+    journeyGrid.innerHTML = items.map((card, idx) => {
+        const side = idx % 2 === 0 ? 'left' : 'right';
+        return `
+        <div class="journey-timeline-item journey-side-${side} journey-reveal" data-idx="${idx}">
+            <div class="journey-timeline-dot">
+                <i class="fa-solid fa-location-dot"></i>
+            </div>
+            <div class="journey-timeline-card">
+                ${card.url ? `
+                <div class="journey-img-box">
+                    <img src="${card.url || fallback}" alt="${escapeHTML(card.title || 'Hành trình')}"
+                         onerror="this.src='${fallback}'">
+                </div>` : ''}
+                <div class="journey-details">
+                    <div class="journey-tag-row">
+                        <span class="journey-tag">
+                            <i class="fa-solid fa-map-pin"></i> ${escapeHTML(card.tag || 'Dấu Chân Thanh Xuân')}
+                        </span>
+                        ${card.date ? `<span class="journey-date"><i class="fa-regular fa-calendar"></i> ${escapeHTML(card.date)}</span>` : ''}
+                    </div>
+                    <h4>${escapeHTML(card.title || 'Kỷ Niệm')}</h4>
+                    <p>${escapeHTML(card.desc || '')}</p>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+
+    // Xoá pager vì timeline hiển thị tất cả
+    if (journeyPager) journeyPager.innerHTML = '';
+
+    // Scroll-reveal với IntersectionObserver
+    const revealItems = journeyGrid.querySelectorAll('.journey-reveal');
+    if ('IntersectionObserver' in window) {
+        _journeyRevealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('journey-visible');
+                    _journeyRevealObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.15 });
+        revealItems.forEach(el => _journeyRevealObserver.observe(el));
+    } else {
+        // Fallback cho browser không hỗ trợ
+        revealItems.forEach(el => el.classList.add('journey-visible'));
+    }
 }
 
-// ── Pager helper ──────────────────────────────────────────────────────────────
+// ── Memory Map (OpenStreetMap) ────────────────────────────────────────────────
+export function renderMemoryMap(state) {
+    const section  = document.getElementById('memoryMapSection');
+    const pinsEl   = document.getElementById('memoryMapPins');
+    const frameEl  = document.getElementById('memoryMapFrame');
+    const hintEl   = document.querySelector('.memory-map-overlay-hint');
+
+    const locations = (state.mapLocations || []).filter(l => l.name);
+    if (!section) return;
+
+    if (!locations.length) {
+        section.style.display = 'none';
+        return;
+    }
+
+    section.style.display = 'block';
+    if (!pinsEl || !frameEl) return;
+
+    pinsEl.innerHTML = '';
+
+    function loadMapLocation(loc, pinEl) {
+        // Ẩn hint khi user chọn địa điểm
+        if (hintEl) hintEl.style.display = 'none';
+
+        // Active state
+        pinsEl.querySelectorAll('.map-pin-btn').forEach(b => b.classList.remove('active'));
+        if (pinEl) pinEl.classList.add('active');
+
+        // Nếu có toạ độ → dùng OSM embed trực tiếp, ngược lại search theo tên qua Nominatim
+        let src;
+        if (loc.lat && loc.lng) {
+            // Bbox nhỏ xung quanh điểm ± ~1km
+            const d = 0.009;
+            src = `https://www.openstreetmap.org/export/embed.html?bbox=${loc.lng - d},${loc.lat - d},${loc.lng + d},${loc.lat + d}&layer=mapnik&marker=${loc.lat},${loc.lng}`;
+        } else {
+            // Tìm kiếm theo tên — embed Nominatim search UI
+            const q = encodeURIComponent(loc.name);
+            src = `https://nominatim.openstreetmap.org/ui/search.html?q=${q}`;
+        }
+
+        frameEl.style.opacity = '0';
+        frameEl.src = src;
+        frameEl.onload = () => { frameEl.style.opacity = '1'; };
+    }
+
+    locations.forEach((loc, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'map-pin-btn';
+        btn.dataset.idx = idx;
+        btn.innerHTML = `
+            <span class="pin-icon"><i class="fa-solid fa-location-dot"></i></span>
+            <span class="pin-info">
+                <span class="pin-name">${escapeHTML(loc.name)}</span>
+                ${loc.label ? `<span class="pin-label">${escapeHTML(loc.label)}</span>` : ''}
+            </span>
+        `;
+        btn.addEventListener('click', () => loadMapLocation(loc, btn));
+        pinsEl.appendChild(btn);
+    });
+
+    // Tự động load địa điểm đầu tiên
+    const firstBtn = pinsEl.querySelector('.map-pin-btn');
+    if (firstBtn && locations[0]) loadMapLocation(locations[0], firstBtn);
+}
 function renderPager(container, current, total, onPageChange) {
     if (!container) return;
     if (total <= 1) { container.innerHTML = ''; return; }

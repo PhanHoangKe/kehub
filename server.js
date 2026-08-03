@@ -87,6 +87,7 @@ const rateLimitMap = new Map();
 
 const RATE_LIMITS = {
     '/api/likes':     { max: 30,  windowMs: 60 * 1000 },       // 30 req / phút
+    '/api/reactions': { max: 30,  windowMs: 60 * 1000 },       // 30 req / phút
     '/api/wishes':    { max: 5,   windowMs: 60 * 1000 },       // 5 req / phút
     '/api/anonymous': { max: 10,  windowMs: 60 * 1000 },       // 10 req / phút (media)
     '/api/login':     { max: 10,  windowMs: 15 * 60 * 1000 },  // 10 req / 15 phút
@@ -302,7 +303,7 @@ function getDB() {
             return data;
         } catch (e) {}
     }
-    return { config: {}, wishes: [], hearts: 0 };
+    return { config: {}, wishes: [], hearts: 0, reactions: {} };
 }
 
 // Hàm ghi DB async với queue để tránh concurrent writes
@@ -435,12 +436,19 @@ const server = http.createServer(async (req, res) => {
     // ── GET /api/data — Trả toàn bộ dữ liệu (public) ────────────────────────
     if (pathname === '/api/data' && req.method === 'GET') {
         const db = getDB();
-        // Không trả anonymousMessages cho request không có auth
+
+        // Migrate hearts cũ → reactions['❤️'] (chạy 1 lần)
+        if (!db.reactions) db.reactions = {};
+        if (db.hearts && !db.reactions['❤️']) {
+            db.reactions['❤️'] = db.hearts;
+        }
+
         const token = getTokenFromRequest(req);
         const safeDB = {
             config: db.config,
             wishes: db.wishes,
             hearts: db.hearts,
+            reactions: db.reactions,
         };
         if (isValidSession(token)) {
             safeDB.anonymousMessages = db.anonymousMessages || [];
@@ -553,12 +561,42 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    // ── POST /api/likes — Thả tim (public, rate-limited) ─────────────────────
+    // ── POST /api/likes — Thả tim (public, rate-limited) — backward compat ────
     if (pathname === '/api/likes' && req.method === 'POST') {
         const db = getDB();
         db.hearts = (db.hearts || 0) + 1;
+        if (!db.reactions) db.reactions = {};
+        db.reactions['❤️'] = (db.reactions['❤️'] || 0) + 1;
         await saveDB(db);
-        jsonResponse(res, 200, { success: true, hearts: db.hearts });
+        jsonResponse(res, 200, { success: true, hearts: db.hearts, reactions: db.reactions });
+        return;
+    }
+
+    // ── POST /api/reactions — Emoji reaction (public, rate-limited) ──────────
+    if (pathname === '/api/reactions' && req.method === 'POST') {
+        const ALLOWED_EMOJIS = ['❤️', '😊', '🥺', '🎉', '👏'];
+        try {
+            const body = await readBody(req, 256);
+            const payload = JSON.parse(body);
+            const emoji = payload.emoji;
+
+            if (!emoji || !ALLOWED_EMOJIS.includes(emoji)) {
+                jsonResponse(res, 400, { success: false, message: 'Emoji không hợp lệ' });
+                return;
+            }
+
+            const db = getDB();
+            if (!db.reactions) db.reactions = {};
+            db.reactions[emoji] = (db.reactions[emoji] || 0) + 1;
+
+            // Sync hearts cho backward compat
+            if (emoji === '❤️') db.hearts = db.reactions['❤️'];
+
+            await saveDB(db);
+            jsonResponse(res, 200, { success: true, emoji, count: db.reactions[emoji], reactions: db.reactions });
+        } catch (e) {
+            jsonResponse(res, 400, { success: false, message: 'Dữ liệu không hợp lệ' });
+        }
         return;
     }
 
@@ -625,7 +663,7 @@ const server = http.createServer(async (req, res) => {
                 'favLover','favLifestyle','favColor','graduationDate',
                 'isCapsuleLocked','sealedAt','graduationMessage','socialLinks',
                 'achievements','clubs','friends','diary','goals','journey',
-                'gallery','playlist',
+                'gallery','playlist','mapLocations',
             ];
             const sanitized = {};
             for (const key of allowed) {

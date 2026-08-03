@@ -5,7 +5,7 @@ import { escapeHTML } from './config.js';
 import { showToast } from './toast.js';
 
 export function initGuestbookEngine() {
-    const btnLikeHeart = document.getElementById('btnLikeHeart');
+    // ── Backward compat refs (vẫn giữ để không crash nếu còn dùng ở nơi khác) ──
     const heartCounterNumber = document.getElementById('heartCounterNumber');
     const btnCopyShareLink = document.getElementById('btnCopyShareLink');
     const guestbookWall = document.getElementById('guestbookWall');
@@ -14,37 +14,119 @@ export function initGuestbookEngine() {
     const btnCloseWishModal = document.getElementById('btnCloseWishModal');
     const btnSubmitWish = document.getElementById('btnSubmitWish');
 
-    let savedHearts = parseInt(localStorage.getItem('youth_heart_count') || '0', 10);
-    if (heartCounterNumber) heartCounterNumber.textContent = savedHearts;
+    // ── Emoji Reactions ───────────────────────────────────────────────────────
+    const EMOJI_MAP = {
+        '❤️': 'reactionCount-heart',
+        '😊': 'reactionCount-smile',
+        '🥺': 'reactionCount-tear',
+        '🎉': 'reactionCount-party',
+        '👏': 'reactionCount-clap',
+    };
 
-    function createFloatingHeart(x, y) {
-        const heart = document.createElement('i');
-        heart.className = 'fa-solid fa-heart floating-heart';
-        heart.style.left = `${x - 12}px`;
-        heart.style.top = `${y - 20}px`;
-        document.body.appendChild(heart);
-        setTimeout(() => heart.remove(), 1800);
+    // LocalStorage key lưu emoji nào user đã react (để bật active state)
+    const LS_KEY = 'youth_my_reactions';
+
+    function getMyReactions() {
+        try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch { return {}; }
+    }
+    function saveMyReaction(emoji) {
+        const mine = getMyReactions();
+        mine[emoji] = (mine[emoji] || 0) + 1;
+        localStorage.setItem(LS_KEY, JSON.stringify(mine));
     }
 
-    if (btnLikeHeart) {
-        btnLikeHeart.addEventListener('click', (e) => {
-            savedHearts++;
-            localStorage.setItem('youth_heart_count', savedHearts);
-            if (heartCounterNumber) heartCounterNumber.textContent = savedHearts;
+    // Cập nhật số đếm từ object reactions
+    function applyReactionCounts(reactions) {
+        if (!reactions || typeof reactions !== 'object') return;
+        let total = 0;
+        Object.entries(EMOJI_MAP).forEach(([emoji, countId]) => {
+            const count = reactions[emoji] || 0;
+            total += count;
+            const el = document.getElementById(countId);
+            if (el) el.textContent = count >= 1000
+                ? `${(count / 1000).toFixed(1)}k`
+                : String(count);
+        });
+        const totalEl = document.getElementById('reactionTotalCount');
+        if (totalEl) totalEl.textContent = total >= 1000
+            ? `${(total / 1000).toFixed(1)}k`
+            : String(total);
+        // backward compat
+        if (heartCounterNumber) heartCounterNumber.textContent = reactions['❤️'] || 0;
+    }
 
-            fetch('/api/likes', { method: 'POST' })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success && heartCounterNumber) {
-                        heartCounterNumber.textContent = data.hearts;
-                        savedHearts = data.hearts;
-                    }
-                }).catch(() => {});
-
-            createFloatingHeart(e.clientX, e.clientY);
-            showToast("Cảm ơn bạn đã gửi 1 trái tim cho Kế! ❤️");
+    // Đánh dấu emoji user đã react
+    function applyActiveStates() {
+        const mine = getMyReactions();
+        document.querySelectorAll('.reaction-btn').forEach(btn => {
+            const emoji = btn.dataset.emoji;
+            btn.classList.toggle('reacted', !!(mine[emoji]));
         });
     }
+
+    // Floating emoji nổi lên khi click
+    function createFloatingEmoji(emoji, x, y) {
+        const el = document.createElement('span');
+        el.className = 'floating-emoji-pop';
+        el.textContent = emoji;
+        el.style.left = `${x - 16}px`;
+        el.style.top  = `${y - 20}px`;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 1400);
+    }
+
+    // Khởi tạo reaction buttons
+    document.querySelectorAll('.reaction-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const emoji = btn.dataset.emoji;
+            if (!emoji) return;
+
+            // Optimistic UI: tăng count ngay
+            const countId = EMOJI_MAP[emoji];
+            const countEl = countId ? document.getElementById(countId) : null;
+            if (countEl) {
+                const cur = parseInt(countEl.textContent.replace('k','')) || 0;
+                countEl.textContent = String(cur + 1);
+            }
+
+            // Hiệu ứng nổi
+            createFloatingEmoji(emoji, e.clientX, e.clientY);
+
+            // Pulse animation
+            btn.classList.add('reaction-pulse');
+            setTimeout(() => btn.classList.remove('reaction-pulse'), 500);
+
+            // Lưu local
+            saveMyReaction(emoji);
+            applyActiveStates();
+
+            // Gửi lên server
+            try {
+                const res = await fetch('/api/reactions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ emoji }),
+                });
+                const data = await res.json();
+                if (data.success && data.reactions) {
+                    applyReactionCounts(data.reactions);
+                }
+            } catch { /* offline: giữ optimistic count */ }
+
+            showToast(`Bạn đã gửi ${emoji} đến Kế!`);
+        });
+    });
+
+    // Load reactions từ server khi init
+    fetch('/api/data')
+        .then(r => r.json())
+        .then(db => {
+            if (db.reactions) applyReactionCounts(db.reactions);
+            else if (db.hearts) applyReactionCounts({ '❤️': db.hearts });
+        })
+        .catch(() => {});
+
+    applyActiveStates();
 
     if (btnCopyShareLink) {
         btnCopyShareLink.addEventListener('click', () => {

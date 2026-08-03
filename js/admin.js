@@ -175,6 +175,45 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
         });
     }
 
+    function compressImage(file, maxWidth = 1200, maxHeight = 1200, quality = 0.85) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > maxWidth || height > maxHeight) {
+                        if (width / height > maxWidth / maxHeight) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        } else {
+                            width = Math.round((width * maxHeight) / height);
+                            height = maxHeight;
+                        }
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    let dataUrl = canvas.toDataURL('image/webp', quality);
+                    if (!dataUrl || !dataUrl.startsWith('data:image/webp')) {
+                        dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    }
+                    resolve(dataUrl);
+                };
+                img.onerror = () => resolve(e.target.result);
+                img.src = e.target.result;
+            };
+            reader.onerror = () => resolve(null);
+            reader.readAsDataURL(file);
+        });
+    }
+
     // Helper upload file lên Backend Node.js Server
     async function uploadFileToBackend(filename, base64Data) {
         try {
@@ -300,8 +339,9 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
 
             const guestbookWall = document.getElementById('guestbookWall');
             const wishCount = guestbookWall ? guestbookWall.children.length : 0;
-            const heartElem = document.getElementById('heartCount');
-            const hearts = heartElem ? heartElem.textContent : '0';
+            // Đọc tổng reactions từ element reactionTotalCount
+            const reactionTotalEl = document.getElementById('reactionTotalCount');
+            const hearts = reactionTotalEl ? reactionTotalEl.textContent : '0';
 
             if (admStatWishes) admStatWishes.textContent = wishCount;
             if (admStatHearts) admStatHearts.textContent = hearts;
@@ -311,6 +351,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             renderAdminPlaylistList();
             renderAdminGalleryList();
             renderAdminJourneyList();
+            renderAdminMapLocationsList();
             fetchAndRenderAnonymousMessages();
 
             customModal.classList.add('active');
@@ -595,6 +636,102 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
         });
     }
 
+    const mapLocationsAdminList = document.getElementById('mapLocationsAdminList');
+    const btnAddMapLocation = document.getElementById('btnAddMapLocation');
+
+    function renderAdminMapLocationsList() {
+        if (!mapLocationsAdminList) return;
+        mapLocationsAdminList.innerHTML = '';
+        const state = getState();
+
+        (state.mapLocations || []).forEach((item, index) => {
+            const card = document.createElement('div');
+            card.className = 'admin-item-card';
+            card.innerHTML = `
+                <div class="admin-item-header">
+                    <span><i class="fa-solid fa-location-dot"></i> Địa Điểm #${index + 1}</span>
+                    <button class="btn-remove-item" data-index="${index}"><i class="fa-solid fa-trash"></i> Xóa</button>
+                </div>
+                <div class="admin-item-grid">
+                    <div class="input-group">
+                        <label>Tên địa điểm (để tìm kiếm trên bản đồ):</label>
+                        <input type="text" class="adm-map-name" data-index="${index}" value="${escapeHTML(item.name || '')}" placeholder="VD: Trường THPT Chu Văn An, Hà Nội">
+                    </div>
+                    <div class="input-group">
+                        <label>Nhãn hiển thị (tuỳ chọn):</label>
+                        <input type="text" class="adm-map-label" data-index="${index}" value="${escapeHTML(item.label || '')}" placeholder="VD: Mái trường 3 năm ❤️">
+                    </div>
+                    <div class="input-group">
+                        <label>Vĩ độ / Latitude (tự tìm hoặc nhập):</label>
+                        <input type="text" class="adm-map-lat" data-index="${index}" value="${escapeHTML(String(item.lat || ''))}" placeholder="VD: 21.0285">
+                    </div>
+                    <div class="input-group">
+                        <label>Kinh độ / Longitude (tự tìm hoặc nhập):</label>
+                        <input type="text" class="adm-map-lng" data-index="${index}" value="${escapeHTML(String(item.lng || ''))}" placeholder="VD: 105.8542">
+                    </div>
+                    <div class="input-group" style="grid-column: 1 / -1;">
+                        <button type="button" class="btn-geocode-map" data-index="${index}">
+                            <i class="fa-solid fa-magnifying-glass-location"></i> Tìm Tọa Độ Tự Động Qua Tên Địa Điểm
+                        </button>
+                    </div>
+                </div>
+            `;
+            const btnRemove = card.querySelector('.btn-remove-item');
+            if (btnRemove) {
+                btnRemove.addEventListener('click', () => {
+                    const st = getState();
+                    if (st.mapLocations) st.mapLocations.splice(index, 1);
+                    renderAdminMapLocationsList();
+                });
+            }
+
+            const btnGeocode = card.querySelector('.btn-geocode-map');
+            if (btnGeocode) {
+                btnGeocode.addEventListener('click', async () => {
+                    const inputName = card.querySelector('.adm-map-name');
+                    const nameVal = inputName ? inputName.value.trim() : '';
+                    if (!nameVal) {
+                        showToast("⚠️ Vui lòng nhập tên địa điểm trước khi tìm tọa độ!");
+                        return;
+                    }
+                    btnGeocode.disabled = true;
+                    btnGeocode.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tìm...';
+                    try {
+                        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(nameVal)}`;
+                        const res = await fetch(url);
+                        const data = await res.json();
+                        if (data && data.length > 0) {
+                            const lat = parseFloat(data[0].lat).toFixed(6);
+                            const lon = parseFloat(data[0].lon).toFixed(6);
+                            const inputLat = card.querySelector('.adm-map-lat');
+                            const inputLng = card.querySelector('.adm-map-lng');
+                            if (inputLat) inputLat.value = lat;
+                            if (inputLng) inputLng.value = lon;
+                            showToast(`📍 Đã tự động tìm thấy tọa độ: ${lat}, ${lon}`);
+                        } else {
+                            showToast("⚠️ Không tìm thấy tọa độ tự động. Bạn có thể tự nhập Lat/Lng thủ công!");
+                        }
+                    } catch (e) {
+                        showToast("Lỗi kết nối dịch vụ tìm tọa độ.");
+                    } finally {
+                        btnGeocode.disabled = false;
+                        btnGeocode.innerHTML = '<i class="fa-solid fa-magnifying-glass-location"></i> Tìm Tọa Độ Tự Động Qua Tên Địa Điểm';
+                    }
+                });
+            }
+            mapLocationsAdminList.appendChild(card);
+        });
+    }
+
+    if (btnAddMapLocation) {
+        btnAddMapLocation.addEventListener('click', () => {
+            const state = getState();
+            state.mapLocations = state.mapLocations || [];
+            state.mapLocations.push({ name: '', label: '', lat: '', lng: '' });
+            renderAdminMapLocationsList();
+        });
+    }
+
     // Save logic với hỗ trợ Upload File từ máy
     if (btnSaveSettings) {
         btnSaveSettings.addEventListener('click', async () => {
@@ -661,9 +798,10 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                 const base64 = await readFileAsDataURL(file);
                 const uploadedUrl = await uploadFileToBackend(`avatar_${Date.now()}_${file.name}`, base64);
                 state.photoUrl = uploadedUrl;
-            } else if (inputPhotoUrl) {
+            } else if (inputPhotoUrl && inputPhotoUrl.value.trim() !== '') {
                 state.photoUrl = inputPhotoUrl.value.trim();
             }
+            // (Nếu không chọn file mới và ô URL trống, giữ nguyên state.photoUrl hiện tại)
 
             // Read & Upload Playlist
             const trkFiles = document.querySelectorAll('.adm-trk-file');
@@ -679,6 +817,8 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                     const file = fileElem.files[0];
                     const base64 = await readFileAsDataURL(file);
                     url = await uploadFileToBackend(`track_${Date.now()}_${file.name}`, base64);
+                } else if (!url && state.playlist && state.playlist[i]) {
+                    url = state.playlist[i].url;
                 }
 
                 const title = trkTitles[i] ? trkTitles[i].value.trim() : '';
@@ -707,6 +847,8 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                     const file = fileElem.files[0];
                     const base64 = await readFileAsDataURL(file);
                     url = await uploadFileToBackend(`gallery_${Date.now()}_${file.name}`, base64);
+                } else if (!url && state.gallery && state.gallery[i]) {
+                    url = state.gallery[i].url;
                 }
 
                 if (url) {
@@ -721,8 +863,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             if (newGallery.length > 0) state.gallery = newGallery;
 
             // Read Journey Cards
-            const jouTitles = document.querySelectorAll('.adm-jou-title');
-            const jouTags = document.querySelectorAll('.adm-jou-tag');
+            const jouTitles = document.querySelectorAll('.adm-jou-title');            const jouTags = document.querySelectorAll('.adm-jou-tag');
             const jouDates = document.querySelectorAll('.adm-jou-date');
             const jouUrls = document.querySelectorAll('.adm-jou-url');
             const jouDescs = document.querySelectorAll('.adm-jou-desc');
@@ -743,6 +884,27 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             }
             if (newJourney.length > 0) state.journey = newJourney;
 
+            // Read Map Locations
+            const mapNames  = document.querySelectorAll('.adm-map-name');
+            const mapLabels = document.querySelectorAll('.adm-map-label');
+            const mapLats   = document.querySelectorAll('.adm-map-lat');
+            const mapLngs   = document.querySelectorAll('.adm-map-lng');
+            const newMapLocations = [];
+            for (let i = 0; i < mapNames.length; i++) {
+                const name = mapNames[i].value.trim();
+                if (name) {
+                    const lat = parseFloat(mapLats[i] ? mapLats[i].value : '');
+                    const lng = parseFloat(mapLngs[i] ? mapLngs[i].value : '');
+                    newMapLocations.push({
+                        name,
+                        label: mapLabels[i] ? mapLabels[i].value.trim() : '',
+                        lat: isNaN(lat) ? null : lat,
+                        lng: isNaN(lng) ? null : lng,
+                    });
+                }
+            }
+            state.mapLocations = newMapLocations;
+
             setState(state);
             await saveBackendConfig(state);
             refreshDOM();
@@ -751,6 +913,56 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             btnSaveSettings.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Lưu Thay Đổi';
             if (customModal) customModal.classList.remove('active');
             showToast("Đã cập nhật toàn bộ thay đổi thành công! ✨");
+        });
+    }
+
+    // Backup JSON Export & Import
+    const btnExportBackup = document.getElementById('btnExportBackup');
+    const btnImportBackup = document.getElementById('btnImportBackup');
+    const inputBackupFile = document.getElementById('inputBackupFile');
+
+    if (btnExportBackup) {
+        btnExportBackup.addEventListener('click', () => {
+            const state = getState();
+            const jsonStr = JSON.stringify(state, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const dateStr = new Date().toISOString().slice(0, 10);
+            a.href = url;
+            a.download = `youth_memories_backup_${dateStr}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("📦 Đã xuất thành công file Backup JSON!");
+        });
+    }
+
+    if (btnImportBackup && inputBackupFile) {
+        btnImportBackup.addEventListener('click', () => inputBackupFile.click());
+        inputBackupFile.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = async (evt) => {
+                    try {
+                        const data = JSON.parse(evt.target.result);
+                        if (data && typeof data === 'object') {
+                            setState(data);
+                            await saveBackendConfig(data);
+                            refreshDOM();
+                            showToast("✨ Đã phục hồi dữ liệu thành công từ file Backup!");
+                            if (customModal) customModal.classList.remove('active');
+                        } else {
+                            alert("File backup không hợp lệ!");
+                        }
+                    } catch (err) {
+                        alert("Lỗi đọc file JSON: " + err.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
         });
     }
 }

@@ -88,7 +88,7 @@
 
             <button id="btnOpenAnonymous" class="action-btn anonymous-btn">
                 <span class="anonymous-btn-glow"></span>
-                <span class="anonymous-btn-icon"><i class="fa-solid fa-user-secret"></i></span>
+                <span class="anonymous-btn-icon"><i class="fa-solid fa-mask"></i></span>
                 <span class="anonymous-btn-text">Gửi Tin Nhắn Ẩn Danh</span>
                 <span class="anonymous-btn-sparkle">
                     <i class="fa-solid fa-shield-halved"></i>
@@ -182,13 +182,37 @@
                             </button>
                         </div>
 
-                        <div class="heart-like-box">
-                            <button id="btnLikeHeart" class="btn-like-heart">
-                                <i class="fa-solid fa-heart heart-icon"></i>
-                                <span>Thả Tim Ủng Hộ</span>
-                            </button>
-                            <div class="heart-count-display">
-                                <span id="heartCounterNumber">0</span> trái tim đã được gửi tặng
+                        <div class="reaction-bar-box">
+                            <!-- Emoji Reactions -->
+                            <div class="reaction-bar" id="reactionBar">
+                                <button class="reaction-btn" data-emoji="❤️" title="Thả Tim">
+                                    <span class="reaction-emoji">❤️</span>
+                                    <span class="reaction-count" id="reactionCount-heart">0</span>
+                                </button>
+                                <button class="reaction-btn" data-emoji="😊" title="Vui vẻ">
+                                    <span class="reaction-emoji">😊</span>
+                                    <span class="reaction-count" id="reactionCount-smile">0</span>
+                                </button>
+                                <button class="reaction-btn" data-emoji="🥺" title="Xúc động">
+                                    <span class="reaction-emoji">🥺</span>
+                                    <span class="reaction-count" id="reactionCount-tear">0</span>
+                                </button>
+                                <button class="reaction-btn" data-emoji="🎉" title="Chúc mừng">
+                                    <span class="reaction-emoji">🎉</span>
+                                    <span class="reaction-count" id="reactionCount-party">0</span>
+                                </button>
+                                <button class="reaction-btn" data-emoji="👏" title="Khen ngợi">
+                                    <span class="reaction-emoji">👏</span>
+                                    <span class="reaction-count" id="reactionCount-clap">0</span>
+                                </button>
+                            </div>
+                            <!-- Tổng reactions + backward compat cho heartCounterNumber -->
+                            <div class="reaction-total-row">
+                                <span id="heartCounterNumber" style="display:none;">0</span>
+                                <span id="reactionTotalText" class="reaction-total-text">
+                                    <i class="fa-solid fa-fire-flame-curved"></i>
+                                    <span id="reactionTotalCount">0</span> lượt cảm xúc đã được gửi
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -316,6 +340,32 @@
                     </div>
                     <div class="journey-grid" id="journeyGrid"></div>
                     <div class="pager-container" id="journeyPager"></div>
+                </section>
+
+                <!-- Memory Map Section -->
+                <section class="memory-map-section" id="memoryMapSection" style="display:none;">
+                    <div class="section-title-box">
+                        <i class="fa-solid fa-map-location-dot glow-icon"></i>
+                        <h3 class="section-title">BẢN ĐỒ KỶ NIỆM</h3>
+                        <p class="section-subtitle">Những địa điểm gắn liền với thanh xuân</p>
+                    </div>
+                    <div class="memory-map-wrapper">
+                        <div class="memory-map-pins" id="memoryMapPins"></div>
+                        <div class="memory-map-frame-wrap">
+                            <iframe
+                                id="memoryMapFrame"
+                                class="memory-map-frame"
+                                src=""
+                                loading="lazy"
+                                allowfullscreen
+                                referrerpolicy="no-referrer-when-downgrade"
+                                title="Bản đồ kỷ niệm">
+                            </iframe>
+                            <div class="memory-map-overlay-hint">
+                                <i class="fa-solid fa-hand-pointer"></i> Chọn địa điểm bên trái để xem trên bản đồ
+                            </div>
+                        </div>
+                    </div>
                 </section>
             </div>
 
@@ -678,6 +728,7 @@
                 <button class="admin-tab-btn" data-tab="tabMusic"><i class="fa-solid fa-music"></i> Playlist</button>
                 <button class="admin-tab-btn" data-tab="tabFavorites"><i class="fa-solid fa-heart"></i> Sở Thích</button>
                 <button class="admin-tab-btn" data-tab="tabMilestones"><i class="fa-solid fa-map-pin"></i> Dấu Chân</button>
+                <button class="admin-tab-btn" data-tab="tabMemoryMap"><i class="fa-solid fa-map-location-dot"></i> Bản Đồ</button>
                 <button class="admin-tab-btn" data-tab="tabGallery"><i class="fa-solid fa-images"></i> Thư Viện Ảnh</button>
             </div>
             <div class="modal-body">
@@ -905,6 +956,16 @@
                     <button class="btn-add-item" id="btnAddJourneyCard"><i class="fa-solid fa-plus"></i> Thêm Cột Mốc Mới</button>
                 </div>
 
+                <!-- TAB: BẢN ĐỒ KỶ NIỆM -->
+                <div id="tabMemoryMap" class="admin-tab-content">
+                    <div class="tab-subheading"><i class="fa-solid fa-map-location-dot"></i> Bản Đồ Kỷ Niệm (Ghim Địa Điểm)</div>
+                    <p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:16px;">
+                        <i class="fa-solid fa-circle-info"></i> Thêm các địa điểm gắn với kỷ niệm. Tên địa điểm sẽ được tìm kiếm trên OpenStreetMap.
+                    </p>
+                    <div class="admin-items-container" id="mapLocationsAdminList"></div>
+                    <button class="btn-add-item" id="btnAddMapLocation"><i class="fa-solid fa-plus"></i> Thêm Địa Điểm Mới</button>
+                </div>
+
                 <!-- TAB: THƯ VIỆN ẢNH -->
                 <div id="tabGallery" class="admin-tab-content">
                     <div class="tab-subheading"><i class="fa-solid fa-photo-film"></i> Quản Lý Bộ Sưu Tập Ảnh</div>
@@ -913,11 +974,22 @@
                 </div>
             </div>
 
-            <div class="modal-footer">
-                <button class="btn-footer-cancel" id="btnCancelSettings">Hủy</button>
-                <button id="btnSaveSettings" class="btn-footer-save">
-                    <i class="fa-solid fa-floppy-disk"></i> Lưu Thay Đổi
-                </button>
+            <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+                <div class="admin-backup-group" style="display:flex; gap:8px;">
+                    <button type="button" id="btnExportBackup" class="btn-backup-export" title="Xuất file JSON sao lưu toàn bộ web">
+                        <i class="fa-solid fa-download"></i> Xuất Backup JSON
+                    </button>
+                    <button type="button" id="btnImportBackup" class="btn-backup-import" title="Phục hồi dữ liệu từ file JSON">
+                        <i class="fa-solid fa-file-import"></i> Nhập Backup JSON
+                    </button>
+                    <input type="file" id="inputBackupFile" accept=".json" style="display:none;">
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-footer-cancel" id="btnCancelSettings">Hủy</button>
+                    <button id="btnSaveSettings" class="btn-footer-save">
+                        <i class="fa-solid fa-floppy-disk"></i> Lưu Thay Đổi
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -990,7 +1062,7 @@
             <div class="modal-header anonymous-modal-header">
                 <div class="anonymous-modal-title-wrap">
                     <div class="anonymous-modal-icon-circle">
-                        <i class="fa-solid fa-user-secret"></i>
+                        <i class="fa-solid fa-mask"></i>
                     </div>
                     <div>
                         <h3>GỬI TIN NHẮN ẨN DANH</h3>
@@ -1066,11 +1138,31 @@
         </div>
     </div>
 
-    <!-- Lightbox Popup Xem Ảnh HD -->
+    <!-- Lightbox Popup Xem Ảnh HD (Slideshow + Swipe) -->
     <div id="lightboxModal" class="lightbox-modal">
-        <span id="btnCloseLightbox" class="close-lightbox">&times;</span>
+        <button id="btnCloseLightbox" class="close-lightbox" title="Đóng">&times;</button>
+
+        <!-- Điều hướng trái/phải -->
+        <button id="btnLightboxPrev" class="lightbox-nav lightbox-nav-prev" title="Ảnh trước">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <button id="btnLightboxNext" class="lightbox-nav lightbox-nav-next" title="Ảnh tiếp">
+            <i class="fa-solid fa-chevron-right"></i>
+        </button>
+
+        <!-- Ảnh chính -->
         <img id="lightboxImg" class="lightbox-content" src="" alt="HD Photo">
-        <div id="lightboxCaption" class="lightbox-caption"></div>
+
+        <!-- Thanh dưới: caption + counter + nút slideshow -->
+        <div class="lightbox-bottom-bar">
+            <div id="lightboxCaption" class="lightbox-caption"></div>
+            <div class="lightbox-actions">
+                <span id="lightboxCounter" class="lightbox-counter"></span>
+                <button id="btnLightboxSlideshow" class="lightbox-action-btn" title="Tự động slideshow">
+                    <i class="fa-solid fa-play"></i>
+                </button>
+            </div>
+        </div>
     </div>
 
     <audio id="bgAudio" loop preload="auto"></audio>

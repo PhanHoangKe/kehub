@@ -3427,14 +3427,15 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(251, 191, 36, 0.4));
+    background: linear-gradient(135deg, #09090b 0%, #1e1b4b 100%);
+    border: 1px solid rgba(251, 191, 36, 0.4);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--accent-gold);
-    font-size: 0.9rem;
+    color: #fbbf24;
+    font-size: 0.92rem;
     flex-shrink: 0;
-    box-shadow: 0 0 18px rgba(251, 191, 36, 0.4);
+    box-shadow: 0 0 14px rgba(251, 191, 36, 0.35);
     transition: transform 0.3s ease;
 }
 
@@ -3624,24 +3625,24 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
     width: 52px;
     height: 52px;
     border-radius: 16px;
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.35) 0%, rgba(251, 191, 36, 0.35) 100%);
-    border: 1px solid rgba(251, 191, 36, 0.3);
+    background: linear-gradient(135deg, #09090b 0%, #18181b 50%, #0f172a 100%);
+    border: 1.5px solid rgba(251, 191, 36, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--accent-gold);
+    color: #fbbf24;
     font-size: 1.4rem;
     flex-shrink: 0;
     box-shadow:
-        0 0 0 1px rgba(255, 255, 255, 0.06) inset,
-        0 8px 24px rgba(251, 191, 36, 0.25),
-        0 8px 24px rgba(168, 85, 247, 0.2);
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+        0 0 20px rgba(251, 191, 36, 0.3),
+        0 8px 24px rgba(0, 0, 0, 0.6);
     animation: iconCirclePulse 3s ease-in-out infinite;
 }
 
 @keyframes iconCirclePulse {
-    0%, 100% { box-shadow: 0 0 0 1px rgba(255,255,255,0.06) inset, 0 8px 24px rgba(251,191,36,0.2), 0 8px 24px rgba(168,85,247,0.18); }
-    50%      { box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset, 0 8px 30px rgba(251,191,36,0.35), 0 8px 30px rgba(168,85,247,0.3); }
+    0%, 100% { box-shadow: 0 0 0 1px rgba(255,255,255,0.1) inset, 0 0 16px rgba(251,191,36,0.3), 0 8px 24px rgba(0,0,0,0.6); transform: scale(1); }
+    50%      { box-shadow: 0 0 0 1px rgba(255,255,255,0.2) inset, 0 0 25px rgba(251,191,36,0.5), 0 8px 30px rgba(0,0,0,0.8); transform: scale(1.05); }
 }
 
 .anonymous-modal-header h3 {
@@ -3904,22 +3905,39 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 /* ── Responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 560px) {
     .anonymous-btn {
-        padding: 9px 14px 9px 10px;
-        gap: 8px;
+        padding: 8px 12px;
+        gap: 7px;
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.35) 0%, rgba(244, 63, 94, 0.3) 50%, rgba(251, 191, 36, 0.3) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        box-shadow: 0 0 15px rgba(168, 85, 247, 0.4), 0 0 8px rgba(244, 63, 94, 0.3);
+        animation: mobileAnonPulse 2s ease-in-out infinite alternate;
     }
 
     .anonymous-btn-icon {
-        width: 28px;
-        height: 28px;
-        font-size: 0.82rem;
+        width: 26px;
+        height: 26px;
+        font-size: 0.8rem;
+        background: linear-gradient(135deg, #a855f7, #ec4899);
+        color: #fff;
+        border-radius: 50%;
     }
 
     .anonymous-btn-text {
-        font-size: 0.8rem;
+        display: inline-block !important;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        white-space: nowrap;
+        background: linear-gradient(135deg, #ffffff 30%, #fbcfe8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
 
     .anonymous-btn-sparkle {
-        display: none;
+        display: inline-flex;
+        font-size: 0.75rem;
+        color: #fbbf24;
+        animation: anonymousSparkle 2s ease-in-out infinite;
     }
 
     .anonymous-modal-box {
@@ -3940,12 +3958,25 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 }
 
 @media (max-width: 420px) {
-    .anonymous-btn-text {
-        display: none;
+    .anonymous-btn {
+        padding: 7px 10px;
+        gap: 5px;
     }
 
-    .anonymous-btn {
-        padding: 9px 10px;
+    .anonymous-btn-text {
+        display: inline-block !important;
+        font-size: 0.73rem;
+    }
+}
+
+@keyframes mobileAnonPulse {
+    0% {
+        box-shadow: 0 0 10px rgba(168, 85, 247, 0.4), 0 0 4px rgba(244, 63, 94, 0.3);
+        transform: scale(1);
+    }
+    100% {
+        box-shadow: 0 0 22px rgba(236, 72, 153, 0.75), 0 0 12px rgba(251, 191, 36, 0.65);
+        transform: scale(1.03);
     }
 }
 
@@ -5154,5 +5185,48 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
         padding: 4px 10px;
         font-size: 0.72rem;
     }
+}
+
+/* ── Admin Smart V2 Buttons ────────────────────────────────────────────────── */
+.btn-backup-export, .btn-backup-import, .btn-geocode-map {
+    padding: 8px 14px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.25s ease;
+}
+
+.btn-backup-export:hover {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: #38bdf8;
+    color: #38bdf8;
+    transform: translateY(-1px);
+}
+
+.btn-backup-import:hover {
+    background: rgba(168, 85, 247, 0.2);
+    border-color: #a855f7;
+    color: #c084fc;
+    transform: translateY(-1px);
+}
+
+.btn-geocode-map {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.2));
+    border-color: rgba(16, 185, 129, 0.4);
+    color: #34d399;
+    margin-top: 6px;
+}
+
+.btn-geocode-map:hover {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.35), rgba(6, 182, 212, 0.35));
+    border-color: #10b981;
+    color: #fff;
 }
 

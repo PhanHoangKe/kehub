@@ -22,6 +22,7 @@ import {
     renderGoals,
     renderGallery,
     renderJourney,
+    renderMemoryMap,
 } from './renderers.js';
 
 // ── Global State ─────────────────────────────────────────────────────────────
@@ -116,6 +117,7 @@ export function applyStateToDOM() {
     renderGoals(state);
     renderGallery(state);
     renderJourney(state);
+    renderMemoryMap(state);
 
     if (audioEngine && audioEngine.renderPlaylist) audioEngine.renderPlaylist();
     if (balloonEngine && balloonEngine.updateBalloonVisibility) balloonEngine.updateBalloonVisibility();
@@ -209,7 +211,7 @@ function initFortuneJar() {
     }
 }
 
-// ── Quote Slider ──────────────────────────────────────────────────────────────
+// ── Quote Slider với auto-rotate (fade + slide up) ───────────────────────────
 function initQuoteSlider() {
     const btnPrevQuote = document.getElementById('btnPrevQuote');
     const btnNextQuote = document.getElementById('btnNextQuote');
@@ -221,22 +223,74 @@ function initQuoteSlider() {
         '"Những người bạn tốt giống như những ngôi sao, không phải lúc nào cũng thấy nhưng luôn ở đó."',
         '"Cuộc sống là 10% những gì xảy ra với bạn và 90% cách bạn phản ứng với nó."',
         '"Hãy lưu giữ những kỷ niệm đẹp, để mỗi khi nhìn lại ta mỉm cười vì đã sống hết mình."',
+        '"Đừng chờ đợi cơ hội — hãy tự tạo ra nó. Thanh xuân không bao giờ chờ ai."',
+        '"Mỗi ngày là một trang mới. Hãy viết nên câu chuyện xứng đáng được nhớ mãi."',
     ];
-    let quoteIdx = 0;
 
-    function updateQuote(idx) {
-        quoteIdx = (idx + quotes.length) % quotes.length;
-        if (dynamicQuote) {
-            dynamicQuote.style.opacity = '0';
-            setTimeout(() => {
-                dynamicQuote.textContent = quotes[quoteIdx];
-                dynamicQuote.style.opacity = '1';
-            }, 200);
-        }
+    let quoteIdx = 0;
+    let autoTimer = null;
+    const AUTO_INTERVAL = 5000; // 5 giây
+
+    function transitionQuote(newIdx, direction = 'next') {
+        if (!dynamicQuote) return;
+        quoteIdx = (newIdx + quotes.length) % quotes.length;
+
+        // Slide ra: tuỳ chiều
+        const slideOut = direction === 'next' ? 'translateY(-14px)' : 'translateY(14px)';
+        dynamicQuote.style.transition = 'opacity 0.28s ease, transform 0.28s ease';
+        dynamicQuote.style.opacity = '0';
+        dynamicQuote.style.transform = slideOut;
+
+        setTimeout(() => {
+            dynamicQuote.textContent = quotes[quoteIdx];
+            // Slide vào từ chiều ngược lại
+            const slideIn = direction === 'next' ? 'translateY(14px)' : 'translateY(-14px)';
+            dynamicQuote.style.transition = 'none';
+            dynamicQuote.style.transform = slideIn;
+
+            // Force reflow để transition hoạt động
+            void dynamicQuote.offsetWidth;
+
+            dynamicQuote.style.transition = 'opacity 0.38s ease, transform 0.38s cubic-bezier(0.34, 1.2, 0.64, 1)';
+            dynamicQuote.style.opacity = '1';
+            dynamicQuote.style.transform = 'translateY(0)';
+        }, 280);
     }
 
-    if (btnPrevQuote) btnPrevQuote.addEventListener('click', () => updateQuote(quoteIdx - 1));
-    if (btnNextQuote) btnNextQuote.addEventListener('click', () => updateQuote(quoteIdx + 1));
+    function startAutoRotate() {
+        stopAutoRotate();
+        autoTimer = setInterval(() => transitionQuote(quoteIdx + 1, 'next'), AUTO_INTERVAL);
+    }
+
+    function stopAutoRotate() {
+        if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+    }
+
+    // Reset auto-rotate sau khi user tương tác
+    function onUserNav(fn) {
+        fn();
+        stopAutoRotate();
+        // Tiếp tục auto-rotate sau 10 giây không chạm
+        setTimeout(startAutoRotate, 10000);
+    }
+
+    if (btnPrevQuote) btnPrevQuote.addEventListener('click', () => onUserNav(() => transitionQuote(quoteIdx - 1, 'prev')));
+    if (btnNextQuote) btnNextQuote.addEventListener('click', () => onUserNav(() => transitionQuote(quoteIdx + 1, 'next')));
+
+    // Hiển thị quote đầu tiên ngay (không cần animation)
+    if (dynamicQuote) {
+        dynamicQuote.textContent = quotes[0];
+        dynamicQuote.style.opacity = '1';
+        dynamicQuote.style.transform = 'translateY(0)';
+    }
+
+    // Bắt đầu tự động xoay
+    startAutoRotate();
+
+    // Dừng khi tab/trang bị ẩn để tiết kiệm CPU
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) stopAutoRotate(); else startAutoRotate();
+    });
 }
 
 // ── Admin Visibility ──────────────────────────────────────────────────────────
@@ -248,18 +302,9 @@ function initAdminVisibility() {
 }
 
 // ── Lightbox ──────────────────────────────────────────────────────────────────
+// Lightbox controls được khởi tạo tự động trong renderers.js khi renderGallery() chạy lần đầu.
 function initLightbox() {
-    const lightboxModal    = document.getElementById('lightboxModal');
-    const btnCloseLightbox = document.getElementById('btnCloseLightbox');
-    if (btnCloseLightbox && lightboxModal) {
-        btnCloseLightbox.addEventListener('click', () => lightboxModal.classList.remove('active'));
-    }
-    // Đóng khi click ngoài ảnh
-    if (lightboxModal) {
-        lightboxModal.addEventListener('click', (e) => {
-            if (e.target === lightboxModal) lightboxModal.classList.remove('active');
-        });
-    }
+    // No-op: logic đã chuyển vào renderers.js::initLightboxControls()
 }
 
 // ── Reveal animations ─────────────────────────────────────────────────────────

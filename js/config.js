@@ -59,7 +59,8 @@ export const KE_CONFIG = {
     goals: [],
     journey: [],
     gallery: [],
-    playlist: []
+    playlist: [],
+    mapLocations: [],  // [{name, label, lat, lng}]
 };
 
 export function escapeHTML(str) {

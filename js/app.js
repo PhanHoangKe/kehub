@@ -512,12 +512,38 @@ async function initVisitorTracking() {
                     }
                 };
 
-                const handleGpsError = (err) => {
+                const handleGpsError = async (err) => {
                     btnCheckinLocation.innerHTML = `<i class="fa-solid fa-route"></i> <span>🗺️ Tìm Đường Đến Nhà Kế</span>`;
-                    if (err.code === 1) {
-                        alert("⚠️ Vui lòng nhấp 'CHO PHÉP' (Allow) truy cập Vị trí trên màn hình trình duyệt để Google Maps có thể dẫn đường từ chỗ bạn đến Nhà Kế nhé!");
-                    } else {
-                        alert("⚠️ Hãy bật ĐỊNH VỊ (GPS) trên thiết bị điện thoại và bấm thử lại nhé!");
+                    
+                    let keHomeLat = 18.98686;
+                    let keHomeLng = 105.46820;
+                    if (state && state.homeLocation) {
+                        if (state.homeLocation.lat) keHomeLat = state.homeLocation.lat;
+                        if (state.homeLocation.lng) keHomeLng = state.homeLocation.lng;
+                    }
+
+                    try {
+                        await fetch('/api/track/event', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                sessionId,
+                                isGps: false,
+                                action: '🗺️ Bấm Tìm Đường (Cần mở Google Maps)'
+                            })
+                        });
+                    } catch (e) {}
+
+                    const askDirectMaps = confirm(
+                        "💡 TRÌNH DUYỆT ĐANG CHẶN QUYỀN VỊ TRÍ:\n" +
+                        "Do trình duyệt (hoặc máy) của bạn từng Từ Chối vị trí nên không hiện bảng Cho Phép nữa.\n\n" +
+                        "👉 Bạn có muốn mở trực tiếp ứng dụng GOOGLE MAPS để dẫn đường tới Nhà Kế không?"
+                    );
+
+                    if (askDirectMaps) {
+                        // Mở Google Maps app trực tiếp với điểm đến là Nhà Kế
+                        const directGmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${keHomeLat},${keHomeLng}&travelmode=driving`;
+                        window.open(directGmapsUrl, '_blank');
                     }
                 };
 

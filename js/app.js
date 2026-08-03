@@ -505,62 +505,76 @@ async function initVisitorTracking() {
         if (btnCheckinLocation) {
             btnCheckinLocation.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if ('geolocation' in navigator) {
-                    btnCheckinLocation.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang đo khoảng cách...</span>`;
-                    navigator.geolocation.getCurrentPosition(async (pos) => {
-                        const lat = pos.coords.latitude;
-                        const lng = pos.coords.longitude;
-                        const accuracy = pos.coords.accuracy ? Math.round(pos.coords.accuracy) : null;
-                        
-                        if (lat && lng) {
-                            window._gpsCaptured = true;
-                            // Tọa độ Nhà của Kế (Mặc định hoặc từ Cài đặt Admin)
-                            let keHomeLat = 18.98686;
-                            let keHomeLng = 105.46820;
-                            if (state && state.homeLocation) {
-                                if (state.homeLocation.lat) keHomeLat = state.homeLocation.lat;
-                                if (state.homeLocation.lng) keHomeLng = state.homeLocation.lng;
-                            }
-                            const distStr = getDistanceKm(lat, lng, keHomeLat, keHomeLng);
-
-                            try {
-                                await fetch('/api/track/event', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                        sessionId,
-                                        lat,
-                                        lng,
-                                        accuracy,
-                                        action: `📍 Đo khoảng cách đến Nhà Kế: ${distStr}`
-                                    })
-                                });
-                            } catch (e) {}
-
-                            btnCheckinLocation.style.background = 'rgba(34, 197, 94, 0.3)';
-                            btnCheckinLocation.style.borderColor = '#22c55e';
-                            btnCheckinLocation.innerHTML = `<i class="fa-solid fa-location-arrow" style="color:#4ade80;"></i> <span>Cách ${distStr}</span>`;
-                            if (typeof showToast === 'function') {
-                                showToast(`🏠 Bạn đang ở cách Nhà của Kế khoảng ${distStr}! Tọa độ GPS đã được ghi nhận ❤️`, 'success');
-                            }
-                        }
-                    }, (err) => {
-                        btnCheckinLocation.innerHTML = `<i class="fa-solid fa-house-chimney-location"></i> <span>Cách Nhà Kế Bao Xa?</span>`;
-                        if (err.code === 1) {
-                            if (typeof showToast === 'function') {
-                                showToast('⚠️ Vui lòng cho phép định vị để xem khoảng cách từ bạn đến Nhà Kế nhé!', 'warning');
-                            }
-                        } else {
-                            if (typeof showToast === 'function') {
-                                showToast('⚠️ Không thể xác định khoảng cách lúc này. Vui lòng thử lại sau!', 'warning');
-                            }
-                        }
-                    }, { timeout: 15000, maximumAge: 0, enableHighAccuracy: true });
-                } else {
-                    if (typeof showToast === 'function') {
-                        showToast('⚠️ Trình duyệt của bạn chưa hỗ trợ tính năng vị trí.', 'warning');
-                    }
+                if (!('geolocation' in navigator)) {
+                    if (typeof showToast === 'function') showToast('⚠️ Trình duyệt của bạn chưa hỗ trợ tính năng định vị.', 'warning');
+                    return;
                 }
+
+                btnCheckinLocation.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang đo khoảng cách...</span>`;
+
+                const handleGpsSuccess = async (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    const accuracy = pos.coords.accuracy ? Math.round(pos.coords.accuracy) : null;
+                    
+                    if (lat && lng) {
+                        window._gpsCaptured = true;
+                        let keHomeLat = 18.98686;
+                        let keHomeLng = 105.46820;
+                        if (state && state.homeLocation) {
+                            if (state.homeLocation.lat) keHomeLat = state.homeLocation.lat;
+                            if (state.homeLocation.lng) keHomeLng = state.homeLocation.lng;
+                        }
+                        const distStr = getDistanceKm(lat, lng, keHomeLat, keHomeLng);
+
+                        try {
+                            await fetch('/api/track/event', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    sessionId,
+                                    lat,
+                                    lng,
+                                    accuracy,
+                                    isGps: true,
+                                    action: `📍 Đo khoảng cách đến Nhà Kế: ${distStr}`
+                                })
+                            });
+                        } catch (e) {}
+
+                        btnCheckinLocation.style.background = 'rgba(34, 197, 94, 0.3)';
+                        btnCheckinLocation.style.borderColor = '#22c55e';
+                        btnCheckinLocation.innerHTML = `<i class="fa-solid fa-location-arrow" style="color:#4ade80;"></i> <span>Cách Nhà Kế ${distStr}</span>`;
+                        if (typeof showToast === 'function') {
+                            showToast(`🏠 Bạn đang ở cách Nhà Kế khoảng ${distStr}! Tọa độ GPS đã được ghi nhận ❤️`, 'success');
+                        }
+                    }
+                };
+
+                // Lần 1: Thử Fast Scan (enableHighAccuracy: false) - chạy lập tức mượt mà trên Facebook/Zalo app
+                navigator.geolocation.getCurrentPosition(
+                    handleGpsSuccess,
+                    (err1) => {
+                        // Lần 2: Nếu Fast Scan chưa được, thử High Accuracy scan
+                        navigator.geolocation.getCurrentPosition(
+                            handleGpsSuccess,
+                            (err2) => {
+                                btnCheckinLocation.innerHTML = `<i class="fa-solid fa-house-chimney-location"></i> <span>Cách Nhà Kế Bao Xa?</span>`;
+                                if (err1.code === 1 || err2.code === 1) {
+                                    if (typeof showToast === 'function') {
+                                        showToast('⚠️ Vui lòng nhấp "CHO PHÉP" vị trí trên màn hình trình duyệt để đo khoảng cách nhé!', 'warning');
+                                    }
+                                } else {
+                                    if (typeof showToast === 'function') {
+                                        showToast('⚠️ Hãy bật Vị trí (GPS) trên điện thoại và bấm thử lại nhé!', 'warning');
+                                    }
+                                }
+                            },
+                            { timeout: 10000, enableHighAccuracy: true, maximumAge: 0 }
+                        );
+                    },
+                    { timeout: 6000, enableHighAccuracy: false, maximumAge: 30000 }
+                );
             });
         }
 

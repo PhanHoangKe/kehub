@@ -9,7 +9,10 @@ let _adminAuthenticated = false;
 
 async function checkAdminSession() {
     try {
-        const res = await fetch('/api/admin/check', { credentials: 'include' });
+        const token = localStorage.getItem('admin_token');
+        const headers = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const res = await fetch('/api/admin/check', { headers, credentials: 'include' });
         if (res.ok) {
             const data = await res.json();
             _adminAuthenticated = data.authenticated === true;
@@ -121,6 +124,7 @@ function promptAdminLogin() {
                 const data = await res.json();
 
                 if (data.success) {
+                    if (data.token) localStorage.setItem('admin_token', data.token);
                     _adminAuthenticated = true;
                     loginModal.style.display = 'none';
                     loginModal.classList.remove('active');
@@ -174,9 +178,13 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
     // Helper upload file lên Backend Node.js Server
     async function uploadFileToBackend(filename, base64Data) {
         try {
+            const token = localStorage.getItem('admin_token');
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
             const res = await fetch('/api/upload', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers,
                 credentials: 'include',
                 body: JSON.stringify({ fileName: filename, fileData: base64Data }),
             });

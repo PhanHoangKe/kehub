@@ -41,12 +41,19 @@ export function setState(newState) { state = { ...state, ...newState }; }
 export async function saveBackendConfig(configData) {
     localStorage.setItem('youth_memories_state', JSON.stringify(configData));
     try {
-        await fetch('/api/config', {
+        const token = localStorage.getItem('admin_token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch('/api/config', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify(configData),
             credentials: 'include',
         });
+        if (res.status === 401) {
+            console.warn("Phiên Admin chưa được xác thực (401).");
+        }
     } catch (e) { /* offline fallback đã được localStorage xử lý */ }
 }
 

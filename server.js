@@ -614,7 +614,7 @@ const server = http.createServer(async (req, res) => {
             return;
         }
         try {
-            const body = await readBody(req, 1 * 1024 * 1024); // 1MB
+            const body = await readBody(req, 50 * 1024 * 1024); // 50MB (chứa được ảnh/audio base64 lớn)
             const payload = JSON.parse(body);
             // Sanitize các trường text quan trọng
             const allowed = [

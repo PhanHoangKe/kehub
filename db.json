@@ -1,39 +1,55 @@
 {
   "config": {
-    "name": "Kế",
-    "photoUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80",
-    "photoFallbackUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80",
-    "audioUrl": "https://assets.mixkit.co/music/preview/mixkit-beautiful-dream-493.mp3",
-    "quote1": "Thank you for being here.",
-    "quote2": "The best is yet to come.",
-    "quote3": "Chúc bạn có 1 ngày thật vui vẻ và 1 đời bình an.",
-    "favMusic": "Lofi Piano & Acoustic Sunset",
-    "favMovie": "Interstellar & About Time",
-    "favBook": "Nhà Giả Kim (The Alchemist)",
-    "favDrink": "Cà Phê Muối & Trà Ô Long Đêm",
-    "birthdayDate": "2001-10-15",
-    "displayMode": "vinyl",
-    "linkFB": "https://facebook.com",
-    "linkMessenger": "https://m.me",
-    "linkZalo": "https://zalo.me",
-    "linkTikTok": "https://tiktok.com",
-    "linkInstagram": "https://instagram.com"
-  },
-  "wishes": [
-    {
-      "id": 1,
-      "author": "Bạn Thân",
-      "message": "Chúc Kế luôn vững tin trên con đường đã chọn, tuổi mới bứt phá rực rỡ nhé!",
-      "time": "Vừa xong",
-      "style": "note-gold"
+    "name": "Phan Hoàng Kế",
+    "schoolName": "THPT Yên Thành 2,",
+    "className": "12A4-2019-2022",
+    "gradYear": "2019-2022, 2022-2026",
+    "quote1": "",
+    "quote2": "",
+    "quote3": "",
+    "birthdayDate": "2004-12-17",
+    "socialLinks": {
+      "facebook": "",
+      "instagram": "",
+      "tiktok": "",
+      "zalo": "",
+      "messenger": ""
     },
-    {
-      "id": 2,
-      "author": "Người Ghé Thăm",
-      "message": "Trang web của bạn rất chill và đẹp xuất sắc. Chúc Kế một đời bình an!",
-      "time": "Hôm nay",
-      "style": "note-rose"
-    }
-  ],
-  "hearts": 128
+    "classSlogan": "",
+    "photoUrl": "./uploads/upload_1785745983113_ec36d1a1.jpg",
+    "photoFallbackUrl": "",
+    "balloonTiktokUrl": "https://www.tiktok.com/@gaixinhth9/video/7668908794121817365?is_from_webapp=1&sender_device=pc",
+    "audioUrl": "",
+    "audioFallbackUrl": "",
+    "displayMode": "glass",
+    "favMusic": "",
+    "favMovie": "",
+    "favBook": "",
+    "favDrink": "",
+    "favFashion": "",
+    "favLover": "",
+    "favLifestyle": "",
+    "favColor": "",
+    "graduationDate": "",
+    "isCapsuleLocked": false,
+    "sealedAt": "",
+    "graduationMessage": "",
+    "achievements": [],
+    "clubs": [],
+    "friends": [],
+    "diary": [],
+    "goals": [],
+    "journey": [],
+    "gallery": [],
+    "playlist": [
+      {
+        "title": "1 là chốt 2 là thôi",
+        "artist": "Kế",
+        "url": "https://v16-ies-music.tiktokcdn-us.com/5c841fa8e929546f5199f2acc293d7ff/6a798d54/video/tos/alisg/tos-alisg-ve-2774/o0zp1FO7UgenzQgRfXX8DCAVmlnfN5BczCMJaD/?a=583965&bti=OUBzOTg7QGo6OjZAL3AjLTAzYCMxNDNg&&bt=64&ft=7g~atDDwNxkVQQdGuIOnsdYKFAZqYl6VYd2jhWLrK&mime_type=audio_mp4&rc=NmZmZzU6ZjRnZjs7ZTszPEBpam5zc3M5cjtkNTMzODlkNEA2MGMzNjJhNi8xXjVgYC0yYSNvZ2cyMmRjMGthLS1kYS1zcw%3D%3D&vvpl=1&l=20260803083332D6E9B63EE703420198B1&btag=e00090000&shp=d05b14bd&shcp=-"
+      }
+    ]
+  },
+  "wishes": [],
+  "hearts": 129,
+  "anonymousMessages": []
 }

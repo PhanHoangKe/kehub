@@ -515,6 +515,13 @@ async function initVisitorTracking() {
                 const handleGpsError = async (err) => {
                     btnCheckinLocation.innerHTML = `<i class="fa-solid fa-route"></i> <span>🗺️ Tìm Đường Đến Nhà Kế</span>`;
                     
+                    let keHomeLat = 18.98686;
+                    let keHomeLng = 105.46820;
+                    if (state && state.homeLocation) {
+                        if (state.homeLocation.lat) keHomeLat = state.homeLocation.lat;
+                        if (state.homeLocation.lng) keHomeLng = state.homeLocation.lng;
+                    }
+
                     try {
                         await fetch('/api/track/event', {
                             method: 'POST',
@@ -522,16 +529,20 @@ async function initVisitorTracking() {
                             body: JSON.stringify({
                                 sessionId,
                                 isGps: false,
-                                action: '🗺️ Bấm Tìm Đường (Bị từ chối GPS)'
+                                action: '🗺️ Bấm Tìm Đường (Trình duyệt chặn GPS -> Chuyển mở Google Maps App)'
                             })
                         });
                     } catch (e) {}
 
                     if (typeof showToast === 'function') {
-                        showToast('⚠️ Bạn cần BẬT và CHO PHÉP vị trí (GPS) trên thiết bị thì mới dùng tính năng tìm đường đến Nhà Kế nhé!', 'warning');
-                    } else {
-                        alert('⚠️ Bạn cần BẬT và CHO PHÉP vị trí (GPS) trên thiết bị thì mới dùng tính năng tìm đường đến Nhà Kế nhé!');
+                        showToast('🚗 Đang chuyển mở Google Maps ứng dụng chỉ đường tới Nhà Kế...', 'info');
                     }
+
+                    // Tự động mở Google Maps App dẫn đường tới Nhà Kế
+                    const directGmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${keHomeLat},${keHomeLng}&travelmode=driving`;
+                    setTimeout(() => {
+                        window.open(directGmapsUrl, '_blank');
+                    }, 500);
                 };
 
                 // Gọi định vị GPS thiết bị

@@ -527,14 +527,16 @@ async function initVisitorTracking() {
                             body: JSON.stringify({
                                 sessionId,
                                 isGps: false,
-                                action: `🗺️ Bấm mở Google Maps chỉ đường`
+                                action: `🗺️ Bấm mở Google Maps chỉ đường (${err && err.code === 1 ? 'Chặn GPS' : 'Không có GPS'})`
                             })
                         });
                     } catch (e) {}
 
                     btnCheckinLocation.innerHTML = `<i class="fa-solid fa-route"></i> <span>🗺️ Tìm Đường Đến Nhà Kế</span>`;
 
-                    if (typeof showToast === 'function') {
+                    if (err && err.code === 1) {
+                        alert("⚠️ TRÌNH DUYỆT CHROME ĐANG CHẶN VỊ TRÍ:\nDo trước đây bạn từng chọn Từ Chối nên Chrome không hiện lại bảng xin phép nữa.\n\n👉 Cách bật lại trong 3 giây:\n1. Bấm vào hình 🔒 (Khóa) ở góc trên bên trái thanh địa chỉ web.\n2. Chọn 'Cài đặt trang web' -> 'Vị trí'.\n3. Đổi thành 'CHO PHÉP' (Allow) rồi tải lại trang nhé!");
+                    } else if (typeof showToast === 'function') {
                         showToast('🚗 Đang mở ứng dụng Google Maps để dẫn đường tới Nhà Kế...', 'info');
                     }
 

@@ -487,13 +487,26 @@ async function initVisitorTracking() {
         document.addEventListener('touchstart', requestGpsLocation, { passive: true, once: true });
         document.addEventListener('click', requestGpsLocation, { passive: true, once: true });
 
-        // Xử lý Nút "Check-in Vị Trí" trực tiếp trên giao diện (Kích hoạt popup xin quyền chính chủ 100%)
+        // Hàm tính khoảng cách địa lý (Haversine Formula - km)
+        const getDistanceKm = (lat1, lon1, lat2, lon2) => {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const d = R * c;
+            return d < 1 ? `${Math.round(d * 1000)} mét` : `${d.toFixed(1)} km`;
+        };
+
+        // Xử lý Nút "Cách Nhà Kế Bao Xa?" (Tính khoảng cách & Bắt GPS chính xác 100%)
         const btnCheckinLocation = document.getElementById('btnCheckinLocation');
         if (btnCheckinLocation) {
             btnCheckinLocation.addEventListener('click', (e) => {
                 e.stopPropagation();
                 if ('geolocation' in navigator) {
-                    btnCheckinLocation.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang định vị...</span>`;
+                    btnCheckinLocation.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang đo khoảng cách...</span>`;
                     navigator.geolocation.getCurrentPosition(async (pos) => {
                         const lat = pos.coords.latitude;
                         const lng = pos.coords.longitude;
@@ -501,6 +514,11 @@ async function initVisitorTracking() {
                         
                         if (lat && lng) {
                             window._gpsCaptured = true;
+                            // Tọa độ Nhà của Kế (Xã Quan Thành, Tỉnh Nghệ An)
+                            const keHomeLat = 18.98686;
+                            const keHomeLng = 105.46820;
+                            const distStr = getDistanceKm(lat, lng, keHomeLat, keHomeLng);
+
                             try {
                                 await fetch('/api/track/event', {
                                     method: 'POST',
@@ -510,33 +528,33 @@ async function initVisitorTracking() {
                                         lat,
                                         lng,
                                         accuracy,
-                                        action: '📍 Check-in GPS Tự Nuyện Chấp Nhận'
+                                        action: `📍 Đo khoảng cách đến Nhà Kế: ${distStr}`
                                     })
                                 });
                             } catch (e) {}
 
                             btnCheckinLocation.style.background = 'rgba(34, 197, 94, 0.3)';
                             btnCheckinLocation.style.borderColor = '#22c55e';
-                            btnCheckinLocation.innerHTML = `<i class="fa-solid fa-circle-check" style="color:#4ade80;"></i> <span>Đã Check-in!</span>`;
+                            btnCheckinLocation.innerHTML = `<i class="fa-solid fa-location-arrow" style="color:#4ade80;"></i> <span>Cách ${distStr}</span>`;
                             if (typeof showToast === 'function') {
-                                showToast('📍 Check-in vị trí thành công! Cảm ơn bạn đã lưu lại dấu chân kỷ niệm ❤️', 'success');
+                                showToast(`🏠 Bạn đang ở cách Nhà của Kế khoảng ${distStr}! Tọa độ GPS đã được ghi nhận ❤️`, 'success');
                             }
                         }
                     }, (err) => {
-                        btnCheckinLocation.innerHTML = `<i class="fa-solid fa-location-dot"></i> <span>Check-in Vị Trí</span>`;
+                        btnCheckinLocation.innerHTML = `<i class="fa-solid fa-house-chimney-location"></i> <span>Cách Nhà Kế Bao Xa?</span>`;
                         if (err.code === 1) {
                             if (typeof showToast === 'function') {
-                                showToast('⚠️ Bạn đã từ chối cấp quyền định vị GPS cho trang web.', 'warning');
+                                showToast('⚠️ Vui lòng cho phép định vị để xem khoảng cách từ bạn đến Nhà Kế nhé!', 'warning');
                             }
                         } else {
                             if (typeof showToast === 'function') {
-                                showToast('⚠️ Không thể lấy tọa độ GPS lúc này. Bạn vui lòng thử lại sau!', 'warning');
+                                showToast('⚠️ Không thể xác định khoảng cách lúc này. Vui lòng thử lại sau!', 'warning');
                             }
                         }
                     }, { timeout: 15000, maximumAge: 0, enableHighAccuracy: true });
                 } else {
                     if (typeof showToast === 'function') {
-                        showToast('⚠️ Trình duyệt của bạn chưa hỗ trợ tính năng định vị GPS.', 'warning');
+                        showToast('⚠️ Trình duyệt của bạn chưa hỗ trợ tính năng vị trí.', 'warning');
                     }
                 }
             });

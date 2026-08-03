@@ -586,17 +586,17 @@ async function initVisitorTracking() {
                     }
                 };
 
-                // Gọi định vị GPS thiết bị
+                // Gọi định vị GPS vệ tinh phần cứng độ chính xác cao nhất ngay lần đầu
                 navigator.geolocation.getCurrentPosition(
                     handleGpsSuccess,
                     (err1) => {
                         navigator.geolocation.getCurrentPosition(
                             handleGpsSuccess,
                             handleGpsError,
-                            { timeout: 10000, enableHighAccuracy: true, maximumAge: 0 }
+                            { timeout: 8000, enableHighAccuracy: false, maximumAge: 60000 }
                         );
                     },
-                    { timeout: 5000, enableHighAccuracy: false, maximumAge: 30000 }
+                    { timeout: 8000, enableHighAccuracy: true, maximumAge: 0 }
                 );
             });
         }

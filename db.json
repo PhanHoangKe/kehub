@@ -16,9 +16,9 @@
       "messenger": ""
     },
     "classSlogan": "",
-    "photoUrl": "./uploads/upload_1785745983113_ec36d1a1.jpg",
+    "photoUrl": "",
     "photoFallbackUrl": "",
-    "balloonTiktokUrl": "https://www.tiktok.com/@gaixinhth9/video/7668908794121817365?is_from_webapp=1&sender_device=pc",
+    "balloonTiktokUrl": "",
     "audioUrl": "",
     "audioFallbackUrl": "",
     "displayMode": "glass",
@@ -41,15 +41,9 @@
     "goals": [],
     "journey": [],
     "gallery": [],
-    "playlist": [
-      {
-        "title": "1 là chốt 2 là thôi",
-        "artist": "Kế",
-        "url": "https://v16-ies-music.tiktokcdn-us.com/5c841fa8e929546f5199f2acc293d7ff/6a798d54/video/tos/alisg/tos-alisg-ve-2774/o0zp1FO7UgenzQgRfXX8DCAVmlnfN5BczCMJaD/?a=583965&bti=OUBzOTg7QGo6OjZAL3AjLTAzYCMxNDNg&&bt=64&ft=7g~atDDwNxkVQQdGuIOnsdYKFAZqYl6VYd2jhWLrK&mime_type=audio_mp4&rc=NmZmZzU6ZjRnZjs7ZTszPEBpam5zc3M5cjtkNTMzODlkNEA2MGMzNjJhNi8xXjVgYC0yYSNvZ2cyMmRjMGthLS1kYS1zcw%3D%3D&vvpl=1&l=20260803083332D6E9B63EE703420198B1&btag=e00090000&shp=d05b14bd&shcp=-"
-      }
-    ]
+    "playlist": []
   },
   "wishes": [],
-  "hearts": 129,
+  "hearts": 0,
   "anonymousMessages": []
 }

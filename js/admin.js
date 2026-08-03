@@ -615,14 +615,14 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             const inputFavColor = document.getElementById('inputFavColor');
             const inputBalloonTiktokUrl = document.getElementById('inputBalloonTiktokUrl');
 
-            if (inputName && inputName.value.trim()) state.name = inputName.value.trim();
-            if (inputSchoolName && inputSchoolName.value.trim()) state.schoolName = inputSchoolName.value.trim();
-            if (inputClassName && inputClassName.value.trim()) state.className = inputClassName.value.trim();
-            if (inputClassSlogan && inputClassSlogan.value.trim()) state.classSlogan = inputClassSlogan.value.trim();
-            if (inputQuote1 && inputQuote1.value.trim()) state.quote1 = inputQuote1.value.trim();
-            if (inputQuote2 && inputQuote2.value.trim()) state.quote2 = inputQuote2.value.trim();
-            if (inputQuote3 && inputQuote3.value.trim()) state.quote3 = inputQuote3.value.trim();
-            if (inputBirthdayDate && inputBirthdayDate.value.trim()) state.birthdayDate = inputBirthdayDate.value.trim();
+            if (inputName) state.name = inputName.value.trim();
+            if (inputSchoolName) state.schoolName = inputSchoolName.value.trim();
+            if (inputClassName) state.className = inputClassName.value.trim();
+            if (inputClassSlogan) state.classSlogan = inputClassSlogan.value.trim();
+            if (inputQuote1) state.quote1 = inputQuote1.value.trim();
+            if (inputQuote2) state.quote2 = inputQuote2.value.trim();
+            if (inputQuote3) state.quote3 = inputQuote3.value.trim();
+            if (inputBirthdayDate) state.birthdayDate = inputBirthdayDate.value.trim();
             if (inputBalloonTiktokUrl) state.balloonTiktokUrl = inputBalloonTiktokUrl.value.trim();
 
             const inputLinkFacebook = document.getElementById('inputLinkFacebook');
@@ -638,14 +638,14 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             if (inputLinkTiktok) state.socialLinks.tiktok = inputLinkTiktok.value.trim();
             if (inputLinkInstagram) state.socialLinks.instagram = inputLinkInstagram.value.trim();
 
-            if (inputFavMusic && inputFavMusic.value.trim()) state.favMusic = inputFavMusic.value.trim();
-            if (inputFavMovie && inputFavMovie.value.trim()) state.favMovie = inputFavMovie.value.trim();
-            if (inputFavBook && inputFavBook.value.trim()) state.favBook = inputFavBook.value.trim();
-            if (inputFavDrink && inputFavDrink.value.trim()) state.favDrink = inputFavDrink.value.trim();
-            if (inputFavFashion && inputFavFashion.value.trim()) state.favFashion = inputFavFashion.value.trim();
-            if (inputFavLover && inputFavLover.value.trim()) state.favLover = inputFavLover.value.trim();
-            if (inputFavLifestyle && inputFavLifestyle.value.trim()) state.favLifestyle = inputFavLifestyle.value.trim();
-            if (inputFavColor && inputFavColor.value.trim()) state.favColor = inputFavColor.value.trim();
+            if (inputFavMusic) state.favMusic = inputFavMusic.value.trim();
+            if (inputFavMovie) state.favMovie = inputFavMovie.value.trim();
+            if (inputFavBook) state.favBook = inputFavBook.value.trim();
+            if (inputFavDrink) state.favDrink = inputFavDrink.value.trim();
+            if (inputFavFashion) state.favFashion = inputFavFashion.value.trim();
+            if (inputFavLover) state.favLover = inputFavLover.value.trim();
+            if (inputFavLifestyle) state.favLifestyle = inputFavLifestyle.value.trim();
+            if (inputFavColor) state.favColor = inputFavColor.value.trim();
 
             // Check Avatar Upload File
             if (inputPhotoFile && inputPhotoFile.files.length > 0) {
@@ -653,7 +653,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                 const base64 = await readFileAsDataURL(file);
                 const uploadedUrl = await uploadFileToBackend(`avatar_${Date.now()}_${file.name}`, base64);
                 state.photoUrl = uploadedUrl;
-            } else if (inputPhotoUrl && inputPhotoUrl.value.trim()) {
+            } else if (inputPhotoUrl) {
                 state.photoUrl = inputPhotoUrl.value.trim();
             }
 

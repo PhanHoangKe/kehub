@@ -289,23 +289,42 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                 const durationSec = (v.durationSeconds || 0) % 60;
                 const durationText = durationMin > 0 ? `${durationMin} phút ${durationSec}s` : `${durationSec}s`;
 
-                const sectionsStr = (v.sectionsVisited || []).map(s => `<span style="font-size:0.75rem;padding:2px 6px;background:rgba(255,255,255,0.06);border-radius:6px;color:#cbd5e1;">${escapeHTML(s)}</span>`).join(' ');
+                const batteryStr = v.battery ? ` • 🔋 Pin: ${escapeHTML(v.battery)}` : '';
+                const networkStr = v.connection ? ` • 📶 Mạng: ${escapeHTML(v.connection.toUpperCase())}` : '';
+                const screenStr = v.screen && v.screen !== '-' ? ` • 📐 Màn hình: ${escapeHTML(v.screen)} (x${v.dpr || 1})` : '';
+
+                const timelineHtml = (v.timelineLogs || []).map(log => 
+                    `<div style="font-size:0.75rem;color:#cbd5e1;padding:2px 0;border-bottom:1px dashed rgba(255,255,255,0.05);display:flex;gap:6px;">
+                        <span style="color:#94a3b8;min-width:60px;">${escapeHTML(log.time)}</span>
+                        <strong style="color:#38bdf8;">${escapeHTML(log.event)}</strong>
+                        <span style="color:#64748b;">${escapeHTML(log.detail || '')}</span>
+                    </div>`
+                ).join('');
 
                 card.innerHTML = `
                     <div class="admin-item-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                        <span><i class="fa-solid fa-user-ninja" style="color:#a855f7;"></i> Khách #${index + 1} — <strong>${escapeHTML(v.city || 'Việt Nam')}</strong> ${statusBadge}</span>
+                        <span><i class="fa-solid fa-user-ninja" style="color:#a855f7;"></i> Khách #${index + 1} — <strong style="color:#f472b6;">${escapeHTML(v.city || 'Việt Nam')}</strong> (${escapeHTML(v.isp || 'Nhà mạng')}) ${statusBadge}</span>
                         <span style="font-size:0.78rem;color:#94a3b8;"><i class="fa-solid fa-clock"></i> ${timeStr}</span>
                     </div>
-                    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:8px;font-size:0.83rem;color:#cbd5e1;">
-                        <div>📍 <strong>Vị trí & IP:</strong> ${escapeHTML(v.city)} (${escapeHTML(v.country)}) — <span style="font-size:0.75rem;color:#94a3b8;">${escapeHTML(v.ip)}</span></div>
-                        <div>📱 <strong>Thiết bị:</strong> ${escapeHTML(v.device)} (${escapeHTML(v.os)})</div>
-                        <div>🌐 <strong>Trình duyệt:</strong> ${escapeHTML(v.browser)}</div>
-                        <div>🔗 <strong>Nguồn đến:</strong> <span style="color:#38bdf8;">${escapeHTML(v.referrer)}</span></div>
-                        <div>⏱️ <strong>Thời gian ở lại:</strong> ${durationText} (${v.clicks || 1} thao tác)</div>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:6px;font-size:0.82rem;color:#cbd5e1;background:rgba(0,0,0,0.25);padding:10px;border-radius:8px;margin-bottom:8px;">
+                        <div>🌐 <strong>IP Thật:</strong> <span style="font-family:monospace;color:#facc15;">${escapeHTML(v.ip)}</span></div>
+                        <div>📍 <strong>Tỉnh / Thành:</strong> ${escapeHTML(v.city)} (${escapeHTML(v.region || v.country)})</div>
+                        <div>📱 <strong>Thiết bị & OS:</strong> ${escapeHTML(v.device)} • ${escapeHTML(v.os)}</div>
+                        <div>💻 <strong>Trình duyệt:</strong> ${escapeHTML(v.browser)}</div>
+                        <div>🔗 <strong>Nguồn đến (Referrer):</strong> <span style="color:#38bdf8;word-break:break-all;">${escapeHTML(v.referrer)}</span></div>
+                        <div>⏱️ <strong>Thời gian ở lại:</strong> <span style="color:#4ade80;font-weight:bold;">${durationText}</span> (${v.clicks || 1} lượt click)</div>
+                        <div style="grid-column:1 / -1;font-size:0.78rem;color:#94a3b8;border-top:1px solid rgba(255,255,255,0.06);padding-top:4px;">
+                            ⚙️ <strong>Thông số máy:</strong> Lang: ${escapeHTML(v.language)} • TZ: ${escapeHTML(v.timezone)}${screenStr}${networkStr}${batteryStr}
+                        </div>
                     </div>
-                    <div style="margin-top:8px;font-size:0.8rem;color:#94a3b8;">
-                        🎯 <strong>Các mục đã xem:</strong> <div style="display:inline-flex;gap:4px;flex-wrap:wrap;margin-top:4px;">${sectionsStr || 'Trang chủ'}</div>
-                    </div>
+                    <details style="font-size:0.8rem;color:#94a3b8;cursor:pointer;">
+                        <summary style="font-weight:bold;color:#a855f7;outline:none;margin-bottom:4px;">
+                            📜 Xem Nhật Ký Thao Tác Chi Tiết (${(v.timelineLogs || []).length} bước)
+                        </summary>
+                        <div style="background:rgba(15,23,42,0.6);padding:8px;border-radius:6px;margin-top:4px;max-height:160px;overflow-y:auto;">
+                            ${timelineHtml || '<div style="font-size:0.75rem;color:#64748b;">Chưa có thao tác thêm</div>'}
+                        </div>
+                    </details>
                 `;
                 adminVisitorsList.appendChild(card);
             });

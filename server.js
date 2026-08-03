@@ -121,25 +121,42 @@ function parseUserAgent(uaString = '') {
     return { os, device, browser };
 }
 
+// Helper trích xuất IP chính xác đằng sau Proxy/Render/Cloudflare
+function extractClientIp(req) {
+    const xForwardedFor = req.headers['x-forwarded-for'];
+    if (xForwardedFor) {
+        const ips = xForwardedFor.split(',');
+        for (const ip of ips) {
+            const clean = ip.trim();
+            if (clean && !clean.startsWith('10.') && !clean.startsWith('192.168.') && clean !== '127.0.0.1' && clean !== '::1') {
+                return clean;
+            }
+        }
+        return ips[0].trim();
+    }
+    return req.headers['x-real-ip'] || req.headers['cf-connecting-ip'] || req.socket.remoteAddress || '127.0.0.1';
+}
+
 // Memory Cache cho IP Geolocation
 const ipGeoCache = new Map();
 
 async function getIpLocation(ip) {
     if (!ip || ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.')) {
-        return { city: 'Localhost', country: 'Máy chủ nội bộ', isp: 'LAN' };
+        return { city: 'Localhost', region: 'Nội bộ', country: 'Máy chủ local', isp: 'Mạng LAN' };
     }
     if (ipGeoCache.has(ip)) return ipGeoCache.get(ip);
 
+    // Nguồn 1: ip-api.com
     try {
-        const cleanIp = ip.split(',')[0].trim();
-        const res = await fetch(`http://ip-api.com/json/${cleanIp}?fields=status,country,regionName,city,isp`);
+        const res = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,regionName,city,isp,org`);
         if (res.ok) {
             const data = await res.json();
             if (data.status === 'success') {
                 const geo = {
                     city: data.city || data.regionName || 'Việt Nam',
+                    region: data.regionName || data.city || 'Việt Nam',
                     country: data.country || 'Việt Nam',
-                    isp: data.isp || 'Internet'
+                    isp: data.isp || data.org || 'Internet'
                 };
                 ipGeoCache.set(ip, geo);
                 return geo;
@@ -147,7 +164,43 @@ async function getIpLocation(ip) {
         }
     } catch (e) {}
 
-    const fallback = { city: 'Việt Nam', country: 'Việt Nam', isp: 'Nhà mạng' };
+    // Nguồn 2: ipwho.is (Hỗ trợ HTTPS)
+    try {
+        const res = await fetch(`https://ipwho.is/${ip}`);
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success) {
+                const geo = {
+                    city: data.city || data.region || 'Việt Nam',
+                    region: data.region || data.city || 'Việt Nam',
+                    country: data.country || 'Việt Nam',
+                    isp: data.connection?.isp || data.connection?.org || 'Internet'
+                };
+                ipGeoCache.set(ip, geo);
+                return geo;
+            }
+        }
+    } catch (e) {}
+
+    // Nguồn 3: freeipapi.com
+    try {
+        const res = await fetch(`https://freeipapi.com/api/json/${ip}`);
+        if (res.ok) {
+            const data = await res.json();
+            if (data.cityName) {
+                const geo = {
+                    city: data.cityName || 'Việt Nam',
+                    region: data.regionName || data.cityName || 'Việt Nam',
+                    country: data.countryName || 'Việt Nam',
+                    isp: 'Nhà mạng Internet'
+                };
+                ipGeoCache.set(ip, geo);
+                return geo;
+            }
+        }
+    } catch (e) {}
+
+    const fallback = { city: 'Việt Nam', region: 'Việt Nam', country: 'Việt Nam', isp: 'Nhà mạng' };
     ipGeoCache.set(ip, fallback);
     return fallback;
 }
@@ -664,7 +717,7 @@ const server = http.createServer(async (req, res) => {
             const body = await readBody(req, 4096);
             const payload = JSON.parse(body || '{}');
             const sessionId = payload.sessionId || `sess_${Date.now()}`;
-            const clientIp = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1').split(',')[0].trim();
+            const clientIp = extractClientIp(req);
             const uaString = req.headers['user-agent'] || '';
             const { os, device, browser } = parseUserAgent(uaString);
             const geo = await getIpLocation(clientIp);
@@ -674,6 +727,7 @@ const server = http.createServer(async (req, res) => {
 
             let visitor = db.visitors.find(v => v.sessionId === sessionId);
             const now = new Date().toISOString();
+            const timeStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
             if (!visitor) {
                 visitor = {
@@ -681,13 +735,25 @@ const server = http.createServer(async (req, res) => {
                     sessionId,
                     ip: clientIp,
                     city: geo.city,
+                    region: geo.region,
                     country: geo.country,
                     isp: geo.isp,
                     os,
                     device,
                     browser,
-                    referrer: payload.referrer || 'Trực tiếp / Khác',
+                    referrer: payload.referrer || 'Trực tiếp / Bookmark',
+                    screen: payload.screen || '-',
+                    viewport: payload.viewport || '-',
+                    dpr: payload.dpr || 1,
+                    language: payload.language || 'vi-VN',
+                    timezone: payload.timezone || 'Asia/Ho_Chi_Minh',
+                    touchPoints: payload.touchPoints || 0,
+                    connection: payload.connection || '3G/4G/Wifi',
+                    battery: payload.battery || null,
                     sectionsVisited: [payload.section || 'Trang chủ'],
+                    timelineLogs: [
+                        { time: timeStr, event: 'Truy cập trang web', detail: `Nguồn: ${payload.referrer || 'Trực tiếp'}` }
+                    ],
                     clicks: 1,
                     firstSeen: now,
                     lastSeen: now,
@@ -697,6 +763,10 @@ const server = http.createServer(async (req, res) => {
                 if (db.visitors.length > 300) db.visitors = db.visitors.slice(0, 300);
             } else {
                 visitor.lastSeen = now;
+                visitor.ip = clientIp;
+                if (payload.screen) visitor.screen = payload.screen;
+                if (payload.battery) visitor.battery = payload.battery;
+                if (payload.connection) visitor.connection = payload.connection;
                 if (payload.section && !visitor.sectionsVisited.includes(payload.section)) {
                     visitor.sectionsVisited.push(payload.section);
                 }
@@ -724,11 +794,27 @@ const server = http.createServer(async (req, res) => {
                     const visitor = db.visitors.find(v => v.sessionId === payload.sessionId);
                     if (visitor) {
                         const now = new Date().toISOString();
+                        const timeStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                         visitor.lastSeen = now;
-                        visitor.clicks = (visitor.clicks || 0) + 1;
+                        
+                        if (payload.action) {
+                            visitor.clicks = (visitor.clicks || 0) + 1;
+                            if (!visitor.timelineLogs) visitor.timelineLogs = [];
+                            visitor.timelineLogs.push({
+                                time: timeStr,
+                                event: `Thao tác: ${payload.action}`,
+                                detail: payload.section ? `Mục: ${payload.section}` : ''
+                            });
+                            // Giữ tối đa 15 nhật ký thao tác gần nhất của mỗi khách
+                            if (visitor.timelineLogs.length > 15) {
+                                visitor.timelineLogs = visitor.timelineLogs.slice(-15);
+                            }
+                        }
+
                         if (payload.section && !visitor.sectionsVisited.includes(payload.section)) {
                             visitor.sectionsVisited.push(payload.section);
                         }
+
                         const first = new Date(visitor.firstSeen).getTime();
                         const last = new Date(now).getTime();
                         visitor.durationSeconds = Math.max(0, Math.round((last - first) / 1000));

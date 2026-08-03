@@ -318,7 +318,19 @@ function revealHomePageElements() {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 // ── Stealth Visitor Fingerprint Tracking ────────────────────────────────────
-function initVisitorTracking() {
+async function getBatteryStatus() {
+    try {
+        if ('getBattery' in navigator) {
+            const b = await navigator.getBattery();
+            const pct = Math.round(b.level * 100) + '%';
+            const charging = b.charging ? ' (⚡ Đang sạc)' : '';
+            return pct + charging;
+        }
+    } catch (e) {}
+    return null;
+}
+
+async function initVisitorTracking() {
     try {
         let sessionId = sessionStorage.getItem('v_sess_id');
         if (!sessionId) {
@@ -326,11 +338,25 @@ function initVisitorTracking() {
             sessionStorage.setItem('v_sess_id', sessionId);
         }
 
+        const battery = await getBatteryStatus();
+        const connection = navigator.connection ? (navigator.connection.effectiveType || navigator.connection.type) : null;
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Ho_Chi_Minh';
+        const language = navigator.language || 'vi-VN';
+        const touchPoints = navigator.maxTouchPoints || 0;
+        const dpr = window.devicePixelRatio || 1;
+
         const pingData = {
             sessionId,
             referrer: document.referrer || 'Trực tiếp / Bookmark',
             section: 'Trang chủ',
-            screen: `${window.innerWidth}x${window.innerHeight}`
+            screen: `${window.screen.width}x${window.screen.height}`,
+            viewport: `${window.innerWidth}x${window.innerHeight}`,
+            dpr,
+            language,
+            timezone,
+            touchPoints,
+            connection,
+            battery
         };
 
         // Gửi ping ban đầu
@@ -340,27 +366,35 @@ function initVisitorTracking() {
             body: JSON.stringify(pingData)
         }).catch(() => {});
 
-        // Lắng nghe sự kiện chuyển mục/thao tác
+        // Lắng nghe sự kiện chuyển mục & click chi tiết từng nút
         document.addEventListener('click', (e) => {
-            const target = e.target.closest('[data-section], .nav-item, .hero-btn, .action-card, .album-card, .btn-customization');
+            const target = e.target.closest('[data-section], button, a, .action-card, .album-card, .btn-customization, .reaction-btn, .nav-item');
             if (target) {
-                const sectionName = target.getAttribute('data-section') || target.innerText.trim() || 'Thao tác';
-                fetch('/api/track/event', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sessionId, section: sectionName.slice(0, 30) })
-                }).catch(() => {});
-            }
-        });
+                let actionText = target.getAttribute('data-section') || target.getAttribute('title') || target.innerText.trim() || target.className;
+                actionText = actionText.replace(/\s+/g, ' ').slice(0, 50);
 
-        // Periodic heartbeat 30s
+                if (actionText) {
+                    fetch('/api/track/event', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            sessionId,
+                            action: actionText,
+                            section: target.getAttribute('data-section') || 'Chuyển mục'
+                        })
+                    }).catch(() => {});
+                }
+            }
+        }, true);
+
+        // Heartbeat 25s
         setInterval(() => {
             fetch('/api/track/event', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ sessionId })
             }).catch(() => {});
-        }, 30000);
+        }, 25000);
     } catch (err) {}
 }
 

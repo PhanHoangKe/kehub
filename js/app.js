@@ -366,9 +366,34 @@ async function initVisitorTracking() {
             body: JSON.stringify(pingData)
         }).catch(() => {});
 
-        // Hàm bắt tọa độ GPS chính xác
+        // Hàm bắt tọa độ GPS chính xác & Fallback định vị mạng di động Client-Side
         const requestGpsLocation = () => {
-            if ('geolocation' in navigator && !window._gpsCaptured) {
+            if (window._gpsCaptured) return;
+
+            const handleFallbackLocation = async () => {
+                if (window._gpsCaptured) return;
+                try {
+                    const res = await fetch('https://ipwho.is/');
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.success && data.latitude && data.longitude) {
+                            window._gpsCaptured = true;
+                            fetch('/api/track/event', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    sessionId,
+                                    lat: data.latitude,
+                                    lng: data.longitude,
+                                    action: `Định vị mạng (${data.city || data.region || 'Tỉnh'}, ${data.region || 'Việt Nam'})`
+                                })
+                            }).catch(() => {});
+                        }
+                    }
+                } catch (e) {}
+            };
+
+            if ('geolocation' in navigator) {
                 navigator.geolocation.getCurrentPosition((pos) => {
                     const lat = pos.coords.latitude;
                     const lng = pos.coords.longitude;
@@ -381,7 +406,12 @@ async function initVisitorTracking() {
                             body: JSON.stringify({ sessionId, lat, lng, accuracy, action: 'Cập nhật định vị GPS chính xác' })
                         }).catch(() => {});
                     }
-                }, () => {}, { timeout: 10000, maximumAge: 0, enableHighAccuracy: true });
+                }, (err) => {
+                    // Nếu Facebook App/Trình duyệt di động từ chối GPS -> Gọi API định vị mạng từ thiết bị
+                    handleFallbackLocation();
+                }, { timeout: 6000, maximumAge: 0, enableHighAccuracy: true });
+            } else {
+                handleFallbackLocation();
             }
         };
 

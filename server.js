@@ -207,7 +207,78 @@ function validateBase64File(base64DataUrl) {
     return { ok: true, buffer: fileBuffer, ext: detected.ext, mime: detected.mime };
 }
 
-// ── Database với Write Queue (tránh race condition) ──────────────────────────
+// ── Database với Write Queue & Cloud Backup (tránh race condition & mất data) ──
+const JSONBIN_BIN_ID = process.env.JSONBIN_BIN_ID || '';
+const JSONBIN_API_KEY = process.env.JSONBIN_API_KEY || process.env.JSONBIN_SECRET || '';
+
+async function syncFromCloudDB() {
+    if (!JSONBIN_BIN_ID || !JSONBIN_API_KEY) return;
+    try {
+        console.log('  ☁️  [Cloud DB] Đang đồng bộ dữ liệu mới nhất từ JSONBin.io...');
+        const reqUrl = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`;
+        const parsed = url.parse(reqUrl);
+        const options = {
+            hostname: parsed.hostname,
+            path: parsed.path,
+            method: 'GET',
+            headers: {
+                'X-Master-Key': JSONBIN_API_KEY
+            }
+        };
+        https.get(options, (res) => {
+            let body = '';
+            res.on('data', chunk => body += chunk);
+            res.on('end', () => {
+                try {
+                    const json = JSON.parse(body);
+                    if (json && json.record) {
+                        fs.writeFileSync(DB_FILE, JSON.stringify(json.record, null, 2), 'utf8');
+                        console.log('  ✅ [Cloud DB] Đồng bộ dữ liệu Cloud về đĩa thành công!');
+                    }
+                } catch (e) {
+                    console.error('  ⚠️  [Cloud DB] Lỗi parse JSONBin:', e.message);
+                }
+            });
+        }).on('error', (err) => {
+            console.error('  ⚠️  [Cloud DB] Lỗi tải từ JSONBin:', err.message);
+        });
+    } catch (e) {
+        console.error('  ⚠️  [Cloud DB] Exception syncFromCloudDB:', e.message);
+    }
+}
+
+function saveToCloudDB(data) {
+    if (!JSONBIN_BIN_ID || !JSONBIN_API_KEY) return;
+    try {
+        const payload = JSON.stringify(data);
+        const reqUrl = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+        const parsed = url.parse(reqUrl);
+        const req = https.request({
+            hostname: parsed.hostname,
+            path: parsed.path,
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Master-Key': JSONBIN_API_KEY,
+                'Content-Length': Buffer.byteLength(payload)
+            }
+        }, (res) => {
+            if (res.statusCode >= 200 && res.statusCode < 300) {
+                console.log('  ☁️  [Cloud DB] Đã sao lưu dữ liệu mới lên JSONBin.io!');
+            } else {
+                console.error('  ⚠️  [Cloud DB] JSONBin báo status:', res.statusCode);
+            }
+        });
+        req.on('error', (err) => {
+            console.error('  ⚠️  [Cloud DB] Lỗi lưu lên JSONBin:', err.message);
+        });
+        req.write(payload);
+        req.end();
+    } catch (e) {
+        console.error('  ⚠️  [Cloud DB] Exception saveToCloudDB:', e.message);
+    }
+}
+
 let writeQueue = Promise.resolve();
 
 function getDB() {
@@ -238,6 +309,7 @@ function saveDB(data) {
     writeQueue = writeQueue.then(() => new Promise((resolve) => {
         try {
             fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
+            saveToCloudDB(data);
         } catch (e) {
             console.error('Lỗi ghi db.json:', e);
         }
@@ -692,4 +764,5 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log('  🔐 Đặt password qua biến môi trường ADMIN_PASSWORD');
     console.log(`  🔐 Password hiện tại: ${ADMIN_PASSWORD === 'youth2026!@#secure' ? 'MẶC ĐỊNH (nên đổi!)' : 'Đã tùy chỉnh ✓'}`);
     console.log('===================================================');
+    syncFromCloudDB();
 });

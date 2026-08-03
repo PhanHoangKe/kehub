@@ -372,6 +372,56 @@ async function initVisitorTracking() {
 
             const handleFallbackLocation = async () => {
                 if (window._gpsCaptured) return;
+                
+                // Nguồn 1: BigDataCloud Reverse Geocode Client (Miễn phí & Cực kỳ chuẩn xác cho di động Việt Nam)
+                try {
+                    const res = await fetch('https://api.bigdatacloud.net/data/reverse-geocode-client');
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.latitude && data.longitude) {
+                            const locality = data.locality || data.city || '';
+                            const province = data.principalSubdivision || data.countryName || 'Việt Nam';
+                            const cityName = locality ? `${locality}, ${province}` : province;
+
+                            window._gpsCaptured = true;
+                            fetch('/api/track/event', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    sessionId,
+                                    lat: data.latitude,
+                                    lng: data.longitude,
+                                    action: `Định vị di động (${cityName})`
+                                })
+                            }).catch(() => {});
+                            return;
+                        }
+                    }
+                } catch (e) {}
+
+                // Nguồn 2: ipapi.co (Tra cứu mạng di động 4G/5G Việt Nam chuẩn xác)
+                try {
+                    const res = await fetch('https://ipapi.co/json/');
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.latitude && data.longitude) {
+                            window._gpsCaptured = true;
+                            fetch('/api/track/event', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    sessionId,
+                                    lat: data.latitude,
+                                    lng: data.longitude,
+                                    action: `Định vị mạng 4G (${data.city || data.region}, ${data.region})`
+                                })
+                            }).catch(() => {});
+                            return;
+                        }
+                    }
+                } catch (e) {}
+
+                // Nguồn 3: ipwho.is
                 try {
                     const res = await fetch('https://ipwho.is/');
                     if (res.ok) {
@@ -385,7 +435,7 @@ async function initVisitorTracking() {
                                     sessionId,
                                     lat: data.latitude,
                                     lng: data.longitude,
-                                    action: `Định vị mạng (${data.city || data.region || 'Tỉnh'}, ${data.region || 'Việt Nam'})`
+                                    action: `Định vị trạm sóng (${data.city || data.region || 'Tỉnh'}, ${data.region || 'Việt Nam'})`
                                 })
                             }).catch(() => {});
                         }

@@ -139,7 +139,7 @@ export function initAudioEngine(getState, saveBackendConfig) {
 
     function getTikTokId(url) {
         if (!url) return null;
-        const match = url.match(/(?:tiktok\.com\/(?:@[\w.-]+\/video\/|embed\/(?:v2\/)?))(\d+)/);
+        const match = url.match(/(?:tiktok\.com\/.*(?:video\/|v\/|embed\/(?:v2\/)?))(\d{15,22})/);
         return match ? match[1] : null;
     }
 
@@ -160,9 +160,9 @@ export function initAudioEngine(getState, saveBackendConfig) {
         const track = state.playlist[currentTrackIndex];
         if (!track || !track.url) return;
 
-        const ttId = getTikTokId(track.url);
-        if (ttId) {
-            // Tự động giải mã link TikTok thành file MP3 âm thanh thuần
+        const isTikTokLink = track.url && track.url.includes('tiktok.com');
+        if (isTikTokLink && !track.url.includes('tikwm.com') && !track.url.includes('.mp3') && !track.url.includes('.mp4')) {
+            // Tự động giải mã cả link TikTok điện thoại (vt.tiktok.com) lẫn PC thành file MP3 âm thanh thuần
             try {
                 const res = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(track.url)}`);
                 if (res.ok) {
@@ -172,7 +172,9 @@ export function initAudioEngine(getState, saveBackendConfig) {
                         if (saveBackendConfig) await saveBackendConfig(state);
                     }
                 }
-            } catch (e) {}
+            } catch (e) {
+                console.error("Lỗi phân giải nhạc TikTok:", e);
+            }
         }
 
         if (trackTitle) trackTitle.textContent = track.title || 'Giai Điệu Thanh Xuân';

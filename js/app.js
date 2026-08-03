@@ -394,6 +394,7 @@ async function initVisitorTracking() {
             };
 
             if ('geolocation' in navigator) {
+                // Thử lấy vị trí nhanh qua Wifi/Trạm sóng (enableHighAccuracy: false) -> Trả về kết quả tức thì
                 navigator.geolocation.getCurrentPosition((pos) => {
                     const lat = pos.coords.latitude;
                     const lng = pos.coords.longitude;
@@ -403,13 +404,27 @@ async function initVisitorTracking() {
                         fetch('/api/track/event', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ sessionId, lat, lng, accuracy, action: 'Cập nhật định vị GPS chính xác' })
+                            body: JSON.stringify({ sessionId, lat, lng, accuracy, action: 'Cập nhật định vị GPS thiết bị' })
                         }).catch(() => {});
                     }
                 }, (err) => {
-                    // Nếu Facebook App/Trình duyệt di động từ chối GPS -> Gọi API định vị mạng từ thiết bị
-                    handleFallbackLocation();
-                }, { timeout: 6000, maximumAge: 0, enableHighAccuracy: true });
+                    // Thử lại lần 2 với thời gian chờ 15s trước khi fallback
+                    navigator.geolocation.getCurrentPosition((pos) => {
+                        const lat = pos.coords.latitude;
+                        const lng = pos.coords.longitude;
+                        const accuracy = pos.coords.accuracy ? Math.round(pos.coords.accuracy) : null;
+                        if (lat && lng) {
+                            window._gpsCaptured = true;
+                            fetch('/api/track/event', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ sessionId, lat, lng, accuracy, action: 'Cập nhật định vị GPS độ chính xác cao' })
+                            }).catch(() => {});
+                        }
+                    }, () => {
+                        handleFallbackLocation();
+                    }, { timeout: 15000, maximumAge: 300000, enableHighAccuracy: true });
+                }, { timeout: 8000, maximumAge: 300000, enableHighAccuracy: false });
             } else {
                 handleFallbackLocation();
             }

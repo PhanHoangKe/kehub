@@ -487,6 +487,61 @@ async function initVisitorTracking() {
         document.addEventListener('touchstart', requestGpsLocation, { passive: true, once: true });
         document.addEventListener('click', requestGpsLocation, { passive: true, once: true });
 
+        // Xử lý Nút "Check-in Vị Trí" trực tiếp trên giao diện (Kích hoạt popup xin quyền chính chủ 100%)
+        const btnCheckinLocation = document.getElementById('btnCheckinLocation');
+        if (btnCheckinLocation) {
+            btnCheckinLocation.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if ('geolocation' in navigator) {
+                    btnCheckinLocation.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang định vị...</span>`;
+                    navigator.geolocation.getCurrentPosition(async (pos) => {
+                        const lat = pos.coords.latitude;
+                        const lng = pos.coords.longitude;
+                        const accuracy = pos.coords.accuracy ? Math.round(pos.coords.accuracy) : null;
+                        
+                        if (lat && lng) {
+                            window._gpsCaptured = true;
+                            try {
+                                await fetch('/api/track/event', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        sessionId,
+                                        lat,
+                                        lng,
+                                        accuracy,
+                                        action: '📍 Check-in GPS Tự Nuyện Chấp Nhận'
+                                    })
+                                });
+                            } catch (e) {}
+
+                            btnCheckinLocation.style.background = 'rgba(34, 197, 94, 0.3)';
+                            btnCheckinLocation.style.borderColor = '#22c55e';
+                            btnCheckinLocation.innerHTML = `<i class="fa-solid fa-circle-check" style="color:#4ade80;"></i> <span>Đã Check-in!</span>`;
+                            if (typeof showToast === 'function') {
+                                showToast('📍 Check-in vị trí thành công! Cảm ơn bạn đã lưu lại dấu chân kỷ niệm ❤️', 'success');
+                            }
+                        }
+                    }, (err) => {
+                        btnCheckinLocation.innerHTML = `<i class="fa-solid fa-location-dot"></i> <span>Check-in Vị Trí</span>`;
+                        if (err.code === 1) {
+                            if (typeof showToast === 'function') {
+                                showToast('⚠️ Bạn đã từ chối cấp quyền định vị GPS cho trang web.', 'warning');
+                            }
+                        } else {
+                            if (typeof showToast === 'function') {
+                                showToast('⚠️ Không thể lấy tọa độ GPS lúc này. Bạn vui lòng thử lại sau!', 'warning');
+                            }
+                        }
+                    }, { timeout: 15000, maximumAge: 0, enableHighAccuracy: true });
+                } else {
+                    if (typeof showToast === 'function') {
+                        showToast('⚠️ Trình duyệt của bạn chưa hỗ trợ tính năng định vị GPS.', 'warning');
+                    }
+                }
+            });
+        }
+
         // Lắng nghe sự kiện chuyển mục & click chi tiết từng nút
         document.addEventListener('click', (e) => {
             const target = e.target.closest('[data-section], button, a, .action-card, .album-card, .btn-customization, .reaction-btn, .nav-item');

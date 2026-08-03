@@ -854,6 +854,7 @@ const server = http.createServer(async (req, res) => {
                             visitor.lat = payload.lat;
                             visitor.lng = payload.lng;
                             if (payload.accuracy) visitor.accuracy = payload.accuracy;
+                            visitor.isGps = true;
                             const gpsAddr = await reverseGeocode(payload.lat, payload.lng);
                             if (gpsAddr) {
                                 visitor.city = gpsAddr.city;

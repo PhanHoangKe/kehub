@@ -14,7 +14,7 @@ export function initGuestbookEngine() {
     const btnCloseWishModal = document.getElementById('btnCloseWishModal');
     const btnSubmitWish = document.getElementById('btnSubmitWish');
 
-    let savedHearts = parseInt(localStorage.getItem('youth_heart_count') || '128', 10);
+    let savedHearts = parseInt(localStorage.getItem('youth_heart_count') || '0', 10);
     if (heartCounterNumber) heartCounterNumber.textContent = savedHearts;
 
     function createFloatingHeart(x, y) {

@@ -302,7 +302,7 @@ function getDB() {
             return data;
         } catch (e) {}
     }
-    return { config: {}, wishes: [], hearts: 128 };
+    return { config: {}, wishes: [], hearts: 0 };
 }
 
 // Hàm ghi DB async với queue để tránh concurrent writes
@@ -556,7 +556,7 @@ const server = http.createServer(async (req, res) => {
     // ── POST /api/likes — Thả tim (public, rate-limited) ─────────────────────
     if (pathname === '/api/likes' && req.method === 'POST') {
         const db = getDB();
-        db.hearts = (db.hearts || 128) + 1;
+        db.hearts = (db.hearts || 0) + 1;
         await saveDB(db);
         jsonResponse(res, 200, { success: true, hearts: db.hearts });
         return;

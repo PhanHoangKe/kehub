@@ -293,7 +293,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             const guestbookWall = document.getElementById('guestbookWall');
             const wishCount = guestbookWall ? guestbookWall.children.length : 0;
             const heartElem = document.getElementById('heartCount');
-            const hearts = heartElem ? heartElem.textContent : '128';
+            const hearts = heartElem ? heartElem.textContent : '0';
 
             if (admStatWishes) admStatWishes.textContent = wishCount;
             if (admStatHearts) admStatHearts.textContent = hearts;

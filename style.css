@@ -4977,10 +4977,10 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 .balloon-video-content {
     background: #11141a;
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 16px;
+    border-radius: 18px;
     width: 92%;
-    max-width: 360px;
-    max-height: 90vh;
+    max-width: 340px;
+    max-height: 88vh;
     padding: 10px;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
     position: relative;
@@ -5060,15 +5060,14 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 
 .balloon-iframe-container {
     width: 100%;
-    height: calc(85vh - 50px);
-    max-height: 580px;
-    min-height: 350px;
+    height: 440px;
+    max-height: 72vh;
     border-radius: 12px;
     overflow: hidden;
     background: #000;
     display: flex;
     justify-content: center;
-    flex: 1;
+    align-items: center;
 }
 
 .balloon-iframe-container iframe {
@@ -5093,14 +5092,14 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 
     .balloon-video-content {
         width: 94%;
-        max-height: 92vh;
+        max-width: 330px;
+        max-height: 90vh;
         padding: 8px;
     }
 
     .balloon-iframe-container {
-        height: calc(88vh - 45px);
-        max-height: 520px;
-        min-height: 300px;
+        height: 420px;
+        max-height: 70vh;
     }
 }
 

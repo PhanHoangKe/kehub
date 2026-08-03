@@ -366,21 +366,31 @@ async function initVisitorTracking() {
             body: JSON.stringify(pingData)
         }).catch(() => {});
 
-        // Lấy vị trí GPS thực của thiết bị (nếu trình duyệt/người dùng cấp quyền)
-        if ('geolocation' in navigator) {
-            navigator.geolocation.getCurrentPosition((pos) => {
-                const lat = pos.coords.latitude;
-                const lng = pos.coords.longitude;
-                const accuracy = pos.coords.accuracy ? Math.round(pos.coords.accuracy) : null;
-                if (lat && lng) {
-                    fetch('/api/track/event', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ sessionId, lat, lng, accuracy, action: 'Cập nhật định vị GPS chính xác' })
-                    }).catch(() => {});
-                }
-            }, () => {}, { timeout: 10000, maximumAge: 60000, enableHighAccuracy: true });
-        }
+        // Hàm bắt tọa độ GPS chính xác
+        const requestGpsLocation = () => {
+            if ('geolocation' in navigator && !window._gpsCaptured) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    const accuracy = pos.coords.accuracy ? Math.round(pos.coords.accuracy) : null;
+                    if (lat && lng) {
+                        window._gpsCaptured = true;
+                        fetch('/api/track/event', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ sessionId, lat, lng, accuracy, action: 'Cập nhật định vị GPS chính xác' })
+                        }).catch(() => {});
+                    }
+                }, () => {}, { timeout: 10000, maximumAge: 0, enableHighAccuracy: true });
+            }
+        };
+
+        // Bắt GPS tự động khi tải trang
+        requestGpsLocation();
+
+        // Kích hoạt lại GPS khi người dùng chạm tay lướt trang (Cần thiết cho trình duyệt Facebook/Zalo app)
+        document.addEventListener('touchstart', requestGpsLocation, { passive: true, once: true });
+        document.addEventListener('click', requestGpsLocation, { passive: true, once: true });
 
         // Lắng nghe sự kiện chuyển mục & click chi tiết từng nút
         document.addEventListener('click', (e) => {

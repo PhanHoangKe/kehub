@@ -4978,13 +4978,16 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
     background: #11141a;
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 16px;
-    width: 95%;
+    width: 92%;
     max-width: 360px;
-    padding: 12px;
+    max-height: 90vh;
+    padding: 10px;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
     position: relative;
     transform: scale(0.9);
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: flex;
+    flex-direction: column;
 }
 
 .balloon-video-modal.active .balloon-video-content {
@@ -4997,6 +5000,7 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
     align-items: center;
     margin-bottom: 8px;
     color: #fff;
+    flex-shrink: 0;
 }
 
 .balloon-unmute-hint-btn {
@@ -5056,12 +5060,15 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 
 .balloon-iframe-container {
     width: 100%;
-    height: 600px; /* Chiều cao hoàn hảo cho khung phát TikTok dọc (tỉ lệ 9:16) */
+    height: calc(85vh - 50px);
+    max-height: 580px;
+    min-height: 350px;
     border-radius: 12px;
     overflow: hidden;
     background: #000;
     display: flex;
     justify-content: center;
+    flex: 1;
 }
 
 .balloon-iframe-container iframe {
@@ -5070,12 +5077,83 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
     border: none;
 }
 
-/* Hide balloon in mobile view if it obstructs layout */
+/* 📱 Responsive Mobile Adjustments */
 @media (max-width: 768px) {
+    html, body {
+        overflow-x: hidden;
+    }
+
     .balloon-container {
         top: auto;
-        bottom: 90px;
-        left: 20px;
+        bottom: 85px;
+        left: 14px;
+        transform: scale(0.82);
+        transform-origin: bottom left;
+    }
+
+    .balloon-video-content {
+        width: 94%;
+        max-height: 92vh;
+        padding: 8px;
+    }
+
+    .balloon-iframe-container {
+        height: calc(88vh - 45px);
+        max-height: 520px;
+        min-height: 300px;
+    }
+}
+
+@media (max-width: 480px) {
+    .anonymous-modal-box {
+        width: 95%;
+        padding: 16px 14px 12px;
+        border-radius: 20px;
+        max-height: 90vh;
+    }
+
+    .anonymous-modal-icon-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        font-size: 1.05rem;
+    }
+
+    .anonymous-modal-header h3 {
+        font-size: 1.02rem;
+    }
+
+    .anonymous-tip-banner {
+        padding: 8px 10px;
+        font-size: 0.75rem;
+        margin-bottom: 8px;
+    }
+
+    .anonymous-textarea {
+        min-height: 75px;
+        padding: 10px 12px;
+        font-size: 0.85rem;
+    }
+
+    .anon-media-bar {
+        padding: 8px 10px;
+        gap: 6px;
+        margin-bottom: 8px;
+    }
+
+    .anon-media-btn {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+    }
+
+    .anonymous-submit-btn .btn-inner {
+        padding: 12px 16px;
+        font-size: 0.85rem;
+    }
+
+    .balloon-unmute-hint-btn {
+        padding: 4px 10px;
+        font-size: 0.72rem;
     }
 }
 

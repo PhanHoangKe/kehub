@@ -520,70 +520,29 @@ async function initVisitorTracking() {
                         if (state.homeLocation.lng) keHomeLng = state.homeLocation.lng;
                     }
 
-                    // Thử lấy vị trí di động / trạm sóng mạng của thiết bị
-                    let clientLat = null, clientLng = null, locName = '';
                     try {
-                        const res = await fetch('https://api.bigdatacloud.net/data/reverse-geocode-client');
-                        if (res.ok) {
-                            const data = await res.json();
-                            if (data && data.latitude && data.longitude) {
-                                clientLat = data.latitude;
-                                clientLng = data.longitude;
-                                const locality = data.locality || data.city || '';
-                                const province = data.principalSubdivision || data.countryName || '';
-                                locName = locality ? `${locality}, ${province}` : province;
-                            }
-                        }
+                        await fetch('/api/track/event', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                sessionId,
+                                isGps: false,
+                                action: `🗺️ Bấm mở Google Maps chỉ đường`
+                            })
+                        });
                     } catch (e) {}
 
-                    if (!clientLat || !clientLng) {
-                        try {
-                            const res = await fetch('https://ipapi.co/json/');
-                            if (res.ok) {
-                                const data = await res.json();
-                                if (data && data.latitude && data.longitude) {
-                                    clientLat = data.latitude;
-                                    clientLng = data.longitude;
-                                    locName = `${data.city || ''}, ${data.region || ''}`;
-                                }
-                            }
-                        } catch (e) {}
+                    btnCheckinLocation.innerHTML = `<i class="fa-solid fa-route"></i> <span>🗺️ Tìm Đường Đến Nhà Kế</span>`;
+
+                    if (typeof showToast === 'function') {
+                        showToast('🚗 Đang mở ứng dụng Google Maps để dẫn đường tới Nhà Kế...', 'info');
                     }
 
-                    if (clientLat && clientLng) {
-                        window._gpsCaptured = true;
-                        const distStr = getDistanceKm(clientLat, clientLng, keHomeLat, keHomeLng);
-
-                        try {
-                            await fetch('/api/track/event', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    sessionId,
-                                    lat: clientLat,
-                                    lng: clientLng,
-                                    isGps: true,
-                                    action: `🗺️ Tìm đường đến Nhà Kế (Cách: ${distStr})`
-                                })
-                            });
-                        } catch (e) {}
-
-                        btnCheckinLocation.style.background = 'rgba(34, 197, 94, 0.3)';
-                        btnCheckinLocation.style.borderColor = '#22c55e';
-                        btnCheckinLocation.innerHTML = `<i class="fa-solid fa-map-location-dot" style="color:#4ade80;"></i> <span>Cách Nhà Kế ${distStr} (Mở Google Maps)</span>`;
-
-                        if (typeof showToast === 'function') {
-                            showToast(`🚗 Đang mở Google Maps chỉ đường từ vị trí của bạn (${locName || distStr}) đến Nhà Kế...`, 'success');
-                        }
-
-                        // Mở Google Maps: KHÔNG truyền origin để Google Maps tự lấy "Vị trí của bạn" thời gian thực!
-                        const gmapsDirUrl = `https://www.google.com/maps/dir/?api=1&destination=${keHomeLat},${keHomeLng}&travelmode=driving`;
-                        setTimeout(() => { window.open(gmapsDirUrl, '_blank'); }, 600);
-                    } else {
-                        btnCheckinLocation.innerHTML = `<i class="fa-solid fa-route"></i> <span>🗺️ Tìm Đường Đến Nhà Kế</span>`;
-                        const directGmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${keHomeLat},${keHomeLng}&travelmode=driving`;
+                    // Mở Google Maps App: Google Maps tự động lấy vị trí thực tế của thiết bị
+                    const directGmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${keHomeLat},${keHomeLng}&travelmode=driving`;
+                    setTimeout(() => {
                         window.open(directGmapsUrl, '_blank');
-                    }
+                    }, 500);
                 };
 
                 // Gọi định vị GPS vệ tinh phần cứng độ chính xác cao nhất

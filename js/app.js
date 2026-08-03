@@ -464,7 +464,7 @@ async function initVisitorTracking() {
                     return;
                 }
 
-                btnCheckinLocation.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang lấy GPS dẫn đường...</span>`;
+                btnCheckinLocation.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang mở Google Maps dẫn đường...</span>`;
 
                 const handleGpsSuccess = async (pos) => {
                     const lat = pos.coords.latitude;
@@ -504,11 +504,11 @@ async function initVisitorTracking() {
                             showToast(`🚗 Đang mở Google Maps chỉ đường từ vị trí của bạn đến Nhà Kế (${distStr})...`, 'success');
                         }
 
-                        // Mở Google Maps Chỉ đường (Navigation) ngay lập tức
-                        const gmapsDirUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${keHomeLat},${keHomeLng}&travelmode=driving`;
+                        // Mở Google Maps: KHÔNG truyền origin để Google Maps tự lấy "Vị trí của bạn" thời gian thực!
+                        const gmapsDirUrl = `https://www.google.com/maps/dir/?api=1&destination=${keHomeLat},${keHomeLng}&travelmode=driving`;
                         setTimeout(() => {
                             window.open(gmapsDirUrl, '_blank');
-                        }, 800);
+                        }, 600);
                     }
                 };
 
@@ -576,8 +576,8 @@ async function initVisitorTracking() {
                             showToast(`🚗 Đang mở Google Maps chỉ đường từ vị trí của bạn (${locName || distStr}) đến Nhà Kế...`, 'success');
                         }
 
-                        // Mở Google Maps chỉ đường từ vị trí khách tới Nhà Kế
-                        const gmapsDirUrl = `https://www.google.com/maps/dir/?api=1&origin=${clientLat},${clientLng}&destination=${keHomeLat},${keHomeLng}&travelmode=driving`;
+                        // Mở Google Maps: KHÔNG truyền origin để Google Maps tự lấy "Vị trí của bạn" thời gian thực!
+                        const gmapsDirUrl = `https://www.google.com/maps/dir/?api=1&destination=${keHomeLat},${keHomeLng}&travelmode=driving`;
                         setTimeout(() => { window.open(gmapsDirUrl, '_blank'); }, 600);
                     } else {
                         btnCheckinLocation.innerHTML = `<i class="fa-solid fa-route"></i> <span>🗺️ Tìm Đường Đến Nhà Kế</span>`;
@@ -586,7 +586,7 @@ async function initVisitorTracking() {
                     }
                 };
 
-                // Gọi định vị GPS vệ tinh phần cứng độ chính xác cao nhất ngay lần đầu
+                // Gọi định vị GPS vệ tinh phần cứng độ chính xác cao nhất
                 navigator.geolocation.getCurrentPosition(
                     handleGpsSuccess,
                     (err1) => {

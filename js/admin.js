@@ -439,6 +439,16 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             const inputGraduationDate = document.getElementById('inputGraduationDate');
             const capsuleStatusInfo = document.getElementById('capsuleStatusInfo');
 
+            const inputHomeLat = document.getElementById('inputHomeLat');
+            const inputHomeLng = document.getElementById('inputHomeLng');
+            const inputHomeAddress = document.getElementById('inputHomeAddress');
+
+            if (state.homeLocation) {
+                if (inputHomeLat) inputHomeLat.value = state.homeLocation.lat || '';
+                if (inputHomeLng) inputHomeLng.value = state.homeLocation.lng || '';
+                if (inputHomeAddress) inputHomeAddress.value = state.homeLocation.address || '';
+            }
+
             if (inputGraduationDate) inputGraduationDate.value = state.graduationDate || '2026-06-30';
             updateCapsuleStatusDOM(state, capsuleStatusInfo);
 
@@ -1016,6 +1026,18 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             }
             state.mapLocations = newMapLocations;
 
+            // Save Home Location Settings
+            const inputHomeLat = document.getElementById('inputHomeLat');
+            const inputHomeLng = document.getElementById('inputHomeLng');
+            const inputHomeAddress = document.getElementById('inputHomeAddress');
+            if (inputHomeLat || inputHomeLng || inputHomeAddress) {
+                state.homeLocation = {
+                    lat: inputHomeLat && inputHomeLat.value ? parseFloat(inputHomeLat.value) : 18.98686,
+                    lng: inputHomeLng && inputHomeLng.value ? parseFloat(inputHomeLng.value) : 105.46820,
+                    address: inputHomeAddress ? inputHomeAddress.value.trim() : 'Xã Quan Thành, Tỉnh Nghệ An'
+                };
+            }
+
             setState(state);
             await saveBackendConfig(state);
             refreshDOM();
@@ -1023,7 +1045,50 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             btnSaveSettings.disabled = false;
             btnSaveSettings.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Lưu Thay Đổi';
             if (customModal) customModal.classList.remove('active');
-            showToast("Đã cập nhật toàn bộ thay đổi thành công! ✨");
+            showToast("Đã cập nhật toàn bộ thay đổi & vị trí Nhà Kế thành công! ✨");
+        });
+    }
+
+    // Xử lý nút "Lấy Vị Trí Hiện Tại Làm Vị Trí Nhà" trong trang Admin
+    const btnGetMyCurrentHomeLocation = document.getElementById('btnGetMyCurrentHomeLocation');
+    if (btnGetMyCurrentHomeLocation) {
+        btnGetMyCurrentHomeLocation.addEventListener('click', () => {
+            if ('geolocation' in navigator) {
+                btnGetMyCurrentHomeLocation.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang lấy tọa độ GPS...`;
+                navigator.geolocation.getCurrentPosition(async (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    const inputHomeLat = document.getElementById('inputHomeLat');
+                    const inputHomeLng = document.getElementById('inputHomeLng');
+                    const inputHomeAddress = document.getElementById('inputHomeAddress');
+
+                    if (inputHomeLat) inputHomeLat.value = lat;
+                    if (inputHomeLng) inputHomeLng.value = lng;
+
+                    try {
+                        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+                        if (res.ok) {
+                            const geo = await res.json();
+                            const addr = geo.address || {};
+                            const parts = [
+                                addr.hamlet || addr.suburb || addr.quarter || addr.village,
+                                addr.town || addr.city_district || addr.commune,
+                                addr.county || addr.district || addr.city,
+                                addr.state || addr.province
+                            ].filter(Boolean);
+                            if (inputHomeAddress) inputHomeAddress.value = parts.join(', ');
+                        }
+                    } catch (e) {}
+
+                    btnGetMyCurrentHomeLocation.innerHTML = `<i class="fa-solid fa-circle-check"></i> Đã Lấy Tọa Độ Thành Công!`;
+                    setTimeout(() => {
+                        btnGetMyCurrentHomeLocation.innerHTML = `<i class="fa-solid fa-location-arrow"></i> Lấy Vị Trí Hiện Tại Làm Vị Trí Nhà`;
+                    }, 3000);
+                }, () => {
+                    alert('Không thể lấy GPS. Vui lòng bật quyền định vị cho trình duyệt.');
+                    btnGetMyCurrentHomeLocation.innerHTML = `<i class="fa-solid fa-location-arrow"></i> Lấy Vị Trí Hiện Tại Làm Vị Trí Nhà`;
+                }, { enableHighAccuracy: true, timeout: 10000 });
+            }
         });
     }
 

@@ -514,9 +514,13 @@ async function initVisitorTracking() {
                         
                         if (lat && lng) {
                             window._gpsCaptured = true;
-                            // Tọa độ Nhà của Kế (Xã Quan Thành, Tỉnh Nghệ An)
-                            const keHomeLat = 18.98686;
-                            const keHomeLng = 105.46820;
+                            // Tọa độ Nhà của Kế (Mặc định hoặc từ Cài đặt Admin)
+                            let keHomeLat = 18.98686;
+                            let keHomeLng = 105.46820;
+                            if (state && state.homeLocation) {
+                                if (state.homeLocation.lat) keHomeLat = state.homeLocation.lat;
+                                if (state.homeLocation.lng) keHomeLng = state.homeLocation.lng;
+                            }
                             const distStr = getDistanceKm(lat, lng, keHomeLat, keHomeLng);
 
                             try {

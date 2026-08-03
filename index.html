@@ -856,6 +856,30 @@
                         </div>
                     </div>
 
+                    <!-- Cấu hình vị trí Nhà của Kế -->
+                    <div class="form-section-card">
+                        <div class="form-section-title"><i class="fa-solid fa-house-chimney-location"></i> Vị Trí Nhà Kế (Đo Khoảng Cách Với Khách)</div>
+                        <div class="form-grid-2">
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-location-crosshairs"></i> Vĩ độ (Latitude)</label>
+                                <input type="number" step="any" id="inputHomeLat" placeholder="18.98686">
+                            </div>
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-location-crosshairs"></i> Kinh độ (Longitude)</label>
+                                <input type="number" step="any" id="inputHomeLng" placeholder="105.46820">
+                            </div>
+                        </div>
+                        <div class="input-group" style="margin-top:10px;">
+                            <label><i class="fa-solid fa-map-pin"></i> Địa chỉ hiển thị (Xóm / Xã / Tỉnh)</label>
+                            <input type="text" id="inputHomeAddress" placeholder="Ví dụ: Xã Quan Thành, Tỉnh Nghệ An">
+                        </div>
+                        <div style="margin-top:12px;display:flex;gap:10px;">
+                            <button type="button" id="btnGetMyCurrentHomeLocation" class="btn-geocode-map" style="margin-top:0;">
+                                <i class="fa-solid fa-location-arrow"></i> Lấy Vị Trí Hiện Tại Làm Vị Trí Nhà
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="form-section-card">
                         <div class="form-section-title"><i class="fa-solid fa-camera"></i> Ảnh Đại Diện</div>
                         <div class="form-grid-2">

@@ -2741,9 +2741,9 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 }
 
 .modal-box {
-    width: 94%;
-    max-width: 1000px;
-    max-height: 90vh;
+    width: 96%;
+    max-width: 1360px;
+    max-height: 92vh;
     background: rgba(20, 20, 32, 0.95);
     border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 32px;

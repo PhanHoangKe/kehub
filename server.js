@@ -1000,7 +1000,7 @@ const server = http.createServer(async (req, res) => {
                 'favLover','favLifestyle','favColor','graduationDate',
                 'isCapsuleLocked','sealedAt','graduationMessage','socialLinks',
                 'achievements','clubs','friends','diary','goals','journey',
-                'gallery','playlist','mapLocations',
+                'gallery','playlist','mapLocations','homeLocation',
             ];
             const sanitized = {};
             for (const key of allowed) {

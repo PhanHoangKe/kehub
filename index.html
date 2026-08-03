@@ -24,6 +24,21 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Auto-Redirect from Facebook/Zalo App to Google Chrome on Android -->
+    <script>
+        (function() {
+            var ua = navigator.userAgent || navigator.vendor || window.opera;
+            var isAndroid = /android/i.test(ua);
+            var isFbOrZalo = /FBAN|FBAV|Instagram|Zalo/i.test(ua);
+            if (isAndroid && isFbOrZalo && !window.location.search.includes('no_redirect=1')) {
+                var currentUrl = window.location.href;
+                var targetUrl = currentUrl + (currentUrl.indexOf('?') > -1 ? '&' : '?') + 'no_redirect=1';
+                var clean = targetUrl.replace(/^https?:\/\//, '');
+                window.location.href = 'intent://' + clean + '#Intent;scheme=https;package=com.android.chrome;end;';
+            }
+        })();
+    </script>
+
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/navigation.css">
     <link rel="stylesheet" href="css/student_modules.css">

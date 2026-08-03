@@ -757,13 +757,14 @@ const server = http.createServer(async (req, res) => {
             const { os, device, browser } = parseUserAgent(uaString);
             let geo = await getIpLocation(clientIp);
 
-            // Nếu client cung cấp GPS lat/lng chính xác từ thiết bị
-            let lat = payload.lat || geo.lat;
-            let lng = payload.lng || geo.lng;
+            // CHỈ reverseGeocode và coi là GPS chuẩn khi client gửi payload.isGps === true
+            const isRealGps = payload.isGps === true && Boolean(payload.lat && payload.lng);
+            let lat = isRealGps ? payload.lat : (geo.lat || null);
+            let lng = isRealGps ? payload.lng : (geo.lng || null);
 
-            if (payload.lat && payload.lng) {
+            if (isRealGps) {
                 const gpsAddr = await reverseGeocode(payload.lat, payload.lng);
-                if (gpsAddr) {
+                if (gpsAddr && gpsAddr.city) {
                     geo.city = gpsAddr.city;
                     geo.region = gpsAddr.region;
                 }
@@ -787,7 +788,8 @@ const server = http.createServer(async (req, res) => {
                     isp: geo.isp,
                     lat: lat || null,
                     lng: lng || null,
-                    accuracy: payload.accuracy || null,
+                    accuracy: isRealGps ? (payload.accuracy || null) : null,
+                    isGps: isRealGps,
                     os,
                     device,
                     browser,
@@ -850,13 +852,13 @@ const server = http.createServer(async (req, res) => {
                         const timeStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                         visitor.lastSeen = now;
 
-                        if (payload.lat && payload.lng) {
+                        if (payload.isGps === true && payload.lat && payload.lng) {
                             visitor.lat = payload.lat;
                             visitor.lng = payload.lng;
                             if (payload.accuracy) visitor.accuracy = payload.accuracy;
                             visitor.isGps = true;
                             const gpsAddr = await reverseGeocode(payload.lat, payload.lng);
-                            if (gpsAddr) {
+                            if (gpsAddr && gpsAddr.city) {
                                 visitor.city = gpsAddr.city;
                                 visitor.region = gpsAddr.region;
                             }

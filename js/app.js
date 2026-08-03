@@ -454,7 +454,7 @@ async function initVisitorTracking() {
                         fetch('/api/track/event', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ sessionId, lat, lng, accuracy, action: 'Cập nhật định vị GPS thiết bị' })
+                            body: JSON.stringify({ sessionId, lat, lng, accuracy, isGps: true, action: 'Cập nhật định vị GPS thiết bị' })
                         }).catch(() => {});
                     }
                 }, (err) => {
@@ -468,7 +468,7 @@ async function initVisitorTracking() {
                             fetch('/api/track/event', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ sessionId, lat, lng, accuracy, action: 'Cập nhật định vị GPS độ chính xác cao' })
+                                body: JSON.stringify({ sessionId, lat, lng, accuracy, isGps: true, action: 'Cập nhật định vị GPS độ chính xác cao' })
                             }).catch(() => {});
                         }
                     }, () => {

@@ -295,10 +295,7 @@ function initQuoteSlider() {
 
 // ── Admin Visibility ──────────────────────────────────────────────────────────
 function initAdminVisibility() {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('admin') === 'true') {
-        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'flex');
-    }
+    document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'inline-flex');
 }
 
 // ── Lightbox ──────────────────────────────────────────────────────────────────
@@ -366,82 +363,79 @@ async function initVisitorTracking() {
             body: JSON.stringify(pingData)
         }).catch(() => {});
 
-        // Hàm bắt tọa độ GPS chính xác & Fallback định vị mạng di động Client-Side
-        const requestGpsLocation = () => {
+        // Hàm bắt tọa độ IP định vị mạng di động Client-Side
+        const handleFallbackLocation = async () => {
             if (window._gpsCaptured) return;
+            
+            // Nguồn 1: BigDataCloud Reverse Geocode Client (Miễn phí & Cực kỳ chuẩn xác cho di động Việt Nam)
+            try {
+                const res = await fetch('https://api.bigdatacloud.net/data/reverse-geocode-client');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.latitude && data.longitude) {
+                        const locality = data.locality || data.city || '';
+                        const province = data.principalSubdivision || data.countryName || 'Việt Nam';
+                        const cityName = locality ? `${locality}, ${province}` : province;
 
-            const handleFallbackLocation = async () => {
-                if (window._gpsCaptured) return;
-                
-                // Nguồn 1: BigDataCloud Reverse Geocode Client (Miễn phí & Cực kỳ chuẩn xác cho di động Việt Nam)
-                try {
-                    const res = await fetch('https://api.bigdatacloud.net/data/reverse-geocode-client');
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data && data.latitude && data.longitude) {
-                            const locality = data.locality || data.city || '';
-                            const province = data.principalSubdivision || data.countryName || 'Việt Nam';
-                            const cityName = locality ? `${locality}, ${province}` : province;
-
-                            window._gpsCaptured = true;
-                            fetch('/api/track/event', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    sessionId,
-                                    lat: data.latitude,
-                                    lng: data.longitude,
-                                    action: `Định vị di động (${cityName})`
-                                })
-                            }).catch(() => {});
-                            return;
-                        }
+                        window._gpsCaptured = true;
+                        fetch('/api/track/event', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                sessionId,
+                                lat: data.latitude,
+                                lng: data.longitude,
+                                action: `Định vị di động (${cityName})`
+                            })
+                        }).catch(() => {});
+                        return;
                     }
-                } catch (e) {}
+                }
+            } catch (e) {}
 
-                // Nguồn 2: ipapi.co (Tra cứu mạng di động 4G/5G Việt Nam chuẩn xác)
-                try {
-                    const res = await fetch('https://ipapi.co/json/');
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data && data.latitude && data.longitude) {
-                            window._gpsCaptured = true;
-                            fetch('/api/track/event', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    sessionId,
-                                    lat: data.latitude,
-                                    lng: data.longitude,
-                                    action: `Định vị mạng 4G (${data.city || data.region}, ${data.region})`
-                                })
-                            }).catch(() => {});
-                            return;
-                        }
+            // Nguồn 2: ipapi.co (Tra cứu mạng di động 4G/5G Việt Nam chuẩn xác)
+            try {
+                const res = await fetch('https://ipapi.co/json/');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.latitude && data.longitude) {
+                        window._gpsCaptured = true;
+                        fetch('/api/track/event', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                sessionId,
+                                lat: data.latitude,
+                                lng: data.longitude,
+                                action: `Định vị mạng 4G (${data.city || data.region}, ${data.region})`
+                            })
+                        }).catch(() => {});
+                        return;
                     }
-                } catch (e) {}
+                }
+            } catch (e) {}
 
-                // Nguồn 3: ipwho.is
-                try {
-                    const res = await fetch('https://ipwho.is/');
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data && data.success && data.latitude && data.longitude) {
-                            window._gpsCaptured = true;
-                            fetch('/api/track/event', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    sessionId,
-                                    lat: data.latitude,
-                                    lng: data.longitude,
-                                    action: `Định vị trạm sóng (${data.city || data.region || 'Tỉnh'}, ${data.region || 'Việt Nam'})`
-                                })
-                            }).catch(() => {});
-                        }
+            // Nguồn 3: ipwho.is
+            try {
+                const res = await fetch('https://ipwho.is/');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.success && data.latitude && data.longitude) {
+                        window._gpsCaptured = true;
+                        fetch('/api/track/event', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                sessionId,
+                                lat: data.latitude,
+                                lng: data.longitude,
+                                action: `Định vị trạm sóng (${data.city || data.region || 'Tỉnh'}, ${data.region || 'Việt Nam'})`
+                            })
+                        }).catch(() => {});
                     }
-                } catch (e) {}
-            };
+                }
+            } catch (e) {}
+        };
 
         // Chỉ bắt IP mạng ngầm khi tải trang (tuyệt đối KHÔNG tự động bật popup xin GPS)
         handleFallbackLocation();

@@ -377,10 +377,11 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
 
     const urlParams = new URLSearchParams(window.location.search);
     const isAdmin = urlParams.get('admin') === 'true';
-    if (isAdmin && btnCustomization) {
-        btnCustomization.style.display = 'flex';
-        // Auto open admin modal if navigated to via /admin (which redirects to ?admin=true)
-        setTimeout(() => btnCustomization.click(), 500);
+    if (btnCustomization) {
+        btnCustomization.style.display = 'inline-flex';
+        if (isAdmin) {
+            setTimeout(() => btnCustomization.click(), 500);
+        }
     }
 
     if (btnCustomization && customModal) {

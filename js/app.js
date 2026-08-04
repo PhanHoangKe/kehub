@@ -158,10 +158,9 @@ function loadFromLocalStorage() {
 
 // ── Display Mode Toggle (Đĩa Than / Khung 3D) ────────────────────────────────
 function initDisplayModeToggle() {
-    const btnToggleDisplay = document.getElementById('btnToggleDisplay');
-    const vinylMode        = document.getElementById('vinylMode');
-    const glassCardMode    = document.getElementById('glassCardMode');
-    if (!btnToggleDisplay) return;
+    const toggleBtns    = document.querySelectorAll('.btn-toggle-display');
+    const vinylMode     = document.getElementById('vinylMode');
+    const glassCardMode = document.getElementById('glassCardMode');
 
     let currentMode = state.displayMode || 'vinyl';
 
@@ -172,15 +171,17 @@ function initDisplayModeToggle() {
             const isGlass = mode === 'glass';
             vinylMode.style.display     = isGlass ? 'none' : 'flex';
             glassCardMode.style.display = isGlass ? 'flex' : 'none';
-            const btnText = btnToggleDisplay.querySelector('.btn-text');
-            if (btnText) btnText.textContent = isGlass ? 'Khung 3D' : 'Đĩa Than';
         }
     }
 
     applyDisplayMode(currentMode);
-    btnToggleDisplay.addEventListener('click', () => {
-        applyDisplayMode(currentMode === 'vinyl' ? 'glass' : 'vinyl');
-        saveBackendConfig(state);
+
+    toggleBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            applyDisplayMode(currentMode === 'vinyl' ? 'glass' : 'vinyl');
+            saveBackendConfig(state);
+        });
     });
 }
 

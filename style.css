@@ -182,10 +182,10 @@ body {
     top: 0;
     left: 0;
     width: 100%;
-    padding: 20px 36px;
+    padding: 16px 36px 0 36px;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     z-index: 100;
     background: transparent;
     backdrop-filter: none;
@@ -206,6 +206,7 @@ body {
     letter-spacing: 2px;
     color: var(--accent-blue);
     text-transform: uppercase;
+    margin-top: 6px;
 }
 
 .header-right-group {
@@ -233,6 +234,30 @@ body {
     gap: 8px;
     box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
     transition: all 0.3s ease;
+}
+
+.action-btn.icon-only-btn {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    padding: 0;
+    border-radius: 50%;
+    justify-content: center;
+    font-size: 1rem;
+    color: #475569;
+}
+
+.action-btn.icon-only-btn:hover {
+    background: #0f172a;
+    color: #38bdf8;
+    border-color: #0284c7;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+}
+
+.action-btn.icon-only-btn:hover i {
+    transform: rotate(60deg);
+    transition: transform 0.4s ease;
 }
 
 .action-btn .btn-text {
@@ -496,12 +521,63 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 18px;
-    height: 18px;
-    background: #080914;
+    width: 26px;
+    height: 26px;
+    background: #0f172a;
     border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.9);
+    border: 2.5px solid #38bdf8;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.4), inset 0 0 4px rgba(0, 0, 0, 0.8);
+    z-index: 10;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.vinyl-hole i {
+    color: #e2e8f0;
+    font-size: 0.7rem;
+    transition: transform 0.4s ease;
+}
+
+.vinyl-hole:hover {
+    background: #0284c7;
+    border-color: #ffffff;
+    transform: translate(-50%, -50%) scale(1.3);
+    box-shadow: 0 0 18px rgba(56, 189, 248, 0.9);
+}
+
+.vinyl-hole:hover i {
+    color: #ffffff;
+    transform: rotate(180deg);
+}
+
+.glass-mode-toggle-btn {
+    position: absolute;
+    top: -18px;
+    right: 12px;
+    z-index: 25;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    transition: all 0.25s ease;
+}
+
+.glass-mode-toggle-btn:hover {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    border-color: #38bdf8;
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 18px rgba(2, 132, 199, 0.4);
 }
 
 .vinyl-arm {
@@ -3412,22 +3488,25 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
    ========================================================================== */
 
 /* ── Header Anonymous Button ────────────────────────────────────────────── */
+/* ── Header Anonymous Button (NGL Style) ────────────────────────────────────────── */
 .anonymous-btn {
     position: relative;
-    background: #ffffff;
-    border: 1px solid var(--glass-border);
+    background: linear-gradient(135deg, #EC008C 0%, #FC6767 100%);
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
     border-radius: var(--radius-pill);
-    padding: 8px 18px 8px 12px;
-    color: var(--text-primary);
+    padding: 8px 18px 8px 10px;
+    color: #ffffff !important;
     font-size: 0.85rem;
-    font-weight: 700;
+    font-weight: 800;
+    letter-spacing: 0.3px;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 8px;
     overflow: hidden;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 4px 16px rgba(236, 0, 140, 0.45), 0 0 0 2px rgba(252, 103, 103, 0.2);
+    animation: nglPulse 2.2s infinite ease-in-out;
 }
 
 .anonymous-btn-glow {
@@ -3436,53 +3515,56 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
 
 .anonymous-btn-icon {
     position: relative;
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
+    background: #ffffff;
+    border: none;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--accent-blue);
-    font-size: 0.88rem;
+    color: #EC008C !important;
+    font-size: 0.85rem;
     flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     transition: transform 0.3s ease;
 }
 
 .anonymous-btn-text {
     position: relative;
-    color: var(--text-primary);
-    font-weight: 700;
+    color: #ffffff !important;
+    font-weight: 800;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .anonymous-btn-sparkle {
     position: relative;
-    color: var(--accent-rose);
-    font-size: 0.75rem;
+    color: #ffedd5 !important;
+    font-size: 0.8rem;
     opacity: 0.9;
 }
 
 .anonymous-btn:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow:
-        0 0 0 1px rgba(255, 255, 255, 0.1) inset,
-        0 8px 30px rgba(168, 85, 247, 0.28),
-        0 12px 40px rgba(251, 191, 36, 0.2),
-        0 16px 50px rgba(0, 0, 0, 0.4);
+    background: linear-gradient(135deg, #d8007e 0%, #ea5454 100%);
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 6px 24px rgba(236, 0, 140, 0.65), 0 0 0 3px rgba(255, 255, 255, 0.4);
 }
 
 .anonymous-btn:hover .anonymous-btn-icon {
-    transform: rotate(-8deg) scale(1.08);
-    box-shadow: 0 0 24px rgba(251, 191, 36, 0.6);
-}
-
-.anonymous-btn:hover::before {
-    opacity: 1;
+    transform: rotate(-12deg) scale(1.1);
 }
 
 .anonymous-btn:active {
-    transform: translateY(0) scale(0.98);
+    transform: translateY(0) scale(0.97);
+}
+
+@keyframes nglPulse {
+    0%, 100% {
+        box-shadow: 0 4px 16px rgba(236, 0, 140, 0.45), 0 0 0 0px rgba(236, 0, 140, 0.4);
+    }
+    50% {
+        box-shadow: 0 4px 22px rgba(236, 0, 140, 0.65), 0 0 0 6px rgba(236, 0, 140, 0);
+    }
 }
 
 @keyframes anonymousBtnFloat {
@@ -5236,32 +5318,42 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
 
 /* ── Header Distance Button (Replaced Weather Badge) ────────────────────────── */
 .header-location-btn {
-    background: #e0f2fe;
-    border: 1px solid #7dd3fc;
-    color: #0369a1;
-    padding: 8px 16px;
+    background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+    color: #ffffff !important;
+    padding: 8px 18px;
     border-radius: var(--radius-pill);
     font-size: 0.85rem;
-    font-weight: 700;
+    font-weight: 800;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    box-shadow: 0 2px 6px rgba(14, 165, 233, 0.12);
-    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35), 0 0 0 2px rgba(56, 189, 248, 0.2);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: locationBtnPulse 2.5s infinite ease-in-out;
 }
 
 .header-location-btn span,
 .header-location-btn i {
-    color: #0369a1 !important;
+    color: #ffffff !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .header-location-btn:hover {
-    background: #ffffff;
-    border-color: #0284c7;
-    color: #0284c7;
-    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
-    transform: translateY(-2px);
+    background: linear-gradient(135deg, #0369a1 0%, #0891b2 100%);
+    border-color: #ffffff;
+    box-shadow: 0 6px 22px rgba(2, 132, 199, 0.55), 0 0 0 4px rgba(56, 189, 248, 0.3);
+    transform: translateY(-2px) scale(1.04);
+}
+
+@keyframes locationBtnPulse {
+    0%, 100% {
+        box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35), 0 0 0 0px rgba(56, 189, 248, 0.4);
+    }
+    50% {
+        box-shadow: 0 4px 18px rgba(2, 132, 199, 0.55), 0 0 0 6px rgba(56, 189, 248, 0);
+    }
 }
 
 @media (max-width: 480px) {

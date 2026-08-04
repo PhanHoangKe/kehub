@@ -90,7 +90,8 @@
       "connection": "4g",
       "battery": "88%",
       "sectionsVisited": [
-        "Trang chủ"
+        "Trang chủ",
+        "Chuyển mục"
       ],
       "timelineLogs": [
         {
@@ -107,12 +108,42 @@
           "time": "18:04:28",
           "event": "Thao tác: Định vị trạm sóng (Tan Phong, Tinh Thanh Hoa)",
           "detail": ""
+        },
+        {
+          "time": "18:06:30",
+          "event": "Thao tác: Mở trang quản trị Admin",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "18:06:31",
+          "event": "Thao tác: Hủy",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "18:06:44",
+          "event": "Thao tác: Trường Lớp & Bạn Bè",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "18:06:45",
+          "event": "Thao tác: Trang Chủ",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "18:06:46",
+          "event": "Thao tác: Thành Tích & CLB",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "18:06:47",
+          "event": "Thao tác: Trang Chủ",
+          "detail": "Mục: Chuyển mục"
         }
       ],
-      "clicks": 3,
+      "clicks": 9,
       "firstSeen": "2026-08-04T11:04:25.860Z",
-      "lastSeen": "2026-08-04T11:05:43.939Z",
-      "durationSeconds": 78
+      "lastSeen": "2026-08-04T11:06:47.160Z",
+      "durationSeconds": 141
     },
     {
       "id": "vis_1785841131096_58it",

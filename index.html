@@ -79,7 +79,7 @@
         </div>
 
         <div class="header-right-group" style="flex-direction: column; align-items: flex-end; gap: 10px;">
-            <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
                 <div id="capsuleSealBadge" class="capsule-seal-badge" style="display: none;" title="Viên nang thời gian tốt nghiệp đã được niêm phong vĩnh viễn">
                     <i class="fa-solid fa-graduation-cap"></i> <span id="capsuleSealText">VIÊN NANG ĐÃ NIÊM PHONG</span>
                 </div>
@@ -89,24 +89,25 @@
                 </button>
 
                 <div class="header-actions">
-                    <button id="btnToggleDisplay" class="action-btn" title="Đổi hiệu ứng (Đĩa than / Khung 3D Floating)">
+                    <!-- Legacy invisible target for JS fallback -->
+                    <button id="btnToggleDisplay" class="action-btn btn-toggle-display" style="display: none;" title="Đổi hiệu ứng (Đĩa than / Khung 3D Floating)">
                         <i class="fa-solid fa-rotate"></i>
                         <span class="btn-text">Đĩa than</span>
                     </button>
-                    <button id="btnCustomization" class="action-btn admin-only" style="display: none;"
+
+                    <button id="btnCustomization" class="action-btn icon-only-btn admin-only" style="display: none;"
                         title="Mở trang quản trị Admin">
-                        <i class="fa-solid fa-sliders"></i>
-                        <span class="btn-text">Quản trị</span>
+                        <i class="fa-solid fa-gear"></i>
                     </button>
                 </div>
             </div>
 
-            <button id="btnOpenAnonymous" class="action-btn anonymous-btn">
+            <button id="btnOpenAnonymous" class="action-btn anonymous-btn ngl-btn" title="Gửi tin nhắn ẩn danh bí mật theo phong cách NGL">
                 <span class="anonymous-btn-glow"></span>
-                <span class="anonymous-btn-icon"><i class="fa-solid fa-mask"></i></span>
+                <span class="anonymous-btn-icon"><i class="fa-solid fa-fire"></i></span>
                 <span class="anonymous-btn-text">Gửi Tin Nhắn Ẩn Danh</span>
                 <span class="anonymous-btn-sparkle">
-                    <i class="fa-solid fa-shield-halved"></i>
+                    <i class="fa-solid fa-bolt"></i>
                 </span>
             </button>
         </div>
@@ -138,7 +139,9 @@
                                     <img id="userPhotoVinyl"
                                         src=""
                                         alt="Ảnh đại diện">
-                                    <div class="vinyl-hole"></div>
+                                    <div class="vinyl-hole btn-toggle-display" id="btnToggleDisplayHole" title="Bấm vào đây để chuyển sang Khung 3D Floating">
+                                        <i class="fa-solid fa-rotate"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -147,6 +150,9 @@
 
                     <!-- Mode 2: Khung Ảnh 3D Nổi (Floating Glass 3D Tilt) -->
                     <div class="glass-card-wrapper" id="glassCardMode">
+                        <button class="glass-mode-toggle-btn btn-toggle-display" id="btnToggleDisplayGlass" title="Bấm để chuyển về chế độ Đĩa Than">
+                            <i class="fa-solid fa-compact-disc"></i> <span>Đĩa Than</span>
+                        </button>
                         <div class="glass-card" id="glassCard">
                             <div class="glass-card-border"></div>
                             <div class="glass-card-image-box">

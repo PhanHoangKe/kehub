@@ -424,7 +424,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             // Kích hoạt smart polling CHỈ KHI đang mở Tab Visitors
             if (targetTab === 'tabVisitors') {
                 loadAdminVisitorsList();
-                _visitorPollTimer = setInterval(loadAdminVisitorsList, 5000);
+                _visitorPollTimer = setInterval(loadAdminVisitorsList, 2000);
             }
         });
     });

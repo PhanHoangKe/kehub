@@ -140,6 +140,19 @@ function extractClientIp(req) {
 // Memory Cache cho IP Geolocation
 const ipGeoCache = new Map();
 
+async function fetchWithTimeout(resource, timeoutMs = 1200) {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        const response = await fetch(resource, { signal: controller.signal });
+        clearTimeout(id);
+        return response;
+    } catch (error) {
+        clearTimeout(id);
+        return null;
+    }
+}
+
 async function getIpLocation(ip) {
     if (!ip || ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.')) {
         return { city: 'Localhost', region: 'Nội bộ', country: 'Máy chủ local', isp: 'Mạng LAN', lat: null, lng: null };
@@ -148,8 +161,8 @@ async function getIpLocation(ip) {
 
     // Nguồn 1: ip-api.com
     try {
-        const res = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,regionName,city,isp,org,lat,lon`);
-        if (res.ok) {
+        const res = await fetchWithTimeout(`http://ip-api.com/json/${ip}?fields=status,country,regionName,city,isp,org,lat,lon`, 1200);
+        if (res && res.ok) {
             const data = await res.json();
             if (data.status === 'success') {
                 const geo = {
@@ -168,8 +181,8 @@ async function getIpLocation(ip) {
 
     // Nguồn 2: ipwho.is (Hỗ trợ HTTPS)
     try {
-        const res = await fetch(`https://ipwho.is/${ip}`);
-        if (res.ok) {
+        const res = await fetchWithTimeout(`https://ipwho.is/${ip}`, 1200);
+        if (res && res.ok) {
             const data = await res.json();
             if (data.success) {
                 const geo = {
@@ -188,8 +201,8 @@ async function getIpLocation(ip) {
 
     // Nguồn 3: freeipapi.com
     try {
-        const res = await fetch(`https://freeipapi.com/api/json/${ip}`);
-        if (res.ok) {
+        const res = await fetchWithTimeout(`https://freeipapi.com/api/json/${ip}`, 1200);
+        if (res && res.ok) {
             const data = await res.json();
             if (data.cityName) {
                 const geo = {

@@ -17,10 +17,16 @@ export function initGuestbookEngine() {
     // ── Emoji Reactions ───────────────────────────────────────────────────────
     const EMOJI_MAP = {
         '❤️': 'reactionCount-heart',
-        '😊': 'reactionCount-smile',
-        '🥺': 'reactionCount-tear',
-        '🎉': 'reactionCount-party',
-        '👏': 'reactionCount-clap',
+        '🧹': 'reactionCount-smile',
+        '😏': 'reactionCount-tear',
+        '🔥': 'reactionCount-party',
+    };
+
+    const EMOJI_IMG_MAP = {
+        '❤️': 'assets/memes/hanhan_3.png',
+        '🧹': 'assets/memes/hanhan_1.png',
+        '😏': 'assets/memes/hanhan_2.png',
+        '🔥': 'assets/memes/hanhan_4.png',
     };
 
     // LocalStorage key lưu emoji nào user đã react (để bật active state)
@@ -65,11 +71,10 @@ export function initGuestbookEngine() {
     }
 
     const EMOJI_IMG_MAP = {
-        '❤️': 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Red%20heart/3D/red_heart_3d.png',
-        '😊': 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Smiling%20face%20with%20smiling%20eyes/3D/smiling_face_with_smiling_eyes_3d.png',
-        '🥺': 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Pleading%20face/3D/pleading_face_3d.png',
-        '🎉': 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Party%20popper/3D/party_popper_3d.png',
-        '👏': 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Clapping%20hands/3D/clapping_hands_3d_default.png',
+        '❤️': 'assets/memes/hanhan_3.png',
+        '🧹': 'assets/memes/hanhan_1.png',
+        '😏': 'assets/memes/hanhan_2.png',
+        '🔥': 'assets/memes/hanhan_4.png',
     };
 
     // Floating emoji nổi lên khi click
@@ -78,12 +83,12 @@ export function initGuestbookEngine() {
         el.className = 'floating-emoji-pop';
         const imgUrl = EMOJI_IMG_MAP[emoji];
         if (imgUrl) {
-            el.innerHTML = `<img src="${imgUrl}" style="width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 4px 10px rgba(0,0,0,0.35));">`;
+            el.innerHTML = `<img src="${imgUrl}" style="width:48px;height:48px;object-fit:cover;border-radius:50%;border:2px solid #f59e0b;box-shadow:0 6px 16px rgba(245,158,11,0.5);">`;
         } else {
             el.textContent = emoji;
         }
-        el.style.left = `${x - 19}px`;
-        el.style.top  = `${y - 24}px`;
+        el.style.left = `${x - 24}px`;
+        el.style.top  = `${y - 30}px`;
         document.body.appendChild(el);
         setTimeout(() => el.remove(), 1400);
     }

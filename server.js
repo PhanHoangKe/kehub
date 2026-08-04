@@ -929,17 +929,7 @@ const server = http.createServer(async (req, res) => {
         }
 
         const db = getDB();
-        const clientIp = extractClientIp(req);
         let visitors = db.visitors || [];
-
-        // TỰ ĐỘNG LỌC BỎ IP VÀ SESSION CỦA CHÍNH ADMIN KHỎI DANH SÁCH TRACKING
-        const initialCount = visitors.length;
-        visitors = visitors.filter(v => v.ip !== clientIp && v.ip !== '127.0.0.1' && v.ip !== '::1');
-        if (visitors.length !== initialCount) {
-            db.visitors = visitors;
-            saveDB(db);
-        }
-
         const nowMs = Date.now();
 
         // Đếm số người đang online (lastSeen trong vòng 5 phút)

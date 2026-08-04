@@ -80,9 +80,10 @@
 
 /* ── Modal box ────────────────────────────────────────────────────────────── */
 #customModal .modal-box {
-    width: 100% !important;
-    max-width: 1200px !important;
-    height: 88vh !important;
+    width: 96vw !important;
+    max-width: 1650px !important;
+    height: 92vh !important;
+    margin: 0 auto !important;
     background: var(--adm-bg-surface) !important;
     backdrop-filter: blur(24px) !important;
     -webkit-backdrop-filter: blur(24px) !important;
@@ -95,7 +96,6 @@
     animation: adminModalIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     transform: none !important;
     padding: 0 !important;
-    margin: 0 !important;
 }
 
 @keyframes adminModalIn {

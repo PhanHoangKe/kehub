@@ -688,7 +688,8 @@ const server = http.createServer(async (req, res) => {
                 id:        Date.now(),
                 message:   message || '',
                 mediaUrl:  savedMediaUrl,
-                mediaType: savedMediaUrl ? (mediaType || 'file') : null,
+                mediaData: mediaData || null,
+                mediaType: (savedMediaUrl || mediaData) ? (mediaType || 'file') : null,
                 createdAt: new Date().toISOString(),
             });
             await saveDB(db);

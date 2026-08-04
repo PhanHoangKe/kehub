@@ -99,9 +99,9 @@ function promptAdminLogin() {
         loginModal.style.display = 'flex';
         loginModal.classList.add('active');
 
-        const input    = document.getElementById('adminPasswordInput');
-        const errorEl  = document.getElementById('adminLoginError');
-        const btnOk    = document.getElementById('adminLoginSubmit');
+        const input = document.getElementById('adminPasswordInput');
+        const errorEl = document.getElementById('adminLoginError');
+        const btnOk = document.getElementById('adminLoginSubmit');
         const btnCancel = document.getElementById('adminLoginCancel');
 
         if (input) { input.value = ''; setTimeout(() => input.focus(), 100); }
@@ -302,7 +302,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
 
                 const lastSeenMs = new Date(v.lastSeen).getTime();
                 const isOnline = (nowMs - lastSeenMs) <= 5 * 60 * 1000;
-                const statusBadge = isOnline 
+                const statusBadge = isOnline
                     ? `<span style="background:rgba(34,197,94,0.2);color:#4ade80;border:1px solid rgba(34,197,94,0.4);padding:2px 8px;border-radius:12px;font-size:0.75rem;font-weight:bold;">🟢 ĐANG ONLINE</span>`
                     : `<span style="background:rgba(148,163,184,0.15);color:#94a3b8;padding:2px 8px;border-radius:12px;font-size:0.75rem;">⚪ Đã rời đi</span>`;
 
@@ -315,7 +315,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                 const networkStr = v.connection ? ` • 📶 Mạng: ${escapeHTML(v.connection.toUpperCase())}` : '';
                 const screenStr = v.screen && v.screen !== '-' ? ` • 📐 Màn hình: ${escapeHTML(v.screen)} (x${v.dpr || 1})` : '';
 
-                const timelineHtml = (v.timelineLogs || []).map(log => 
+                const timelineHtml = (v.timelineLogs || []).map(log =>
                     `<div style="font-size:0.75rem;color:#cbd5e1;padding:2px 0;border-bottom:1px dashed rgba(255,255,255,0.05);display:flex;gap:6px;">
                         <span style="color:#94a3b8;min-width:60px;">${escapeHTML(log.time)}</span>
                         <strong style="color:#38bdf8;">${escapeHTML(log.event)}</strong>
@@ -323,18 +323,18 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                     </div>`
                 ).join('');
 
-                const gmapBtn = (v.lat && v.lng) 
+                const gmapBtn = (v.lat && v.lng)
                     ? `<a href="https://www.google.com/maps?q=${v.lat},${v.lng}" target="_blank" style="background:#0284c7;color:#ffffff;padding:3px 10px;border-radius:6px;font-size:0.75rem;font-weight:bold;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-left:6px;box-shadow:0 0 10px rgba(2,132,199,0.5);"><i class="fa-solid fa-map-location-dot"></i> 🗺️ Mở Google Maps</a>`
                     : '';
 
                 const isGpsExact = v.isGps || (v.accuracy && v.accuracy <= 500);
                 const geoBadge = isGpsExact
                     ? `<span style="background:rgba(34,197,94,0.2);color:#4ade80;border:1px solid rgba(34,197,94,0.4);padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:bold;">🎯 GPS Chuẩn Xóm/Xã (Khách đã cấp quyền)</span>`
-                    : (v.lat && v.lng 
+                    : (v.lat && v.lng
                         ? `<span style="background:rgba(234,179,8,0.2);color:#facc15;border:1px solid rgba(234,179,8,0.4);padding:2px 8px;border-radius:10px;font-size:0.72rem;">📶 Ước Tính IP Mạng (Chưa có GPS)</span>`
                         : `<span style="background:rgba(148,163,184,0.15);color:#94a3b8;padding:2px 8px;border-radius:10px;font-size:0.72rem;">❓ Vị Trí Chưa Rõ</span>`);
 
-                const locationTitle = isGpsExact 
+                const locationTitle = isGpsExact
                     ? `<span style="color:#4ade80;font-weight:bold;">${escapeHTML(v.city || 'Xã / Tỉnh')} (🎯 GPS Chính Xác)</span>`
                     : `<span style="color:#facc15;font-weight:bold;">${escapeHTML(v.city || 'Ước tính IP')} (Chưa có GPS)</span>`;
 
@@ -462,7 +462,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             }
 
             const state = getState();
-            
+
             const inputName = document.getElementById('inputName');
             const inputSchoolName = document.getElementById('inputSchoolName');
             const inputClassName = document.getElementById('inputClassName');
@@ -567,7 +567,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             const res = await fetch('/api/data');
             const data = await res.json();
             const msgs = data.anonymousMessages || [];
-            
+
             adminAnonymousList.innerHTML = '';
             if (msgs.length === 0) {
                 adminAnonymousList.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;font-size:0.88rem;">Chưa có tin nhắn ẩn danh nào.</div>';
@@ -1076,7 +1076,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             if (newGallery.length > 0) state.gallery = newGallery;
 
             // Read Journey Cards
-            const jouTitles = document.querySelectorAll('.adm-jou-title');            const jouTags = document.querySelectorAll('.adm-jou-tag');
+            const jouTitles = document.querySelectorAll('.adm-jou-title'); const jouTags = document.querySelectorAll('.adm-jou-tag');
             const jouDates = document.querySelectorAll('.adm-jou-date');
             const jouUrls = document.querySelectorAll('.adm-jou-url');
             const jouDescs = document.querySelectorAll('.adm-jou-desc');
@@ -1098,10 +1098,10 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             if (newJourney.length > 0) state.journey = newJourney;
 
             // Read Map Locations
-            const mapNames  = document.querySelectorAll('.adm-map-name');
+            const mapNames = document.querySelectorAll('.adm-map-name');
             const mapLabels = document.querySelectorAll('.adm-map-label');
-            const mapLats   = document.querySelectorAll('.adm-map-lat');
-            const mapLngs   = document.querySelectorAll('.adm-map-lng');
+            const mapLats = document.querySelectorAll('.adm-map-lat');
+            const mapLngs = document.querySelectorAll('.adm-map-lng');
             const newMapLocations = [];
             for (let i = 0; i < mapNames.length; i++) {
                 const name = mapNames[i].value.trim();
@@ -1209,7 +1209,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                     }
 
                     showToast("Đã lưu thông tin Hồ Sơ cá nhân! 👤✨");
-                } 
+                }
                 else if (action === 'music') {
                     const trkFiles = document.querySelectorAll('.adm-trk-file');
                     const trkUrls = document.querySelectorAll('.adm-trk-url');
@@ -1286,10 +1286,10 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                     showToast("Đã lưu Dấu Chân Thanh Xuân! 📍✨");
                 }
                 else if (action === 'memoryMap') {
-                    const mapNames  = document.querySelectorAll('.adm-map-name');
+                    const mapNames = document.querySelectorAll('.adm-map-name');
                     const mapLabels = document.querySelectorAll('.adm-map-label');
-                    const mapLats   = document.querySelectorAll('.adm-map-lat');
-                    const mapLngs   = document.querySelectorAll('.adm-map-lng');
+                    const mapLats = document.querySelectorAll('.adm-map-lat');
+                    const mapLngs = document.querySelectorAll('.adm-map-lng');
                     const newMapLocations = [];
                     for (let i = 0; i < mapNames.length; i++) {
                         const name = mapNames[i].value.trim();
@@ -1381,7 +1381,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                             ].filter(Boolean);
                             if (inputHomeAddress) inputHomeAddress.value = parts.join(', ');
                         }
-                    } catch (e) {}
+                    } catch (e) { }
 
                     btnGetMyCurrentHomeLocation.innerHTML = `<i class="fa-solid fa-circle-check"></i> Đã Lấy Tọa Độ Thành Công!`;
                     setTimeout(() => {

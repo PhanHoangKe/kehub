@@ -190,6 +190,7 @@
     border-color: rgba(244, 63, 94, 0.4) !important;
     color: #fb7185 !important;
     box-shadow: 0 0 12px rgba(244, 63, 94, 0.2) !important;
+    transform: none !important;
 }
 
 /* ── Tab Navigation ───────────────────────────────────────────────────────── */

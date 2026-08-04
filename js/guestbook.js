@@ -64,13 +64,26 @@ export function initGuestbookEngine() {
         });
     }
 
+    const EMOJI_IMG_MAP = {
+        '❤️': 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Red%20heart/3D/red_heart_3d.png',
+        '😊': 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Smiling%20face%20with%20smiling%20eyes/3D/smiling_face_with_smiling_eyes_3d.png',
+        '🥺': 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Pleading%20face/3D/pleading_face_3d.png',
+        '🎉': 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Party%20popper/3D/party_popper_3d.png',
+        '👏': 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Clapping%20hands/3D/clapping_hands_3d_default.png',
+    };
+
     // Floating emoji nổi lên khi click
     function createFloatingEmoji(emoji, x, y) {
-        const el = document.createElement('span');
+        const el = document.createElement('div');
         el.className = 'floating-emoji-pop';
-        el.textContent = emoji;
-        el.style.left = `${x - 16}px`;
-        el.style.top  = `${y - 20}px`;
+        const imgUrl = EMOJI_IMG_MAP[emoji];
+        if (imgUrl) {
+            el.innerHTML = `<img src="${imgUrl}" style="width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 4px 10px rgba(0,0,0,0.35));">`;
+        } else {
+            el.textContent = emoji;
+        }
+        el.style.left = `${x - 19}px`;
+        el.style.top  = `${y - 24}px`;
         document.body.appendChild(el);
         setTimeout(() => el.remove(), 1400);
     }

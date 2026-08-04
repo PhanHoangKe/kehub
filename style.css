@@ -5342,9 +5342,84 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
         opacity: 0;
         transform: translateY(6px);
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
+
+/* ==========================================================================
+   OPTIMIZED NATIVE-LIKE MOBILE APP UI & UX (Tối Ưu Giao Diện Điện Thoại)
+   ========================================================================== */
+@media (max-width: 768px) {
+    /* ── Header Top Bar ── */
+    .top-header {
+        padding: 12px 14px !important;
+        background: rgba(5, 6, 14, 0.92) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        backdrop-filter: none !important;
+    }
+
+    .brand-logo {
+        font-size: 0.72rem !important;
+        letter-spacing: 1px !important;
+        margin-top: 0 !important;
+    }
+
+    .header-right-group {
+        gap: 6px !important;
+    }
+
+    .header-actions {
+        gap: 6px !important;
+    }
+
+    .action-btn {
+        padding: 6px 10px !important;
+        font-size: 0.75rem !important;
+        border-radius: 20px !important;
+    }
+
+    .action-btn .btn-text {
+        font-size: 0.72rem !important;
+    }
+
+    /* ── Header Location Button ── */
+    .header-location-btn {
+        padding: 6px 12px !important;
+        font-size: 0.75rem !important;
+        gap: 6px !important;
+    }
+
+    /* ── Main Container Padding ── */
+    .main-container {
+        padding: 85px 14px 100px !important;
+    }
+
+    /* ── Vinyl & Player Controls ── */
+    .vinyl-wrapper {
+        width: 240px !important;
+        height: 240px !important;
+    }
+
+    .glass-card-wrapper {
+        width: 280px !important;
+        height: 340px !important;
+    }
+
+    /* ── Vertical Mood Dock on Mobile ── */
+    .vertical-mood-dock {
+        right: 8px !important;
+        top: 25% !important;
+        padding: 8px 5px !important;
+        gap: 8px !important;
+        background: rgba(14, 17, 36, 0.92) !important;
+        backdrop-filter: none !important;
+    }
+
+    .mood-dock-title {
+        display: none !important;
+    }
+
+    .mood-btn-circle {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 0.95rem !important;
     }
 }
 

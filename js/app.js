@@ -329,16 +329,6 @@ async function getBatteryStatus() {
 
 async function initVisitorTracking() {
     try {
-        // TỰ ĐỘNG TẮT TOÀN BỘ TRACKING NẾU LÀ ADMIN
-        const isAdminToken = localStorage.getItem('admin_token');
-        const isAdminUrl = window.location.search.includes('admin=true');
-        const isAdminCookie = document.cookie.includes('admin_token');
-
-        if (isAdminToken || isAdminUrl || isAdminCookie) {
-            console.log('🛡️ [Admin Mode] Đang mở quyền Admin — Tắt toàn bộ tự theo dõi chính Admin.');
-            return;
-        }
-
         let sessionId = sessionStorage.getItem('v_sess_id');
         if (!sessionId) {
             sessionId = 's_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);

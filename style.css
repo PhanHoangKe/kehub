@@ -5449,6 +5449,14 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
         pointer-events: none !important;
     }
 
+    .top-header > *,
+    .top-header button,
+    .top-header a,
+    .top-header .header-right-group,
+    .top-header .header-actions {
+        pointer-events: auto !important;
+    }
+
     .brand-logo {
         font-size: 0.72rem !important;
         letter-spacing: 1px !important;

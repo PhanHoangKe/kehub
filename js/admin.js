@@ -1,7 +1,7 @@
 /**
  * admin.js - Trung Tâm Quản Lý Admin Kế (Quản lý không giới hạn Ảnh, Dấu Chân Thanh Xuân & Playlist)
  */
-import { escapeHTML } from './config.js';
+import { escapeHTML, KE_CONFIG } from './config.js';
 import { showToast } from './toast.js';
 
 // ── Session cache trong memory ─────────────────────────────────────────────
@@ -446,119 +446,123 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
 
     const urlParams = new URLSearchParams(window.location.search);
     const isParamAdmin = urlParams.get('admin') === 'true';
+
+    async function openAdminModal() {
+        if (!customModal) return;
+        const alreadyAuth = await checkAdminSession();
+        if (!alreadyAuth) {
+            const loggedIn = await promptAdminLogin();
+            if (!loggedIn) return;
+        }
+
+        const state = getState();
+
+        const inputName = document.getElementById('inputName');
+        const inputSchoolName = document.getElementById('inputSchoolName');
+        const inputClassName = document.getElementById('inputClassName');
+        const inputClassSlogan = document.getElementById('inputClassSlogan');
+        const inputPhotoUrl = document.getElementById('inputPhotoUrl');
+        const inputQuote1 = document.getElementById('inputQuote1');
+        const inputQuote2 = document.getElementById('inputQuote2');
+        const inputQuote3 = document.getElementById('inputQuote3');
+        const inputBirthdayDate = document.getElementById('inputBirthdayDate');
+        const inputFavMusic = document.getElementById('inputFavMusic');
+        const inputFavMovie = document.getElementById('inputFavMovie');
+        const inputFavBook = document.getElementById('inputFavBook');
+        const inputFavDrink = document.getElementById('inputFavDrink');
+        const inputFavFashion = document.getElementById('inputFavFashion');
+        const inputFavLover = document.getElementById('inputFavLover');
+        const inputFavLifestyle = document.getElementById('inputFavLifestyle');
+        const inputFavColor = document.getElementById('inputFavColor');
+        const inputBalloonTiktokUrl = document.getElementById('inputBalloonTiktokUrl');
+
+        if (inputName) inputName.value = state.name || '';
+        if (inputSchoolName) inputSchoolName.value = state.schoolName || '';
+        if (inputClassName) inputClassName.value = state.className || '';
+        if (inputClassSlogan) inputClassSlogan.value = state.classSlogan || '';
+        if (inputPhotoUrl) inputPhotoUrl.value = state.photoUrl && state.photoUrl.startsWith('data:') ? '' : (state.photoUrl || '');
+        if (inputQuote1) inputQuote1.value = state.quote1 || '';
+        if (inputQuote2) inputQuote2.value = state.quote2 || '';
+        if (inputQuote3) inputQuote3.value = state.quote3 || '';
+        if (inputBirthdayDate) inputBirthdayDate.value = state.birthdayDate || '';
+        if (inputBalloonTiktokUrl) inputBalloonTiktokUrl.value = state.balloonTiktokUrl || '';
+
+        const inputLinkFacebook = document.getElementById('inputLinkFacebook');
+        const inputLinkMessenger = document.getElementById('inputLinkMessenger');
+        const inputLinkZalo = document.getElementById('inputLinkZalo');
+        const inputLinkTiktok = document.getElementById('inputLinkTiktok');
+        const inputLinkInstagram = document.getElementById('inputLinkInstagram');
+
+        if (state.socialLinks) {
+            if (inputLinkFacebook) inputLinkFacebook.value = state.socialLinks.facebook || '';
+            if (inputLinkMessenger) inputLinkMessenger.value = state.socialLinks.messenger || '';
+            if (inputLinkZalo) inputLinkZalo.value = state.socialLinks.zalo || '';
+            if (inputLinkTiktok) inputLinkTiktok.value = state.socialLinks.tiktok || '';
+            if (inputLinkInstagram) inputLinkInstagram.value = state.socialLinks.instagram || '';
+        }
+
+        if (inputFavMusic) inputFavMusic.value = state.favMusic || '';
+        if (inputFavMovie) inputFavMovie.value = state.favMovie || '';
+        if (inputFavBook) inputFavBook.value = state.favBook || '';
+        if (inputFavDrink) inputFavDrink.value = state.favDrink || '';
+        if (inputFavFashion) inputFavFashion.value = state.favFashion || '';
+        if (inputFavLover) inputFavLover.value = state.favLover || '';
+        if (inputFavLifestyle) inputFavLifestyle.value = state.favLifestyle || '';
+        if (inputFavColor) inputFavColor.value = state.favColor || '';
+
+        const inputGraduationDate = document.getElementById('inputGraduationDate');
+        const capsuleStatusInfo = document.getElementById('capsuleStatusInfo');
+
+        const inputHomeLat = document.getElementById('inputHomeLat');
+        const inputHomeLng = document.getElementById('inputHomeLng');
+        const inputHomeAddress = document.getElementById('inputHomeAddress');
+
+        if (state.homeLocation) {
+            if (inputHomeLat) inputHomeLat.value = state.homeLocation.lat || '';
+            if (inputHomeLng) inputHomeLng.value = state.homeLocation.lng || '';
+            if (inputHomeAddress) inputHomeAddress.value = state.homeLocation.address || '';
+        }
+
+        if (inputGraduationDate) inputGraduationDate.value = state.graduationDate || '2026-06-30';
+        updateCapsuleStatusDOM(state, capsuleStatusInfo);
+
+        // Cập nhật chỉ số thống kê System Admin
+        const admStatWishes = document.getElementById('admStatWishes');
+        const admStatHearts = document.getElementById('admStatHearts');
+        const admStatTracks = document.getElementById('admStatTracks');
+        const admStatGallery = document.getElementById('admStatGallery');
+
+        const guestbookWall = document.getElementById('guestbookWall');
+        const wishCount = guestbookWall ? guestbookWall.children.length : 0;
+        // Đọc tổng reactions từ element reactionTotalCount
+        const reactionTotalEl = document.getElementById('reactionTotalCount');
+        const hearts = reactionTotalEl ? reactionTotalEl.textContent : '0';
+
+        if (admStatWishes) admStatWishes.textContent = wishCount;
+        if (admStatHearts) admStatHearts.textContent = hearts;
+        if (admStatTracks) admStatTracks.textContent = (state.playlist || []).length;
+        if (admStatGallery) admStatGallery.textContent = (state.gallery || []).length;
+
+        renderAdminPlaylistList();
+        renderAdminGalleryList();
+        renderAdminJourneyList();
+        renderAdminMapLocationsList();
+        renderAdminReactionsList();
+        fetchAndRenderAnonymousMessages();
+
+        customModal.classList.add('active');
+    }
+
+    window.openAdminModal = openAdminModal;
+    window.showAdminLoginModal = promptAdminLogin;
+
     const hasAdminToken = Boolean(localStorage.getItem('admin_token'));
     if (btnCustomization) {
         btnCustomization.style.display = (hasAdminToken || isParamAdmin) ? 'inline-flex' : 'none';
+        btnCustomization.addEventListener('click', openAdminModal);
         if (isParamAdmin) {
-            setTimeout(() => btnCustomization.click(), 500);
+            setTimeout(() => openAdminModal(), 300);
         }
-    }
-
-    if (btnCustomization && customModal) {
-        btnCustomization.addEventListener('click', async () => {
-            // Kiểm tra / yêu cầu xác thực Admin trước khi mở panel
-            const alreadyAuth = await checkAdminSession();
-            if (!alreadyAuth) {
-                const loggedIn = await promptAdminLogin();
-                if (!loggedIn) return;
-            }
-
-            const state = getState();
-
-            const inputName = document.getElementById('inputName');
-            const inputSchoolName = document.getElementById('inputSchoolName');
-            const inputClassName = document.getElementById('inputClassName');
-            const inputClassSlogan = document.getElementById('inputClassSlogan');
-            const inputPhotoUrl = document.getElementById('inputPhotoUrl');
-            const inputQuote1 = document.getElementById('inputQuote1');
-            const inputQuote2 = document.getElementById('inputQuote2');
-            const inputQuote3 = document.getElementById('inputQuote3');
-            const inputBirthdayDate = document.getElementById('inputBirthdayDate');
-            const inputFavMusic = document.getElementById('inputFavMusic');
-            const inputFavMovie = document.getElementById('inputFavMovie');
-            const inputFavBook = document.getElementById('inputFavBook');
-            const inputFavDrink = document.getElementById('inputFavDrink');
-            const inputFavFashion = document.getElementById('inputFavFashion');
-            const inputFavLover = document.getElementById('inputFavLover');
-            const inputFavLifestyle = document.getElementById('inputFavLifestyle');
-            const inputFavColor = document.getElementById('inputFavColor');
-            const inputBalloonTiktokUrl = document.getElementById('inputBalloonTiktokUrl');
-
-            if (inputName) inputName.value = state.name || '';
-            if (inputSchoolName) inputSchoolName.value = state.schoolName || '';
-            if (inputClassName) inputClassName.value = state.className || '';
-            if (inputClassSlogan) inputClassSlogan.value = state.classSlogan || '';
-            if (inputPhotoUrl) inputPhotoUrl.value = state.photoUrl && state.photoUrl.startsWith('data:') ? '' : (state.photoUrl || '');
-            if (inputQuote1) inputQuote1.value = state.quote1 || '';
-            if (inputQuote2) inputQuote2.value = state.quote2 || '';
-            if (inputQuote3) inputQuote3.value = state.quote3 || '';
-            if (inputBirthdayDate) inputBirthdayDate.value = state.birthdayDate || '';
-            if (inputBalloonTiktokUrl) inputBalloonTiktokUrl.value = state.balloonTiktokUrl || '';
-
-            const inputLinkFacebook = document.getElementById('inputLinkFacebook');
-            const inputLinkMessenger = document.getElementById('inputLinkMessenger');
-            const inputLinkZalo = document.getElementById('inputLinkZalo');
-            const inputLinkTiktok = document.getElementById('inputLinkTiktok');
-            const inputLinkInstagram = document.getElementById('inputLinkInstagram');
-
-            if (state.socialLinks) {
-                if (inputLinkFacebook) inputLinkFacebook.value = state.socialLinks.facebook || '';
-                if (inputLinkMessenger) inputLinkMessenger.value = state.socialLinks.messenger || '';
-                if (inputLinkZalo) inputLinkZalo.value = state.socialLinks.zalo || '';
-                if (inputLinkTiktok) inputLinkTiktok.value = state.socialLinks.tiktok || '';
-                if (inputLinkInstagram) inputLinkInstagram.value = state.socialLinks.instagram || '';
-            }
-
-            if (inputFavMusic) inputFavMusic.value = state.favMusic || '';
-            if (inputFavMovie) inputFavMovie.value = state.favMovie || '';
-            if (inputFavBook) inputFavBook.value = state.favBook || '';
-            if (inputFavDrink) inputFavDrink.value = state.favDrink || '';
-            if (inputFavFashion) inputFavFashion.value = state.favFashion || '';
-            if (inputFavLover) inputFavLover.value = state.favLover || '';
-            if (inputFavLifestyle) inputFavLifestyle.value = state.favLifestyle || '';
-            if (inputFavColor) inputFavColor.value = state.favColor || '';
-
-            const inputGraduationDate = document.getElementById('inputGraduationDate');
-            const capsuleStatusInfo = document.getElementById('capsuleStatusInfo');
-
-            const inputHomeLat = document.getElementById('inputHomeLat');
-            const inputHomeLng = document.getElementById('inputHomeLng');
-            const inputHomeAddress = document.getElementById('inputHomeAddress');
-
-            if (state.homeLocation) {
-                if (inputHomeLat) inputHomeLat.value = state.homeLocation.lat || '';
-                if (inputHomeLng) inputHomeLng.value = state.homeLocation.lng || '';
-                if (inputHomeAddress) inputHomeAddress.value = state.homeLocation.address || '';
-            }
-
-            if (inputGraduationDate) inputGraduationDate.value = state.graduationDate || '2026-06-30';
-            updateCapsuleStatusDOM(state, capsuleStatusInfo);
-
-            // Cập nhật chỉ số thống kê System Admin
-            const admStatWishes = document.getElementById('admStatWishes');
-            const admStatHearts = document.getElementById('admStatHearts');
-            const admStatTracks = document.getElementById('admStatTracks');
-            const admStatGallery = document.getElementById('admStatGallery');
-
-            const guestbookWall = document.getElementById('guestbookWall');
-            const wishCount = guestbookWall ? guestbookWall.children.length : 0;
-            // Đọc tổng reactions từ element reactionTotalCount
-            const reactionTotalEl = document.getElementById('reactionTotalCount');
-            const hearts = reactionTotalEl ? reactionTotalEl.textContent : '0';
-
-            if (admStatWishes) admStatWishes.textContent = wishCount;
-            if (admStatHearts) admStatHearts.textContent = hearts;
-            if (admStatTracks) admStatTracks.textContent = (state.playlist || []).length;
-            if (admStatGallery) admStatGallery.textContent = (state.gallery || []).length;
-
-            renderAdminPlaylistList();
-            renderAdminGalleryList();
-            renderAdminJourneyList();
-            renderAdminMapLocationsList();
-            fetchAndRenderAnonymousMessages();
-
-            customModal.classList.add('active');
-        });
     }
 
     async function fetchAndRenderAnonymousMessages() {
@@ -680,6 +684,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
     const musicPlaylistAdminList = document.getElementById('musicPlaylistAdminList');
     const galleryAdminList = document.getElementById('galleryAdminList');
     const journeyAdminList = document.getElementById('journeyAdminList');
+    const reactionsAdminList = document.getElementById('reactionsAdminList');
     const btnAddPlaylistTrack = document.getElementById('btnAddPlaylistTrack');
     const btnAddGalleryPhoto = document.getElementById('btnAddGalleryPhoto');
     const btnAddJourneyCard = document.getElementById('btnAddJourneyCard');
@@ -944,6 +949,69 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             state.mapLocations = state.mapLocations || [];
             state.mapLocations.push({ name: '', label: '', lat: '', lng: '' });
             renderAdminMapLocationsList();
+        });
+    }
+
+    function renderAdminReactionsList() {
+        if (!reactionsAdminList) return;
+        reactionsAdminList.innerHTML = '';
+        const state = getState();
+        const list = state.reactionsConfig && state.reactionsConfig.length > 0
+            ? state.reactionsConfig
+            : (KE_CONFIG.reactionsConfig || []);
+
+        list.forEach((item, index) => {
+            const card = document.createElement('div');
+            card.className = 'admin-item-card';
+            card.innerHTML = `
+                <div class="admin-item-header">
+                    <span><i class="fa-solid fa-face-smile"></i> Icon Meme #${index + 1} (${item.emoji || ''})</span>
+                </div>
+                <div class="admin-item-grid" style="grid-template-columns: 80px 1fr 1fr;">
+                    <div class="input-group" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                        <label>Xem trước:</label>
+                        <img src="${escapeHTML(item.imgUrl || '')}" class="adm-react-preview" style="width:48px;height:48px;object-fit:cover;border-radius:50%;border:2px solid #f59e0b;margin-top:4px;" alt="preview">
+                    </div>
+                    <div class="input-group">
+                        <label>Tên / Tiêu đề (Tooltip):</label>
+                        <input type="text" class="adm-react-title" data-index="${index}" value="${escapeHTML(item.title || '')}" placeholder="VD: Thả Tim Hạ Nhân">
+                    </div>
+                    <div class="input-group">
+                        <label>Symbol Emoji ID:</label>
+                        <input type="text" class="adm-react-emoji" data-index="${index}" value="${escapeHTML(item.emoji || '')}" readonly style="background:#f1f5f9;cursor:not-allowed;">
+                    </div>
+                    <div class="input-group" style="grid-column: 1 / -1; display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                        <div class="input-group">
+                            <label>Tải File Ảnh từ máy:</label>
+                            <input type="file" class="adm-react-file" data-index="${index}" accept="image/*">
+                        </div>
+                        <div class="input-group">
+                            <label>Hoặc Dán Link URL Ảnh:</label>
+                            <input type="text" class="adm-react-url" data-index="${index}" value="${escapeHTML(item.imgUrl || '')}" placeholder="https://... hoặc assets/memes/...">
+                        </div>
+                    </div>
+                </div>
+            `;
+            const fileInput = card.querySelector('.adm-react-file');
+            const urlInput = card.querySelector('.adm-react-url');
+            const imgPreview = card.querySelector('.adm-react-preview');
+
+            if (urlInput && imgPreview) {
+                urlInput.addEventListener('input', () => {
+                    if (urlInput.value.trim()) imgPreview.src = urlInput.value.trim();
+                });
+            }
+            if (fileInput && imgPreview) {
+                fileInput.addEventListener('change', () => {
+                    if (fileInput.files && fileInput.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => { imgPreview.src = e.target.result; };
+                        reader.readAsDataURL(fileInput.files[0]);
+                    }
+                });
+            }
+
+            reactionsAdminList.appendChild(card);
         });
     }
 
@@ -1339,6 +1407,42 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                     }
                     if (newGallery.length > 0) state.gallery = newGallery;
                     showToast("Đã lưu Thư Viện Ảnh Kỷ Niệm! 🖼️✨");
+                }
+                else if (action === 'reactions') {
+                    const reactFiles = document.querySelectorAll('.adm-react-file');
+                    const reactUrls = document.querySelectorAll('.adm-react-url');
+                    const reactTitles = document.querySelectorAll('.adm-react-title');
+                    const reactEmojis = document.querySelectorAll('.adm-react-emoji');
+                    const newReactions = [];
+
+                    const currentReactions = state.reactionsConfig && state.reactionsConfig.length > 0
+                        ? state.reactionsConfig
+                        : (KE_CONFIG.reactionsConfig || []);
+
+                    for (let i = 0; i < reactUrls.length; i++) {
+                        let imgUrl = reactUrls[i].value.trim();
+                        const fileElem = reactFiles[i];
+                        if (fileElem && fileElem.files.length > 0) {
+                            const file = fileElem.files[0];
+                            const base64 = await readFileAsDataURL(file);
+                            imgUrl = await uploadFileToBackend(`reaction_${Date.now()}_${file.name}`, base64);
+                        } else if (!imgUrl && currentReactions[i]) {
+                            imgUrl = currentReactions[i].imgUrl;
+                        }
+
+                        const title = reactTitles[i] ? reactTitles[i].value.trim() : '';
+                        const emoji = reactEmojis[i] ? reactEmojis[i].value.trim() : (currentReactions[i] ? currentReactions[i].emoji : '');
+                        const countId = currentReactions[i] ? currentReactions[i].countId : `reactionCount-${i}`;
+
+                        newReactions.push({
+                            emoji,
+                            title: title || 'Meme Reaction',
+                            countId,
+                            imgUrl: imgUrl || 'assets/memes/hanhan_1.png'
+                        });
+                    }
+                    state.reactionsConfig = newReactions;
+                    showToast("Đã lưu Cấu Hình Icon Meme! 😂✨");
                 }
 
                 setState(state);

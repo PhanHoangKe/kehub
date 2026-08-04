@@ -211,16 +211,20 @@
                                     <span class="reaction-count" id="reactionCount-heart">0</span>
                                 </button>
                                 <button class="reaction-btn" data-emoji="🧹" title="Hạ Nhân Quét Rác">
-                                    <img class="reaction-emoji-img meme-img" src="assets/memes/hanhan_1.png" alt="Quét Rác" loading="lazy">
+                                    <img class="reaction-emoji-img meme-img" src="assets/memes/hanhan_1.png" alt="Hạ Nhân Quét Rác" loading="lazy">
                                     <span class="reaction-count" id="reactionCount-smile">0</span>
                                 </button>
                                 <button class="reaction-btn" data-emoji="😏" title="Hạ Nhân Cười Khẩy">
-                                    <img class="reaction-emoji-img meme-img" src="assets/memes/hanhan_2.png" alt="Cười Khẩy" loading="lazy">
+                                    <img class="reaction-emoji-img meme-img" src="assets/memes/hanhan_2.png" alt="Hạ Nhân Cười Khẩy" loading="lazy">
                                     <span class="reaction-count" id="reactionCount-tear">0</span>
                                 </button>
                                 <button class="reaction-btn" data-emoji="🔥" title="Hạ Nhân Cực Ngầu">
-                                    <img class="reaction-emoji-img meme-img" src="assets/memes/hanhan_4.png" alt="Cực Ngầu" loading="lazy">
+                                    <img class="reaction-emoji-img meme-img" src="assets/memes/hanhan_4.png" alt="Hạ Nhân Cực Ngầu" loading="lazy">
                                     <span class="reaction-count" id="reactionCount-party">0</span>
+                                </button>
+                                <button class="reaction-btn" data-emoji="👑" title="Hạ Nhân Bá Đạo">
+                                    <img class="reaction-emoji-img meme-img" src="assets/memes/hanhan_2.png" alt="Hạ Nhân Bá Đạo" loading="lazy">
+                                    <span class="reaction-count" id="reactionCount-clap">0</span>
                                 </button>
                             </div>
                             <!-- Tổng reactions + backward compat cho heartCounterNumber -->
@@ -748,6 +752,7 @@
                 <button class="admin-tab-btn" data-tab="tabMilestones"><i class="fa-solid fa-map-pin"></i> Dấu Chân</button>
                 <button class="admin-tab-btn" data-tab="tabMemoryMap"><i class="fa-solid fa-map-location-dot"></i> Bản Đồ</button>
                 <button class="admin-tab-btn" data-tab="tabGallery"><i class="fa-solid fa-images"></i> Thư Viện Ảnh</button>
+                <button class="admin-tab-btn" data-tab="tabReactions"><i class="fa-solid fa-icons"></i> Icon Meme</button>
             </div>
             <div class="modal-body">
                 <!-- TAB 0: TỔNG QUAN -->
@@ -1073,6 +1078,18 @@
                     </div>
                     <div class="admin-items-container" id="galleryAdminList"></div>
                     <button class="btn-add-item" id="btnAddGalleryPhoto"><i class="fa-solid fa-plus"></i> Thêm Ảnh Mới</button>
+                </div>
+
+                <!-- TAB: QUẢN LÝ ICON MEME -->
+                <div id="tabReactions" class="admin-tab-content">
+                    <div class="tab-header-action-bar">
+                        <div class="tab-header-title"><i class="fa-solid fa-icons"></i> Quản Lý 5 Icon Meme Reactions</div>
+                        <button type="button" class="btn-tab-save" data-tab-action="reactions"><i class="fa-solid fa-floppy-disk"></i> Lưu Icon Meme</button>
+                    </div>
+                    <p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:16px;">
+                        <i class="fa-solid fa-circle-info"></i> Tùy chỉnh tiêu đề và hình ảnh cho 5 nút cảm xúc reaction bên dưới. Tải ảnh từ thiết bị hoặc dán link URL!
+                    </p>
+                    <div class="admin-items-container" id="reactionsAdminList"></div>
                 </div>
             </div>
 

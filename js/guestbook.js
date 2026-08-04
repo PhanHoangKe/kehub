@@ -20,6 +20,7 @@ export function initGuestbookEngine() {
         '🧹': 'reactionCount-smile',
         '😏': 'reactionCount-tear',
         '🔥': 'reactionCount-party',
+        '👑': 'reactionCount-clap',
     };
 
     const EMOJI_IMG_MAP = {
@@ -27,6 +28,7 @@ export function initGuestbookEngine() {
         '🧹': 'assets/memes/hanhan_1.png',
         '😏': 'assets/memes/hanhan_2.png',
         '🔥': 'assets/memes/hanhan_4.png',
+        '👑': 'assets/memes/hanhan_2.png',
     };
 
     // LocalStorage key lưu emoji nào user đã react (để bật active state)
@@ -70,18 +72,12 @@ export function initGuestbookEngine() {
         });
     }
 
-    const EMOJI_IMG_MAP = {
-        '❤️': 'assets/memes/hanhan_3.png',
-        '🧹': 'assets/memes/hanhan_1.png',
-        '😏': 'assets/memes/hanhan_2.png',
-        '🔥': 'assets/memes/hanhan_4.png',
-    };
-
     // Floating emoji nổi lên khi click
     function createFloatingEmoji(emoji, x, y) {
         const el = document.createElement('div');
         el.className = 'floating-emoji-pop';
-        const imgUrl = EMOJI_IMG_MAP[emoji];
+        const btnImg = document.querySelector(`.reaction-btn[data-emoji="${emoji}"] img`);
+        const imgUrl = btnImg ? btnImg.getAttribute('src') : EMOJI_IMG_MAP[emoji];
         if (imgUrl) {
             el.innerHTML = `<img src="${imgUrl}" style="width:48px;height:48px;object-fit:cover;border-radius:50%;border:2px solid #f59e0b;box-shadow:0 6px 16px rgba(245,158,11,0.5);">`;
         } else {

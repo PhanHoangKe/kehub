@@ -61,6 +61,13 @@ export const KE_CONFIG = {
     gallery: [],
     playlist: [],
     mapLocations: [],  // [{name, label, lat, lng}]
+    reactionsConfig: [
+        { emoji: '❤️', title: 'Thả Tim Hạ Nhân', countId: 'reactionCount-heart', imgUrl: 'assets/memes/hanhan_3.png' },
+        { emoji: '🧹', title: 'Hạ Nhân Quét Rác', countId: 'reactionCount-smile', imgUrl: 'assets/memes/hanhan_1.png' },
+        { emoji: '😏', title: 'Hạ Nhân Cười Khẩy', countId: 'reactionCount-tear', imgUrl: 'assets/memes/hanhan_2.png' },
+        { emoji: '🔥', title: 'Hạ Nhân Cực Ngầu', countId: 'reactionCount-party', imgUrl: 'assets/memes/hanhan_4.png' },
+        { emoji: '👑', title: 'Hạ Nhân Bá Đạo', countId: 'reactionCount-clap', imgUrl: 'assets/memes/hanhan_2.png' }
+    ],
 };
 
 export function escapeHTML(str) {

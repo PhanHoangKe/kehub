@@ -119,6 +119,25 @@ export function applyStateToDOM() {
     renderJourney(state);
     renderMemoryMap(state);
 
+    // Cập nhật Cấu hình Icon Meme Reactions (5 Icon)
+    if (state.reactionsConfig && Array.isArray(state.reactionsConfig) && state.reactionsConfig.length > 0) {
+        const reactionBtns = document.querySelectorAll('.reaction-btn');
+        state.reactionsConfig.forEach((cfg, idx) => {
+            if (reactionBtns[idx]) {
+                const btn = reactionBtns[idx];
+                if (cfg.emoji) btn.dataset.emoji = cfg.emoji;
+                if (cfg.title) btn.title = cfg.title;
+                const img = btn.querySelector('img');
+                if (img) {
+                    if (cfg.imgUrl) img.src = cfg.imgUrl;
+                    if (cfg.title) img.alt = cfg.title;
+                }
+                const countSpan = btn.querySelector('.reaction-count');
+                if (countSpan && cfg.countId) countSpan.id = cfg.countId;
+            }
+        });
+    }
+
     if (audioEngine && audioEngine.renderPlaylist) audioEngine.renderPlaylist();
     if (balloonEngine && balloonEngine.updateBalloonVisibility) balloonEngine.updateBalloonVisibility();
 }

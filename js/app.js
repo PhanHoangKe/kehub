@@ -698,7 +698,63 @@ function initApp() {
     initLightbox();
     initVisitorTracking();
     initOutingsEngine();
+    initAnnouncerEngine(getState);
     revealHomePageElements();
+}
+
+function initAnnouncerEngine(getState) {
+    const widget = document.getElementById('announcerWidget');
+    const characterBox = document.getElementById('announcerCharacterBox');
+    const textEl = document.getElementById('announcerText');
+    const btnClose = document.getElementById('btnCloseAnnouncer');
+
+    if (!widget || !textEl) return;
+
+    window.triggerAnnouncerShout = function(text, active = true) {
+        if (!text || active === false) {
+            widget.style.display = 'none';
+            return;
+        }
+
+        widget.style.display = 'flex';
+        textEl.textContent = text;
+
+        if (characterBox) {
+            characterBox.style.animation = 'none';
+            void characterBox.offsetWidth;
+            characterBox.style.animation = 'megaphoneShout 1.8s infinite ease-in-out';
+        }
+
+        if (typeof showToast === 'function') {
+            showToast('📢 Có thông báo mới từ Chú Bé Loa Phường!', 'info');
+        }
+    };
+
+    if (btnClose) {
+        btnClose.addEventListener('click', () => {
+            widget.style.display = 'none';
+            sessionStorage.setItem('announcer_closed', 'true');
+        });
+    }
+
+    if (characterBox) {
+        characterBox.addEventListener('click', () => {
+            const state = getState();
+            const text = state.announcementText || '📢 Chúc bạn một ngày vui vẻ và bình an! 🎉';
+            window.triggerAnnouncerShout(text, true);
+        });
+    }
+
+    setTimeout(() => {
+        const state = getState();
+        const text = state.announcementText;
+        const active = state.announcementActive !== false;
+        const isClosed = sessionStorage.getItem('announcer_closed') === 'true';
+
+        if (text && active && !isClosed) {
+            window.triggerAnnouncerShout(text, true);
+        }
+    }, 1200);
 }
 
 function initOutingsEngine() {

@@ -990,6 +990,18 @@
                         </div>
                     </div>
 
+                    <div class="form-section-card" style="border: 2px dashed #ff4757; background: rgba(255, 71, 87, 0.06);">
+                        <div class="form-section-title" style="color: #ff4757;"><i class="fa-solid fa-bullhorn"></i> Thông Báo Loa Phường (Chú Bé Hoạt Hình Cầm Loa Hét)</div>
+                        <div class="input-group">
+                            <label><i class="fa-solid fa-comment-dots"></i> Nội dung thông báo (Chú bé sẽ cầm loa hét ra dòng chữ này):</label>
+                            <textarea id="inputAnnouncementText" rows="3" placeholder="Nhập thông báo mới nhất... Ví dụ: 📢 Tối nay 8h họp lớp trực tuyến nhé cả nhà! 🎉" style="width:100%; border-radius:10px; padding:10px; border:1px solid rgba(255,71,87,0.3); background:rgba(0,0,0,0.25); color:#fff; font-size:0.95rem; font-family:inherit;"></textarea>
+                        </div>
+                        <div class="input-group" style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="inputAnnouncementActive" style="width:18px; height:18px; cursor:pointer;" checked>
+                            <label for="inputAnnouncementActive" style="cursor:pointer; font-weight:600; color:#ff6b81;">Kích hoạt Chú Bé Loa Phường hét thông báo này trên website</label>
+                        </div>
+                    </div>
+
                     <div class="form-section-card">
                         <div class="form-section-title"><i class="fa-solid fa-wind"></i> Video TikTok Bóng Bóng Bay</div>
                         <div class="input-group">
@@ -1362,6 +1374,34 @@
     <div id="toastNotification" class="toast-notification">
         <i class="fa-solid fa-sparkles toast-icon"></i>
         <span id="toastMessage">Thông báo</span>
+    </div>
+
+    <!-- Floating Megaphone Announcer Widget (Chú Bé Loa Phường Cầm Loa Hét Thông Báo) -->
+    <div id="announcerWidget" class="announcer-widget-container" style="display: none;">
+        <div class="announcer-character-box" id="announcerCharacterBox" title="Bấm để phát lại tiếng hét thông báo!">
+            <div class="announcer-pulse-waves">
+                <span class="wave wave-1"></span>
+                <span class="wave wave-2"></span>
+                <span class="wave wave-3"></span>
+            </div>
+            <img src="assets/announcer.jpg" alt="Chú Bé Loa Phường" class="announcer-img" />
+            <div class="announcer-megaphone-blast">
+                <span class="blast-icon">📢</span>
+                <span class="blast-cloud">💨</span>
+                <span class="blast-spark">⚡</span>
+            </div>
+        </div>
+        <div class="announcer-bubble-box">
+            <div class="announcer-bubble-header">
+                <span class="announcer-tag"><i class="fa-solid fa-bullhorn"></i> THÔNG BÁO TỪ KẾ</span>
+                <button type="button" class="btn-close-announcer" id="btnCloseAnnouncer" title="Đóng thông báo">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="announcer-bubble-text" id="announcerText">
+                <!-- Nội dung thông báo hiển thị động -->
+            </div>
+        </div>
     </div>
 
     <!-- Floating Mini TikTok Video & Audio Player Widget -->

@@ -476,6 +476,9 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
         const inputFavColor = document.getElementById('inputFavColor');
         const inputBalloonTiktokUrl = document.getElementById('inputBalloonTiktokUrl');
 
+        const inputAnnouncementText = document.getElementById('inputAnnouncementText');
+        const inputAnnouncementActive = document.getElementById('inputAnnouncementActive');
+
         if (inputName) inputName.value = state.name || '';
         if (inputSchoolName) inputSchoolName.value = state.schoolName || '';
         if (inputClassName) inputClassName.value = state.className || '';
@@ -486,6 +489,8 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
         if (inputQuote3) inputQuote3.value = state.quote3 || '';
         if (inputBirthdayDate) inputBirthdayDate.value = state.birthdayDate || '';
         if (inputBalloonTiktokUrl) inputBalloonTiktokUrl.value = state.balloonTiktokUrl || '';
+        if (inputAnnouncementText) inputAnnouncementText.value = state.announcementText || '';
+        if (inputAnnouncementActive) inputAnnouncementActive.checked = state.announcementActive !== false;
 
         const inputLinkFacebook = document.getElementById('inputLinkFacebook');
         const inputLinkMessenger = document.getElementById('inputLinkMessenger');
@@ -1267,15 +1272,16 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                         state.photoUrl = inputPhotoUrl.value.trim();
                     }
 
-                    const inputHomeLat = document.getElementById('inputHomeLat');
-                    const inputHomeLng = document.getElementById('inputHomeLng');
-                    const inputHomeAddress = document.getElementById('inputHomeAddress');
-                    if (inputHomeLat || inputHomeLng || inputHomeAddress) {
-                        state.homeLocation = {
-                            lat: inputHomeLat && inputHomeLat.value ? parseFloat(inputHomeLat.value) : 18.98686,
-                            lng: inputHomeLng && inputHomeLng.value ? parseFloat(inputHomeLng.value) : 105.46820,
-                            address: inputHomeAddress ? inputHomeAddress.value.trim() : 'Xã Quan Thành, Tỉnh Nghệ An'
-                        };
+                    const inputAnnouncementText = document.getElementById('inputAnnouncementText');
+                    const inputAnnouncementActive = document.getElementById('inputAnnouncementActive');
+                    if (inputAnnouncementText) state.announcementText = inputAnnouncementText.value.trim();
+                    if (inputAnnouncementActive) state.announcementActive = inputAnnouncementActive.checked;
+
+                    await saveBackendConfig(state);
+                    refreshDOM();
+
+                    if (window.triggerAnnouncerShout) {
+                        window.triggerAnnouncerShout(state.announcementText, state.announcementActive);
                     }
 
                     showToast("Đã lưu thông tin Hồ Sơ cá nhân! 👤✨");

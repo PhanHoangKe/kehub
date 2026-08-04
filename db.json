@@ -5,15 +5,15 @@
   "likes": 0,
   "visitors": [
     {
-      "id": "vis_1785854654828_qiav",
-      "sessionId": "s_1785854654652_i4sbz0",
-      "ip": "127.0.0.1",
-      "city": "Localhost",
-      "region": "Nội bộ",
-      "country": "Máy chủ local",
-      "isp": "Mạng LAN",
-      "lat": null,
-      "lng": null,
+      "id": "vis_1785855166001_2g8h",
+      "sessionId": "s_1785854173041_ybvk8s",
+      "ip": "113.23.44.192",
+      "city": "Hanoi",
+      "region": "Hanoi",
+      "country": "Viet Nam",
+      "isp": "FPT Telecom Company",
+      "lat": 21.018401,
+      "lng": 105.8460922,
       "accuracy": null,
       "isGps": false,
       "os": "Windows",
@@ -21,101 +21,66 @@
       "gpu": "Intel Intel(R) Iris(R) Xe Graphics (0x0000A7A0)",
       "cpuCores": 16,
       "ramGB": 16,
-      "browser": "Edge",
+      "browser": "Chrome",
       "referrer": "Trực tiếp / Bookmark",
       "screen": "1536x864",
-      "viewport": "1528x732",
+      "viewport": "1536x695",
       "dpr": 1.25,
-      "language": "vi",
+      "language": "en-US",
       "timezone": "Asia/Saigon",
       "touchPoints": 0,
       "connection": "4g",
-      "battery": "32%",
+      "battery": "42% (⚡ Đang sạc)",
       "sectionsVisited": [
         "Trang chủ",
         "Chuyển mục"
       ],
       "timelineLogs": [
         {
-          "time": "21:55:35",
+          "time": "14:52:45",
+          "event": "Truy cập trang web",
+          "detail": "Nguồn: Trực tiếp / Bookmark"
+        },
+        {
+          "time": "14:52:46",
+          "event": "Thao tác: Định vị trạm sóng (Tan Phong, Tinh Thanh Hoa)",
+          "detail": ""
+        },
+        {
+          "time": "14:52:48",
+          "event": "Thao tác: Hủy",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "14:52:52",
+          "event": "Thao tác: Nhật Ký Đi Chơi & Vi Vu",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "14:52:54",
           "event": "Thao tác: Tạo Chuyến Đi Mới",
           "detail": "Mục: Chuyển mục"
         },
         {
-          "time": "21:55:41",
+          "time": "14:54:15",
           "event": "Thao tác: Chọn Ảnh & Video từ thiết bị",
           "detail": "Mục: Chuyển mục"
         },
         {
-          "time": "21:55:46",
+          "time": "14:54:23",
           "event": "Thao tác: Đăng Nhật Ký Chuyến Đi",
           "detail": "Mục: Chuyển mục"
         },
         {
-          "time": "21:56:37",
+          "time": "14:54:53",
           "event": "Thao tác: 0 Thích",
-          "detail": "Mục: Chuyển mục"
-        },
-        {
-          "time": "21:56:37",
-          "event": "Thao tác: 0 Thích",
-          "detail": "Mục: Chuyển mục"
-        },
-        {
-          "time": "21:56:37",
-          "event": "Thao tác: 0 Thích",
-          "detail": "Mục: Chuyển mục"
-        },
-        {
-          "time": "21:56:37",
-          "event": "Thao tác: 3 Thích",
-          "detail": "Mục: Chuyển mục"
-        },
-        {
-          "time": "21:56:37",
-          "event": "Thao tác: 4 Thích",
-          "detail": "Mục: Chuyển mục"
-        },
-        {
-          "time": "21:56:38",
-          "event": "Thao tác: 5 Thích",
-          "detail": "Mục: Chuyển mục"
-        },
-        {
-          "time": "21:56:38",
-          "event": "Thao tác: 6 Thích",
-          "detail": "Mục: Chuyển mục"
-        },
-        {
-          "time": "21:56:38",
-          "event": "Thao tác: 7 Thích",
-          "detail": "Mục: Chuyển mục"
-        },
-        {
-          "time": "21:56:38",
-          "event": "Thao tác: 8 Thích",
-          "detail": "Mục: Chuyển mục"
-        },
-        {
-          "time": "21:56:39",
-          "event": "Thao tác: 9 Thích",
-          "detail": "Mục: Chuyển mục"
-        },
-        {
-          "time": "21:56:39",
-          "event": "Thao tác: 10 Thích",
-          "detail": "Mục: Chuyển mục"
-        },
-        {
-          "time": "21:56:39",
-          "event": "Thao tác: 11 Thích",
           "detail": "Mục: Chuyển mục"
         }
       ],
-      "clicks": 23,
-      "firstSeen": "2026-08-04T14:44:14.785Z",
-      "lastSeen": "2026-08-04T14:59:48.644Z",
-      "durationSeconds": 934
+      "clicks": 8,
+      "firstSeen": "2026-08-04T14:52:45.879Z",
+      "lastSeen": "2026-08-04T15:03:50.297Z",
+      "durationSeconds": 664
     },
     {
       "id": "vis_1785816965396_93zk",
@@ -276,31 +241,32 @@
     },
     "outings": [
       {
-        "id": "out_1785855347010_4583c1",
-        "title": "aaaa",
+        "id": "out_1785855947461_5daaa8",
+        "title": "a",
         "location": "",
         "date": "2026-08-04",
-        "weather": "a",
-        "content": "a",
+        "time": "",
+        "weather": "☀️ Nắng đẹp",
+        "content": "",
         "media": [
           {
-            "type": "image",
-            "url": "/uploads/outing_1785855347009_732a294c.jpg"
+            "type": "video",
+            "url": "/uploads/outing_1785855947452_72c91b0e.mp4"
           }
         ],
         "hearts": 0,
-        "createdAt": "2026-08-04T14:55:47.011Z"
+        "createdAt": "2026-08-04T15:05:47.461Z"
       },
       {
-        "id": "out_1785855312632_c4de36",
-        "title": "aa",
+        "id": "out_1785855264880_342886",
+        "title": "Quảng trường PĐL",
         "location": "",
         "date": "2026-08-04",
-        "weather": "dd",
-        "content": "dd",
+        "weather": "Ban đêm",
+        "content": "Chẳng cs 1 aiii",
         "media": [],
-        "hearts": 12,
-        "createdAt": "2026-08-04T14:55:12.633Z"
+        "hearts": 1,
+        "createdAt": "2026-08-04T14:54:24.880Z"
       }
     ]
   },

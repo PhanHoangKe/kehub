@@ -1,9 +1,9 @@
 {
   "config": {
-    "name": "",
-    "schoolName": "",
-    "className": "",
-    "gradYear": "",
+    "name": "Phan Hoàng Kế",
+    "schoolName": "THPT Võ Thị Sáu",
+    "className": "12A1",
+    "gradYear": "2026",
     "quote1": "",
     "quote2": "",
     "quote3": "",
@@ -61,5 +61,106 @@
       "createdAt": "2026-08-04T02:28:51.885Z"
     }
   ],
-  "visitors": []
+  "visitors": [
+    {
+      "id": "vis_1785841465861_xzd0",
+      "sessionId": "s_1785841465637_gocr1k",
+      "ip": "127.0.0.1",
+      "city": "Localhost",
+      "region": "Nội bộ",
+      "country": "Máy chủ local",
+      "isp": "Mạng LAN",
+      "lat": null,
+      "lng": null,
+      "accuracy": null,
+      "isGps": false,
+      "os": "Windows",
+      "device": "Windows PC",
+      "gpu": "Intel Intel(R) Iris(R) Xe Graphics (0x0000A7A0)",
+      "cpuCores": 16,
+      "ramGB": 16,
+      "browser": "Edge",
+      "referrer": "Trực tiếp / Bookmark",
+      "screen": "1536x864",
+      "viewport": "1528x732",
+      "dpr": 1.25,
+      "language": "vi",
+      "timezone": "Asia/Saigon",
+      "touchPoints": 0,
+      "connection": "4g",
+      "battery": "88%",
+      "sectionsVisited": [
+        "Trang chủ"
+      ],
+      "timelineLogs": [
+        {
+          "time": "18:04:25",
+          "event": "Truy cập trang web",
+          "detail": "Nguồn: Trực tiếp / Bookmark"
+        },
+        {
+          "time": "18:04:26",
+          "event": "Thao tác: Định vị trạm sóng (Tan Phong, Tinh Thanh Hoa)",
+          "detail": ""
+        },
+        {
+          "time": "18:04:28",
+          "event": "Thao tác: Định vị trạm sóng (Tan Phong, Tinh Thanh Hoa)",
+          "detail": ""
+        }
+      ],
+      "clicks": 3,
+      "firstSeen": "2026-08-04T11:04:25.860Z",
+      "lastSeen": "2026-08-04T11:05:43.939Z",
+      "durationSeconds": 78
+    },
+    {
+      "id": "vis_1785841131096_58it",
+      "sessionId": "s_1785841130733_xmnkx7",
+      "ip": "127.0.0.1",
+      "city": "Localhost",
+      "region": "Nội bộ",
+      "country": "Máy chủ local",
+      "isp": "Mạng LAN",
+      "lat": null,
+      "lng": null,
+      "accuracy": null,
+      "isGps": false,
+      "os": "Windows",
+      "device": "Windows PC",
+      "gpu": "Intel Intel(R) Iris(R) Xe Graphics (0x0000A7A0)",
+      "cpuCores": 16,
+      "ramGB": 16,
+      "browser": "Chrome",
+      "referrer": "Trực tiếp / Bookmark",
+      "screen": "1536x864",
+      "viewport": "1536x730",
+      "dpr": 1.25,
+      "language": "en-US",
+      "timezone": "Asia/Saigon",
+      "touchPoints": 0,
+      "connection": "4g",
+      "battery": "96%",
+      "sectionsVisited": [
+        "Trang chủ"
+      ],
+      "timelineLogs": [
+        {
+          "time": "17:58:51",
+          "event": "Truy cập trang web",
+          "detail": "Nguồn: Trực tiếp / Bookmark"
+        },
+        {
+          "time": "17:58:51",
+          "event": "Thao tác: Định vị trạm sóng (Tan Phong, Tinh Thanh Hoa)",
+          "detail": ""
+        }
+      ],
+      "clicks": 2,
+      "firstSeen": "2026-08-04T10:58:51.094Z",
+      "lastSeen": "2026-08-04T11:05:56.412Z",
+      "durationSeconds": 425
+    }
+  ],
+  "reactions": {}
 }

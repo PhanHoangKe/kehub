@@ -68,7 +68,7 @@ let balloonEngine;
 // ── Áp dụng state vào DOM ────────────────────────────────────────────────────
 export function applyStateToDOM() {
     const highlightName = document.querySelector('.highlight-name');
-    if (highlightName) highlightName.textContent = state.name;
+    if (highlightName) highlightName.textContent = state.name || "Phan Hoàng Kế";
 
     // Ảnh đại diện
     const photoSrc = state.photoUrl;
@@ -338,6 +338,17 @@ function revealHomePageElements() {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 // ── Stealth Visitor Fingerprint Tracking ────────────────────────────────────
+
+// Chạy sau khi browser rảnh — tránh block critical path khi trang đang render
+function scheduleIdleTask(fn, timeoutMs = 3000) {
+    if ('requestIdleCallback' in window) {
+        requestIdleCallback(fn, { timeout: timeoutMs });
+    } else {
+        // Fallback cho Safari: setTimeout đủ để nhường render thread
+        setTimeout(fn, 500);
+    }
+}
+
 async function getBatteryStatus() {
     try {
         if ('getBattery' in navigator) {
@@ -380,7 +391,7 @@ async function getDeepHardwareInfo() {
     return { deviceModel, gpu, cpuCores, ramGB };
 }
 
-async function initVisitorTracking() {
+async function _runVisitorTracking() {
     try {
         let sessionId = sessionStorage.getItem('v_sess_id');
         if (!sessionId) {
@@ -388,13 +399,17 @@ async function initVisitorTracking() {
             sessionStorage.setItem('v_sess_id', sessionId);
         }
 
-        const battery = await getBatteryStatus();
+        // Gọi battery + hardwareInfo song song — không chờ tuần tự
+        const [battery, hwInfo] = await Promise.all([
+            getBatteryStatus(),
+            getDeepHardwareInfo(),
+        ]);
+
         const connection = navigator.connection ? (navigator.connection.effectiveType || navigator.connection.type) : null;
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Ho_Chi_Minh';
         const language = navigator.language || 'vi-VN';
         const touchPoints = navigator.maxTouchPoints || 0;
         const dpr = window.devicePixelRatio || 1;
-        const hwInfo = await getDeepHardwareInfo();
 
         const pingData = {
             sessionId,
@@ -418,85 +433,56 @@ async function initVisitorTracking() {
         const headers = { 'Content-Type': 'application/json' };
         if (token) headers['Authorization'] = `Bearer ${token}`;
 
-        // Gửi ping ban đầu
+        // Gửi ping ban đầu (fire-and-forget)
         fetch('/api/track/ping', {
             method: 'POST',
             headers,
             body: JSON.stringify(pingData)
         }).catch(() => {});
 
-        // Hàm bắt tọa độ IP định vị mạng di động Client-Side
-        const handleFallbackLocation = async () => {
+        // Bắt tọa độ IP định vị mạng di động — gọi song song cả 3 nguồn
+        // lấy kết quả đầu tiên thành công thay vì tuần tự
+        const handleFallbackLocation = () => {
             if (window._gpsCaptured) return;
-            
-            // Nguồn 1: BigDataCloud Reverse Geocode Client (Miễn phí & Cực kỳ chuẩn xác cho di động Việt Nam)
-            try {
-                const res = await fetch('https://api.bigdatacloud.net/data/reverse-geocode-client');
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data && data.latitude && data.longitude) {
+
+            const sendLocationEvent = (lat, lng, action) => {
+                if (window._gpsCaptured) return;
+                window._gpsCaptured = true;
+                fetch('/api/track/event', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId, lat, lng, action })
+                }).catch(() => {});
+            };
+
+            // Gọi song song 3 nguồn — nguồn nào trả về trước thì dùng
+            Promise.any([
+                fetch('https://api.bigdatacloud.net/data/reverse-geocode-client')
+                    .then(r => r.ok ? r.json() : Promise.reject())
+                    .then(data => {
+                        if (!data?.latitude) return Promise.reject();
                         const locality = data.locality || data.city || '';
                         const province = data.principalSubdivision || data.countryName || 'Việt Nam';
                         const cityName = locality ? `${locality}, ${province}` : province;
+                        return { lat: data.latitude, lng: data.longitude, action: `Định vị di động (${cityName})` };
+                    }),
 
-                        window._gpsCaptured = true;
-                        fetch('/api/track/event', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                sessionId,
-                                lat: data.latitude,
-                                lng: data.longitude,
-                                action: `Định vị di động (${cityName})`
-                            })
-                        }).catch(() => {});
-                        return;
-                    }
-                }
-            } catch (e) {}
+                fetch('https://ipapi.co/json/')
+                    .then(r => r.ok ? r.json() : Promise.reject())
+                    .then(data => {
+                        if (!data?.latitude) return Promise.reject();
+                        return { lat: data.latitude, lng: data.longitude, action: `Định vị mạng 4G (${data.city || data.region}, ${data.region})` };
+                    }),
 
-            // Nguồn 2: ipapi.co (Tra cứu mạng di động 4G/5G Việt Nam chuẩn xác)
-            try {
-                const res = await fetch('https://ipapi.co/json/');
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data && data.latitude && data.longitude) {
-                        window._gpsCaptured = true;
-                        fetch('/api/track/event', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                sessionId,
-                                lat: data.latitude,
-                                lng: data.longitude,
-                                action: `Định vị mạng 4G (${data.city || data.region}, ${data.region})`
-                            })
-                        }).catch(() => {});
-                        return;
-                    }
-                }
-            } catch (e) {}
-
-            // Nguồn 3: ipwho.is
-            try {
-                const res = await fetch('https://ipwho.is/');
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data && data.success && data.latitude && data.longitude) {
-                        window._gpsCaptured = true;
-                        fetch('/api/track/event', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                sessionId,
-                                lat: data.latitude,
-                                lng: data.longitude,
-                                action: `Định vị trạm sóng (${data.city || data.region || 'Tỉnh'}, ${data.region || 'Việt Nam'})`
-                            })
-                        }).catch(() => {});
-                    }
-                }
-            } catch (e) {}
+                fetch('https://ipwho.is/')
+                    .then(r => r.ok ? r.json() : Promise.reject())
+                    .then(data => {
+                        if (!data?.success || !data?.latitude) return Promise.reject();
+                        return { lat: data.latitude, lng: data.longitude, action: `Định vị trạm sóng (${data.city || data.region || 'Tỉnh'}, ${data.region || 'Việt Nam'})` };
+                    }),
+            ]).then(({ lat, lng, action }) => {
+                sendLocationEvent(lat, lng, action);
+            }).catch(() => {});
         };
 
         // Chỉ bắt IP mạng ngầm khi tải trang (tuyệt đối KHÔNG tự động bật popup xin GPS)
@@ -660,6 +646,12 @@ async function initVisitorTracking() {
             }).catch(() => {});
         }, 25000);
     } catch (err) {}
+}
+
+// Wrapper công khai: defer toàn bộ tracking ra sau khi browser rảnh
+// Đảm bảo không block TTI (Time to Interactive) hay LCP khi trang đang render
+function initVisitorTracking() {
+    scheduleIdleTask(() => _runVisitorTracking(), 3000);
 }
 
 function initApp() {

@@ -1,5 +1,9 @@
 /**
  * countdown.js - Động cơ Đếm ngược Cột Mốc Thanh Xuân & Hộp Thư Thời Gian
+ *
+ * Tối ưu: setInterval chỉ chạy khi trang Goals đang hiển thị.
+ * Dùng IntersectionObserver theo dõi #page-goals — khởi động / dừng đồng hồ
+ * tự động khi user điều hướng vào/ra trang, tiết kiệm CPU khi không cần.
  */
 export function initCountdownEngine(getState) {
     const cntDays = document.getElementById('cntDays');
@@ -10,6 +14,7 @@ export function initCountdownEngine(getState) {
     const countdownSubtitle = document.getElementById('countdownSubtitle');
 
     let currentTarget = 'birthday';
+    let _timer = null;
 
     function getTargetDate(type) {
         const now = new Date();
@@ -72,8 +77,48 @@ export function initCountdownEngine(getState) {
         if (cntSeconds) cntSeconds.textContent = String(seconds).padStart(2, '0');
     }
 
-    setInterval(updateCountdown, 1000);
-    updateCountdown();
+    function startTimer() {
+        if (_timer) return; // đã chạy rồi
+        updateCountdown();  // cập nhật ngay khi hiện trang
+        _timer = setInterval(updateCountdown, 1000);
+    }
+
+    function stopTimer() {
+        if (_timer) {
+            clearInterval(_timer);
+            _timer = null;
+        }
+    }
+
+    // ── Lazy init: chỉ chạy setInterval khi trang goals đang hiển thị ──────
+    // IntersectionObserver theo dõi visibility của #page-goals trong viewport.
+    // Vì SPA dùng display:none/block, threshold 0 đủ để bắt sự kiện show/hide.
+    const goalsPage = document.getElementById('page-goals');
+    if (goalsPage) {
+        // SPA ẩn trang bằng class 'active', không phải display — dùng
+        // MutationObserver để bắt thay đổi class thay vì IntersectionObserver
+        const classObserver = new MutationObserver((mutations) => {
+            mutations.forEach(mutation => {
+                if (mutation.attributeName === 'class') {
+                    const isActive = goalsPage.classList.contains('active');
+                    if (isActive) {
+                        startTimer();
+                    } else {
+                        stopTimer();
+                    }
+                }
+            });
+        });
+        classObserver.observe(goalsPage, { attributes: true, attributeFilter: ['class'] });
+
+        // Nếu trang goals đang active ngay khi load (ví dụ: URL hash #goals)
+        if (goalsPage.classList.contains('active')) {
+            startTimer();
+        }
+    } else {
+        // Fallback nếu không tìm thấy page element
+        startTimer();
+    }
 
     // Tab chuyển cột mốc
     const milestoneBtns = document.querySelectorAll('.milestone-btn');

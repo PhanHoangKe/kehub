@@ -1,28 +1,11 @@
 /* ==========================================================================
    YOUTH MEMORIES - STYLESHEET
-   Aesthetic: Dark Cinematic Sunset / Youth Landscape / Glassmorphism
+   Aesthetic: Bright Student Notebook / Youth Landscape / Light Glassmorphism
    ========================================================================== */
 @import url('css/variables.css');
 @import url('css/navigation.css');
 @import url('css/student_modules.css');
 @import url('css/admin.css');
-
-:root {
-    --bg-dark: #05060e;
-    --accent-amber: #f59e0b;
-    --accent-gold: #fbbf24;
-    --accent-rose: #f43f5e;
-    --accent-cyan: #38bdf8;
-    --accent-purple: #a855f7;
-    --text-primary: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.88);
-    --text-muted: rgba(255, 255, 255, 0.55);
-    --glass-bg: rgba(18, 20, 38, 0.65);
-    --glass-border: rgba(255, 255, 255, 0.18);
-    --glass-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
-    --font-heading: 'Outfit', 'Plus Jakarta Sans', sans-serif;
-    --font-body: 'Plus Jakarta Sans', sans-serif;
-}
 
 .admin-only {
     display: none;
@@ -40,7 +23,7 @@ body {
     width: 100%;
     height: 100%;
     overflow-x: hidden;
-    background-color: var(--bg-dark);
+    background-color: var(--bg-paper);
     color: var(--text-primary);
     font-family: var(--font-body);
     position: relative;
@@ -65,7 +48,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: radial-gradient(circle at 50% 30%, rgba(20, 24, 55, 0.7) 0%, rgba(5, 6, 14, 0.95) 75%);
+    background: radial-gradient(circle at 50% 20%, rgba(238, 242, 255, 0.8) 0%, rgba(248, 250, 252, 0.95) 80%);
     z-index: 2;
     pointer-events: none;
 }
@@ -73,8 +56,8 @@ body {
 .glow-orb {
     position: fixed;
     border-radius: 50%;
-    filter: blur(100px);
-    opacity: 0.35;
+    filter: blur(90px);
+    opacity: 0.25;
     z-index: 2;
     pointer-events: none;
     animation: floatGlow 14s infinite alternate ease-in-out;
@@ -83,7 +66,7 @@ body {
 .orb-1 {
     width: 450px;
     height: 450px;
-    background: radial-gradient(circle, #7c3aed, #f43f5e);
+    background: radial-gradient(circle, #93c5fd, #c084fc);
     top: -100px;
     left: -100px;
 }
@@ -91,7 +74,7 @@ body {
 .orb-2 {
     width: 550px;
     height: 550px;
-    background: radial-gradient(circle, #0284c7, #f59e0b);
+    background: radial-gradient(circle, #bae6fd, #fde047);
     bottom: -150px;
     right: -100px;
     animation-delay: -7s;
@@ -195,61 +178,77 @@ body {
    Header Navigation
    -------------------------------------------------------------------------- */
 .top-header {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    padding: 24px 40px;
+    padding: 20px 36px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     z-index: 100;
+    background: transparent;
+    backdrop-filter: none;
+    border-bottom: none;
+    pointer-events: none;
+}
+
+.top-header > * {
+    pointer-events: auto;
 }
 
 .brand-logo {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    letter-spacing: 3px;
-    color: var(--accent-gold);
+    font-size: 0.9rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: var(--accent-blue);
     text-transform: uppercase;
-    align-self: flex-start;
-    margin-top: 11px;
 }
 
 .header-right-group {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
 }
 
 .header-actions {
     display: flex;
-    gap: 14px;
+    gap: 10px;
 }
 
 .action-btn {
-    background: var(--glass-bg);
+    background: #ffffff;
     border: 1px solid var(--glass-border);
     color: var(--text-primary);
-    padding: 10px 18px;
-    border-radius: 30px;
+    padding: 8px 16px;
+    border-radius: var(--radius-pill);
     font-size: 0.85rem;
-    font-weight: 500;
+    font-weight: 700;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 8px;
-    backdrop-filter: blur(12px);
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
     transition: all 0.3s ease;
 }
 
+.action-btn .btn-text {
+    color: var(--text-primary) !important;
+    font-weight: 700;
+}
+
 .action-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.3);
+    background: #eff6ff;
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
     transform: translateY(-2px);
+}
+
+.action-btn:hover .btn-text {
+    color: var(--accent-blue) !important;
 }
 
 /* --------------------------------------------------------------------------
@@ -263,75 +262,75 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
-    background: rgba(14, 17, 36, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 30px;
-    padding: 16px 10px;
-    backdrop-filter: blur(24px);
-    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid var(--glass-border);
+    border-radius: 40px;
+    padding: 20px 12px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08), 0 2px 10px rgba(37, 99, 235, 0.1);
     z-index: 998;
 }
 
 .mood-dock-title {
-    font-size: 0.62rem;
-    font-weight: 700;
+    font-size: 0.6rem;
+    font-weight: 800;
     letter-spacing: 1.5px;
-    color: var(--text-muted);
+    color: var(--accent-blue);
     writing-mode: horizontal-tb;
     text-align: center;
     text-transform: uppercase;
-    margin-bottom: 6px;
-    opacity: 0.8;
+    margin-bottom: 4px;
+    opacity: 0.9;
 }
 
 .mood-btn-circle {
     position: relative;
-    width: 44px;
-    height: 44px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
     color: var(--text-primary);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.15rem;
+    font-size: 1.1rem;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .mood-btn-circle:hover {
-    background: rgba(255, 255, 255, 0.25);
-    border-color: var(--accent-gold);
-    transform: scale(1.15);
-    color: var(--accent-gold);
+    background: #ffffff;
+    border-color: var(--accent-blue);
+    transform: scale(1.12);
+    color: var(--accent-blue);
 }
 
 .mood-btn-circle.active {
-    background: linear-gradient(135deg, rgba(251, 191, 36, 0.4), rgba(244, 63, 94, 0.4));
-    border-color: var(--accent-gold);
-    color: var(--accent-gold);
-    box-shadow: 0 0 18px rgba(251, 191, 36, 0.45);
-    transform: scale(1.12);
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    border-color: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+    transform: scale(1.08);
 }
 
 /* Tooltip khi hover vào nút tròn chủ đề */
 .mood-btn-circle::before {
     content: attr(data-tooltip);
     position: absolute;
-    right: 56px;
+    right: 54px;
     top: 50%;
     transform: translateY(-50%) scale(0.85);
-    background: rgba(10, 12, 24, 0.92);
-    color: #fff;
+    background: #0f172a;
+    color: #ffffff;
     padding: 6px 14px;
-    border-radius: 12px;
+    border-radius: var(--radius-soft);
     font-size: 0.78rem;
     font-weight: 600;
     white-space: nowrap;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
     opacity: 0;
     pointer-events: none;
     transition: all 0.25s ease;
@@ -349,13 +348,13 @@ body {
     position: relative;
     z-index: 10;
     min-height: 100vh;
-    padding: 100px 24px 160px;
+    padding: 110px 24px 140px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 32px;
-    max-width: 900px;
+    max-width: 920px;
     margin: 0 auto;
     text-align: center;
 }
@@ -363,14 +362,14 @@ body {
 .intro-text-section {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    min-height: 110px;
+    gap: 6px;
+    min-height: 100px;
     justify-content: center;
 }
 
 .fade-text {
-    opacity: 0;
-    transform: translateY(20px);
+    opacity: 1;
+    transform: translateY(0);
     transition: opacity 1.5s ease, transform 1.5s ease;
 }
 
@@ -382,29 +381,30 @@ body {
 #textGreeting {
     font-family: var(--font-heading);
     font-size: 2.2rem;
-    font-weight: 400;
+    font-weight: 600;
     font-style: italic;
-    color: var(--text-secondary);
-    letter-spacing: 2px;
+    color: #475569 !important;
+    letter-spacing: 0.5px;
 }
 
 #textName {
     font-family: var(--font-heading);
-    font-size: 3.6rem;
-    font-weight: 600;
-    letter-spacing: 1px;
-    line-height: 1.2;
+    font-size: 3.4rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    line-height: 1.25;
+    color: #0f172a !important;
 }
 
 .highlight-name {
-    background: linear-gradient(135deg, #fbbf24, #f43f5e, #38bdf8);
+    background: linear-gradient(135deg, #2563eb, #e11d48, #d97706);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     font-style: italic;
-    font-size: 4.2rem;
+    font-size: 3.8rem;
     padding: 0 6px;
-    filter: drop-shadow(0 0 25px rgba(251, 191, 36, 0.4));
+    filter: drop-shadow(0 2px 8px rgba(37, 99, 235, 0.25));
 }
 
 /* --------------------------------------------------------------------------
@@ -643,8 +643,8 @@ body {
 .quote-primary {
     font-family: var(--font-heading);
     font-size: 2rem;
-    font-weight: 600;
-    color: var(--text-primary);
+    font-weight: 700;
+    color: #0f172a;
     letter-spacing: 0.5px;
 }
 
@@ -652,19 +652,17 @@ body {
     font-family: var(--font-heading);
     font-size: 1.6rem;
     font-style: italic;
-    color: var(--accent-gold);
+    color: var(--accent-blue);
     letter-spacing: 1px;
-    filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.3));
 }
 
 .quote-tertiary {
     font-family: var(--font-body);
-    font-size: 1.1rem;
-    font-weight: 400;
-    color: rgba(255, 255, 255, 0.88);
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #334155;
     letter-spacing: 0.5px;
     margin-top: 4px;
-    filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.3));
 }
 
 /* --------------------------------------------------------------------------
@@ -766,38 +764,49 @@ body {
     transform: translateY(-2px);
 }
 
-/* Theme Override 1: Mưa Đêm (Rain Mood) */
+/* Theme Override 1: Mưa Mát (Rain Mood) */
 body[data-theme="rain"] {
-    --bg-dark: #040814;
-    --accent-gold: #38bdf8;
+    --bg-dark: #f0f9ff;
+    --accent-gold: #0284c7;
 }
 body[data-theme="rain"] .ambient-backdrop {
-    background: radial-gradient(circle at 50% 30%, rgba(14, 30, 65, 0.8) 0%, rgba(4, 8, 20, 0.98) 75%);
+    background: radial-gradient(circle at 50% 30%, rgba(186, 230, 253, 0.4) 0%, rgba(240, 249, 255, 0.95) 75%);
 }
-body[data-theme="rain"] .orb-1 { background: radial-gradient(circle, #0284c7, #06b6d4); }
-body[data-theme="rain"] .orb-2 { background: radial-gradient(circle, #3b82f6, #1e1b4b); }
+body[data-theme="rain"] .orb-1 { background: radial-gradient(circle, #38bdf8, #bae6fd); }
+body[data-theme="rain"] .orb-2 { background: radial-gradient(circle, #60a5fa, #93c5fd); }
 
-/* Theme Override 2: Ngàn Sao & Vũ Trụ (Space Mood) */
+/* Theme Override 2: Vũ Trụ Tri Thức (Space Mood) */
 body[data-theme="space"] {
-    --bg-dark: #030309;
-    --accent-gold: #c084fc;
+    --bg-dark: #faf5ff;
+    --accent-gold: #7c3aed;
 }
 body[data-theme="space"] .ambient-backdrop {
-    background: radial-gradient(circle at 50% 30%, rgba(30, 15, 55, 0.85) 0%, rgba(3, 3, 9, 0.98) 80%);
+    background: radial-gradient(circle at 50% 30%, rgba(233, 213, 255, 0.4) 0%, rgba(250, 245, 255, 0.95) 80%);
 }
-body[data-theme="space"] .orb-1 { background: radial-gradient(circle, #a855f7, #6366f1); }
-body[data-theme="space"] .orb-2 { background: radial-gradient(circle, #ec4899, #1e1b4b); }
+body[data-theme="space"] .orb-1 { background: radial-gradient(circle, #c084fc, #e9d5ff); }
+body[data-theme="space"] .orb-2 { background: radial-gradient(circle, #f472b6, #fbcfe8); }
 
 /* Theme Override 3: Nắng Ấm Ban Ngày (Sunny Day Mood) */
 body[data-theme="day"] {
-    --bg-dark: #0b132b;
-    --accent-gold: #fbbf24;
+    --bg-dark: #fffbebfb;
+    --accent-gold: #d97706;
 }
 body[data-theme="day"] .ambient-backdrop {
-    background: radial-gradient(circle at 50% 20%, rgba(56, 189, 248, 0.35) 0%, rgba(11, 19, 43, 0.96) 80%);
+    background: radial-gradient(circle at 50% 20%, rgba(254, 240, 138, 0.4) 0%, rgba(254, 252, 232, 0.95) 80%);
 }
-body[data-theme="day"] .orb-1 { background: radial-gradient(circle, #fbbf24, #f59e0b); }
-body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #0284c7); }
+body[data-theme="day"] .orb-1 { background: radial-gradient(circle, #fde047, #fef08a); }
+body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #bae6fd); }
+
+/* Theme Override 4: Hoàng Hôn (Sunset Mood) */
+body[data-theme="sunset"] {
+    --bg-dark: #fff1f2;
+    --accent-gold: #e11d48;
+}
+body[data-theme="sunset"] .ambient-backdrop {
+    background: radial-gradient(circle at 50% 20%, rgba(254, 205, 211, 0.4) 0%, rgba(255, 241, 242, 0.95) 80%);
+}
+body[data-theme="sunset"] .orb-1 { background: radial-gradient(circle, #fda4af, #f43f5e); }
+body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, #fdba74); }
 
 /* --------------------------------------------------------------------------
    Favorites Section (Sở Thích Của Kế)
@@ -866,16 +875,18 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 }
 
 .card-front {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2), 0 10px 30px rgba(0, 0, 0, 0.4);
+    background: #ffffff;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-soft);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
 }
 
 .card-back {
-    background: linear-gradient(135deg, rgba(30, 20, 50, 0.95), rgba(15, 12, 28, 0.95));
-    border: 1px solid rgba(251, 191, 36, 0.4);
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: var(--radius-soft);
     transform: rotateY(180deg);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 20px rgba(251, 191, 36, 0.2);
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.1);
     justify-content: center;
     gap: 8px;
     position: relative;
@@ -887,29 +898,30 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
     right: 12px;
     bottom: 8px;
     font-size: 3.5rem;
-    color: rgba(251, 191, 36, 0.08);
+    color: rgba(37, 99, 235, 0.08);
     pointer-events: none;
 }
 
 .card-back h5 {
     font-size: 0.78rem;
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: 1.5px;
-    color: var(--accent-gold);
+    color: var(--accent-blue);
     text-transform: uppercase;
 }
 
 .card-back .fav-desc {
     font-size: 0.83rem;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--text-secondary);
     line-height: 1.5;
     font-style: italic;
 }
 
 .hint-flip-text {
     font-size: 0.68rem;
-    color: var(--accent-gold);
-    opacity: 0.8;
+    color: var(--accent-blue);
+    font-weight: 700;
+    opacity: 0.9;
     display: flex;
     align-items: center;
     gap: 4px;
@@ -919,15 +931,15 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 .fav-icon-wrapper {
     width: 44px;
     height: 44px;
-    border-radius: 14px;
-    background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(244, 63, 94, 0.2));
-    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 12px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--accent-gold);
+    color: var(--accent-blue);
     font-size: 1.2rem;
-    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.15);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
 }
 
 .fav-info {
@@ -938,16 +950,16 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 
 .fav-label {
     font-size: 0.68rem;
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: 1px;
-    color: var(--accent-gold);
+    color: var(--accent-blue);
     text-transform: uppercase;
 }
 
 .fav-value {
     font-size: 0.98rem;
-    font-weight: 600;
-    color: #fff;
+    font-weight: 800;
+    color: var(--text-primary);
     line-height: 1.3;
 }
 
@@ -963,12 +975,12 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 
 .social-bio-card {
     width: 100%;
-    background: var(--glass-bg);
+    background: #ffffff;
     border: 1px solid var(--glass-border);
-    border-radius: 32px;
+    border-radius: var(--radius-soft);
     padding: 28px 24px;
     backdrop-filter: blur(20px);
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -978,17 +990,17 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 
 .bio-welcome-badge {
     font-size: 0.8rem;
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: 1px;
-    color: #1877f2;
-    background: rgba(24, 119, 242, 0.15);
-    border: 1px solid rgba(24, 119, 242, 0.35);
+    color: var(--accent-blue);
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
     padding: 6px 16px;
-    border-radius: 20px;
+    border-radius: var(--radius-pill);
     display: flex;
     align-items: center;
     gap: 8px;
-    box-shadow: 0 0 15px rgba(24, 119, 242, 0.25);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
 }
 
 .social-links-grid {
@@ -1004,21 +1016,23 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 18px;
-    border-radius: 25px;
+    padding: 9px 18px;
+    border-radius: var(--radius-pill);
     font-size: 0.85rem;
-    font-weight: 600;
-    color: #fff;
+    font-weight: 700;
+    color: var(--text-primary);
     text-decoration: none;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-    backdrop-filter: blur(10px);
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    transition: all 0.3s ease;
     cursor: pointer;
 }
 
 .social-pill:hover {
-    transform: translateY(-4px) scale(1.04);
+    transform: translateY(-2px);
+    background: #eff6ff;
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
 }
 
 .social-fb:hover {
@@ -2275,8 +2289,8 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 
 .sub-quote {
     font-size: 0.95rem;
-    color: var(--text-secondary);
-    font-weight: 300;
+    color: #475569 !important;
+    font-weight: 500;
     line-height: 1.6;
     transition: opacity 0.5s ease;
 }
@@ -2291,16 +2305,16 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
     transform: translateX(-50%);
     width: calc(100% - 48px);
     max-width: 650px;
-    background: rgba(12, 14, 28, 0.75);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid #cbd5e1;
     backdrop-filter: blur(20px);
-    border-radius: 50px;
+    border-radius: var(--radius-pill);
     padding: 10px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     z-index: 100;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12), 0 2px 10px rgba(37, 99, 235, 0.08);
 }
 
 .song-info {
@@ -2314,7 +2328,7 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
     height: 42px;
     border-radius: 50%;
     overflow: hidden;
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    border: 2px solid #e2e8f0;
 }
 
 .album-art-thumb img {
@@ -2331,7 +2345,7 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 
 .track-title {
     font-size: 0.85rem;
-    font-weight: 600;
+    font-weight: 800;
     color: var(--text-primary);
 }
 
@@ -2349,28 +2363,28 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 .mini-btn {
     background: none;
     border: none;
-    color: var(--text-secondary);
+    color: #64748b;
     cursor: pointer;
     font-size: 0.9rem;
     transition: color 0.3s;
 }
 
 .mini-btn:hover {
-    color: var(--accent-gold);
+    color: var(--accent-blue);
 }
 
 .play-btn {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent-gold), var(--accent-rose));
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
     border: none;
     color: #fff;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 15px rgba(244, 63, 94, 0.4);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
     transition: transform 0.3s ease;
 }
 
@@ -2388,7 +2402,7 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 .sound-visualizer .bar {
     width: 3px;
     height: 4px;
-    background: var(--accent-gold);
+    background: var(--accent-blue);
     border-radius: 3px;
     transition: height 0.2s ease;
 }
@@ -2433,8 +2447,8 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(5, 6, 14, 0.85);
-    backdrop-filter: blur(15px);
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(12px);
     z-index: 1000;
     display: flex;
     justify-content: center;
@@ -2451,13 +2465,13 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 }
 
 .modal-box {
-    background: rgba(18, 20, 38, 0.95);
+    background: #ffffff;
     border: 1px solid var(--glass-border);
-    border-radius: 24px;
+    border-radius: var(--radius-soft);
     width: 100%;
     max-width: 500px;
     padding: 28px;
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
     transform: translateY(20px);
     transition: transform 0.4s ease;
 }
@@ -2475,7 +2489,8 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 
 .modal-header h3 {
     font-size: 1.2rem;
-    color: var(--accent-gold);
+    font-weight: 800;
+    color: var(--accent-blue);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -2484,13 +2499,13 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 .close-btn {
     background: none;
     border: none;
-    color: var(--text-muted);
+    color: #64748b;
     font-size: 1.6rem;
     cursor: pointer;
 }
 
 .close-btn:hover {
-    color: #fff;
+    color: var(--accent-rose);
 }
 
 .modal-body {
@@ -2513,18 +2528,19 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 
 .input-group input[type="text"],
 .input-group input[type="file"] {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: var(--radius-soft);
     padding: 10px 14px;
-    color: #fff;
+    color: var(--text-primary);
     font-size: 0.9rem;
     outline: none;
     transition: border-color 0.3s;
 }
 
 .input-group input[type="text"]:focus {
-    border-color: var(--accent-gold);
+    border-color: var(--accent-blue);
+    background: #ffffff;
 }
 
 .file-hint {
@@ -2543,30 +2559,33 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 .btn-primary,
 .btn-secondary {
     padding: 10px 20px;
-    border-radius: 30px;
+    border-radius: var(--radius-pill);
     font-size: 0.85rem;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     border: none;
     transition: all 0.3s ease;
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--accent-gold), var(--accent-rose));
-    color: #fff;
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
 }
 
 .btn-secondary {
-    background: rgba(255, 255, 255, 0.1);
+    background: #f1f5f9;
     color: var(--text-secondary);
+    border: 1px solid #cbd5e1;
 }
 
 .btn-primary:hover {
-    transform: scale(1.04);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4);
 }
 
 .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: #e2e8f0;
 }
 
 /* Responsive Adjustments for Mobile & Tablets */
@@ -2693,9 +2712,13 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
         width: 100%;
     }
 
+    .vertical-mood-dock {
+        display: none !important;
+    }
+
     .music-player-bar {
         width: calc(100% - 24px);
-        bottom: 12px;
+        bottom: 74px !important;
         padding: 8px 12px;
         gap: 8px;
     }
@@ -2716,7 +2739,7 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
         right: 12px;
         left: 12px;
         width: auto;
-        bottom: 75px;
+        bottom: 135px;
     }
 }
 
@@ -3391,88 +3414,53 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 /* ── Header Anonymous Button ────────────────────────────────────────────── */
 .anonymous-btn {
     position: relative;
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.18) 0%, rgba(251, 191, 36, 0.18) 50%, rgba(244, 63, 94, 0.15) 100%);
-    border: 1px solid transparent;
-    border-radius: 999px;
-    padding: 10px 18px 10px 14px;
+    background: #ffffff;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-pill);
+    padding: 8px 18px 8px 12px;
     color: var(--text-primary);
     font-size: 0.85rem;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 10px;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    gap: 8px;
     overflow: hidden;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow:
-        0 0 0 1px rgba(255, 255, 255, 0.06) inset,
-        0 4px 20px rgba(168, 85, 247, 0.15),
-        0 8px 32px rgba(0, 0, 0, 0.3);
-    animation: anonymousBtnFloat 4s ease-in-out infinite;
-}
-
-.anonymous-btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1px;
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.6) 0%, rgba(251, 191, 36, 0.6) 50%, rgba(244, 63, 94, 0.5) 100%);
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    opacity: 0.7;
-    pointer-events: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
 }
 
 .anonymous-btn-glow {
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 40%;
-    height: 200%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
-    transform: rotate(20deg) translateX(-200%);
-    animation: anonymousShimmer 3.5s ease-in-out infinite;
-    pointer-events: none;
+    display: none;
 }
 
 .anonymous-btn-icon {
     position: relative;
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #09090b 0%, #1e1b4b 100%);
-    border: 1px solid rgba(251, 191, 36, 0.4);
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #fbbf24;
-    font-size: 0.92rem;
+    color: var(--accent-blue);
+    font-size: 0.88rem;
     flex-shrink: 0;
-    box-shadow: 0 0 14px rgba(251, 191, 36, 0.35);
     transition: transform 0.3s ease;
 }
 
 .anonymous-btn-text {
     position: relative;
-    background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 40%, #fda4af 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    letter-spacing: 0.15px;
+    color: var(--text-primary);
     font-weight: 700;
 }
 
 .anonymous-btn-sparkle {
     position: relative;
-    color: var(--accent-purple);
-    font-size: 0.72rem;
-    opacity: 0.85;
-    animation: anonymousSparkle 2.2s ease-in-out infinite;
+    color: var(--accent-rose);
+    font-size: 0.75rem;
+    opacity: 0.9;
 }
 
 .anonymous-btn:hover {
@@ -3923,20 +3911,20 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 /* ── Responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 560px) {
     .anonymous-btn {
-        padding: 8px 12px;
+        padding: 8px 14px;
         gap: 7px;
-        background: linear-gradient(135deg, rgba(168, 85, 247, 0.35) 0%, rgba(244, 63, 94, 0.3) 50%, rgba(251, 191, 36, 0.3) 100%);
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        box-shadow: 0 0 15px rgba(168, 85, 247, 0.4), 0 0 8px rgba(244, 63, 94, 0.3);
-        animation: mobileAnonPulse 2s ease-in-out infinite alternate;
+        background: #fef3c7;
+        border: 1px solid #fde68a;
+        box-shadow: 0 2px 8px rgba(217, 119, 6, 0.12);
+        animation: none;
     }
 
     .anonymous-btn-icon {
         width: 26px;
         height: 26px;
         font-size: 0.8rem;
-        background: linear-gradient(135deg, #a855f7, #ec4899);
-        color: #fff;
+        background: #fef08a;
+        color: #b45309;
         border-radius: 50%;
     }
 
@@ -3946,16 +3934,14 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
         font-weight: 700;
         letter-spacing: 0.2px;
         white-space: nowrap;
-        background: linear-gradient(135deg, #ffffff 30%, #fbcfe8 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: #78350f !important;
+        -webkit-text-fill-color: #78350f !important;
     }
 
     .anonymous-btn-sparkle {
         display: inline-flex;
         font-size: 0.75rem;
-        color: #fbbf24;
-        animation: anonymousSparkle 2s ease-in-out infinite;
+        color: #d97706;
     }
 
     .anonymous-modal-box {
@@ -5250,28 +5236,32 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 
 /* ── Header Distance Button (Replaced Weather Badge) ────────────────────────── */
 .header-location-btn {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(6, 182, 212, 0.25));
-    border: 1px solid rgba(16, 185, 129, 0.5);
-    color: #34d399;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 0.82rem;
-    font-weight: 600;
+    background: #e0f2fe;
+    border: 1px solid #7dd3fc;
+    color: #0369a1;
+    padding: 8px 16px;
+    border-radius: var(--radius-pill);
+    font-size: 0.85rem;
+    font-weight: 700;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+    gap: 8px;
+    box-shadow: 0 2px 6px rgba(14, 165, 233, 0.12);
     transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+.header-location-btn span,
+.header-location-btn i {
+    color: #0369a1 !important;
+}
+
 .header-location-btn:hover {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.45), rgba(6, 182, 212, 0.45));
-    border-color: #10b981;
-    color: #ffffff;
-    box-shadow: 0 0 18px rgba(16, 185, 129, 0.6);
-    transform: translateY(-1px) scale(1.03);
+    background: #ffffff;
+    border-color: #0284c7;
+    color: #0284c7;
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
+    transform: translateY(-2px);
 }
 
 @media (max-width: 480px) {
@@ -5359,10 +5349,12 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
 @media (max-width: 768px) {
     /* ── Header Top Bar ── */
     .top-header {
+        position: absolute !important;
         padding: 12px 14px !important;
-        background: rgba(5, 6, 14, 0.92) !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        background: transparent !important;
+        border-bottom: none !important;
         backdrop-filter: none !important;
+        pointer-events: none !important;
     }
 
     .brand-logo {
@@ -5383,10 +5375,14 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
         padding: 6px 10px !important;
         font-size: 0.75rem !important;
         border-radius: 20px !important;
+        background: #ffffff !important;
+        color: #0f172a !important;
+        border: 1px solid #cbd5e1 !important;
     }
 
     .action-btn .btn-text {
         font-size: 0.72rem !important;
+        color: #0f172a !important;
     }
 
     /* ── Header Location Button ── */
@@ -5418,8 +5414,9 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
         top: 25% !important;
         padding: 8px 5px !important;
         gap: 8px !important;
-        background: rgba(14, 17, 36, 0.92) !important;
-        backdrop-filter: none !important;
+        background: rgba(255, 255, 255, 0.92) !important;
+        border: 1px solid var(--glass-border) !important;
+        backdrop-filter: blur(12px) !important;
     }
 
     .mood-dock-title {

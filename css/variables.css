@@ -3,18 +3,28 @@
    ========================================================================== */
 
 :root {
-    --bg-dark: #05060e;
-    --accent-amber: #f59e0b;
-    --accent-gold: #fbbf24;
-    --accent-rose: #f43f5e;
-    --accent-cyan: #38bdf8;
-    --accent-purple: #a855f7;
-    --text-primary: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.88);
-    --text-muted: rgba(255, 255, 255, 0.55);
-    --glass-bg: rgba(18, 20, 38, 0.65);
-    --glass-border: rgba(255, 255, 255, 0.18);
-    --glass-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+    --bg-dark: #f8fafc;
+    --bg-light: #ffffff;
+    --bg-paper: #f8fafc;
+    --bg-card: #ffffff;
+    --accent-blue: #2563eb;
+    --accent-amber: #d97706;
+    --accent-gold: #f59e0b;
+    --accent-rose: #e11d48;
+    --accent-cyan: #0284c7;
+    --accent-purple: #7c3aed;
+    --accent-mint: #10b981;
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --glass-bg: rgba(255, 255, 255, 0.92);
+    --glass-border: #e2e8f0;
+    --glass-shadow: 0 10px 30px rgba(15, 23, 42, 0.08), 0 2px 8px rgba(37, 99, 235, 0.05);
+    --paper-line-color: rgba(37, 99, 235, 0.06);
+    --paper-margin-line: rgba(225, 29, 72, 0.25);
+    --radius-soft: 12px;
+    --radius-pill: 9999px;
+    --radius-circle: 50%;
     --font-heading: 'Outfit', 'Plus Jakarta Sans', sans-serif;
     --font-body: 'Plus Jakarta Sans', sans-serif;
 }
@@ -31,10 +41,34 @@ body {
     width: 100%;
     height: 100%;
     overflow-x: hidden;
-    background-color: var(--bg-dark);
+    background-color: var(--bg-paper);
+    background-image: 
+        linear-gradient(var(--paper-line-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--paper-line-color) 1px, transparent 1px);
+    background-size: 28px 28px;
+    background-position: -1px -1px;
     color: var(--text-primary);
     font-family: var(--font-body);
     position: relative;
+}
+
+/* Notebook Left Margin Red Line Accent */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 48px;
+    width: 2px;
+    height: 100vh;
+    background-color: var(--paper-margin-line);
+    z-index: 0;
+    pointer-events: none;
+}
+
+@media (max-width: 768px) {
+    body::before {
+        left: 20px;
+    }
 }
 
 /* Canvas Background & Ambient Lighting */
@@ -46,6 +80,7 @@ body {
     height: 100vh;
     z-index: 1;
     pointer-events: none;
+    opacity: 0.6;
 }
 
 .ambient-backdrop {
@@ -54,7 +89,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: radial-gradient(circle at 50% 30%, rgba(20, 24, 55, 0.7) 0%, rgba(5, 6, 14, 0.95) 75%);
+    background: radial-gradient(circle at 50% 20%, rgba(238, 242, 255, 0.8) 0%, rgba(248, 250, 252, 0.95) 80%);
     z-index: 2;
     pointer-events: none;
 }
@@ -62,7 +97,7 @@ body {
 .glow-orb {
     position: fixed;
     border-radius: 50%;
-    filter: blur(100px);
+    filter: blur(90px);
     opacity: 0.35;
     z-index: 2;
     pointer-events: none;
@@ -72,7 +107,7 @@ body {
 .orb-1 {
     width: 450px;
     height: 450px;
-    background: radial-gradient(circle, #7c3aed, #f43f5e);
+    background: radial-gradient(circle, #93c5fd, #c084fc);
     top: -100px;
     left: -100px;
 }
@@ -80,7 +115,7 @@ body {
 .orb-2 {
     width: 550px;
     height: 550px;
-    background: radial-gradient(circle, #0284c7, #f59e0b);
+    background: radial-gradient(circle, #fde047, #f472b6);
     bottom: -150px;
     right: -100px;
     animation-delay: -7s;

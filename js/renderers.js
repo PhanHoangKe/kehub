@@ -170,10 +170,12 @@ export function renderGallery(state) {
     const start = (galleryCurrentPage - 1) * GALLERY_PAGE_SIZE;
     const pageItems = items.slice(start, start + GALLERY_PAGE_SIZE);
 
+    // Dùng DocumentFragment: gom toàn bộ item vào fragment rồi append 1 lần
+    // — tránh N lần reflow khi append từng element riêng lẻ vào DOM
     galleryGrid.innerHTML = '';
+    const fragment = document.createDocumentFragment();
     pageItems.forEach((item, pageIdx) => {
         const globalIdx = start + pageIdx;
-        const fullCaption = `${item.caption || 'Khoảnh khắc'}${item.date ? ` • ${item.date}` : ''}${item.location ? ` • 📍 ${item.location}` : ''}`;
         const div = document.createElement('div');
         div.className = 'gallery-item';
         div.innerHTML = `
@@ -187,8 +189,9 @@ export function renderGallery(state) {
             </div>
         `;
         div.addEventListener('click', () => openLightbox(globalIdx));
-        galleryGrid.appendChild(div);
+        fragment.appendChild(div);
     });
+    galleryGrid.appendChild(fragment);
 
     renderPager(galleryPager, galleryCurrentPage, totalPages, (page) => {
         galleryCurrentPage = page;

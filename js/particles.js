@@ -8,13 +8,21 @@ export function initParticleEngine() {
     const ctx = canvas.getContext('2d');
     let particles = [];
     let currentMood = 'sunset';
+    let animFrameId = null;
+    let isRunning = false;
     const isMobile = () => window.innerWidth < 768;
 
+    // ── Debounced resize: tránh rebuild canvas mỗi pixel kéo cửa sổ ─────────
+    let _resizeTimer = null;
     function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
     }
-    window.addEventListener('resize', resizeCanvas);
+    function debouncedResize() {
+        clearTimeout(_resizeTimer);
+        _resizeTimer = setTimeout(resizeCanvas, 150);
+    }
+    window.addEventListener('resize', debouncedResize, { passive: true });
     resizeCanvas();
 
     class DynamicParticle {
@@ -136,16 +144,42 @@ export function initParticleEngine() {
 
     setMood('sunset');
 
+    // ── Animation loop: dừng khi tab ẩn, tiếp tục khi tab hiện lại ──────────
     function animate() {
+        if (!isRunning) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         const mobile = isMobile();
         particles.forEach(p => {
             p.update();
             p.draw(mobile);
         });
-        requestAnimationFrame(animate);
+        animFrameId = requestAnimationFrame(animate);
     }
-    animate();
+
+    function startAnimation() {
+        if (isRunning) return;
+        isRunning = true;
+        animate();
+    }
+
+    function stopAnimation() {
+        isRunning = false;
+        if (animFrameId) {
+            cancelAnimationFrame(animFrameId);
+            animFrameId = null;
+        }
+    }
+
+    // Dừng khi tab bị ẩn, tiếp tục khi tab được focus lại — tiết kiệm đáng kể CPU/GPU
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            stopAnimation();
+        } else {
+            startAnimation();
+        }
+    });
+
+    startAnimation();
 
     return { setMood };
 }

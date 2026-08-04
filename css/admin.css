@@ -6,34 +6,34 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
-    --adm-bg-base: #0f172a;
-    --adm-bg-surface: rgba(15, 23, 42, 0.85);
-    --adm-bg-card: rgba(30, 41, 59, 0.6);
-    --adm-bg-input: rgba(15, 23, 42, 0.65);
+    --adm-bg-base: #f8fafc;
+    --adm-bg-surface: #ffffff;
+    --adm-bg-card: #ffffff;
+    --adm-bg-input: #f1f5f9;
     
-    --adm-text-primary: #f8fafc;
-    --adm-text-secondary: #cbd5e1;
-    --adm-text-muted: #94a3b8;
+    --adm-text-primary: #0f172a;
+    --adm-text-secondary: #334155;
+    --adm-text-muted: #64748b;
     
-    --adm-primary: #a855f7;
-    --adm-primary-hover: #9333ea;
-    --adm-primary-light: rgba(168, 85, 247, 0.15);
+    --adm-primary: #2563eb;
+    --adm-primary-hover: #1d4ed8;
+    --adm-primary-light: #eff6ff;
     
-    --adm-cyan: #38bdf8;
-    --adm-cyan-light: rgba(56, 189, 248, 0.15);
-    --adm-emerald: #22c55e;
-    --adm-emerald-light: rgba(34, 197, 94, 0.15);
-    --adm-amber: #f59e0b;
-    --adm-rose: #f43f5e;
+    --adm-cyan: #0284c7;
+    --adm-cyan-light: #e0f2fe;
+    --adm-emerald: #059669;
+    --adm-emerald-light: #d1fae5;
+    --adm-amber: #d97706;
+    --adm-rose: #e11d48;
     
-    --adm-border: rgba(255, 255, 255, 0.08);
-    --adm-border-hover: rgba(168, 85, 247, 0.35);
-    --adm-focus: rgba(168, 85, 247, 0.25);
+    --adm-border: #e2e8f0;
+    --adm-border-hover: #bfdbfe;
+    --adm-focus: rgba(37, 99, 235, 0.25);
     
-    --adm-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
-    --adm-shadow-md: 0 8px 16px rgba(0, 0, 0, 0.35);
-    --adm-shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.6);
-    --adm-shadow-glow: 0 0 20px rgba(168, 85, 247, 0.25);
+    --adm-shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.04);
+    --adm-shadow-md: 0 8px 18px rgba(15, 23, 42, 0.08);
+    --adm-shadow-lg: 0 20px 40px rgba(15, 23, 42, 0.12);
+    --adm-shadow-glow: 0 0 20px rgba(37, 99, 235, 0.15);
     
     --adm-font: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
@@ -107,7 +107,7 @@
 #customModal .modal-header {
     padding: 0 28px !important;
     height: 68px !important;
-    background: rgba(15, 23, 42, 0.95) !important;
+    background: #ffffff !important;
     border-bottom: 1px solid var(--adm-border) !important;
     display: flex !important;
     align-items: center !important;
@@ -134,7 +134,7 @@
     background: var(--adm-primary-light) !important;
     padding: 10px !important;
     border-radius: 10px !important;
-    box-shadow: 0 0 12px rgba(168, 85, 247, 0.3) !important;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15) !important;
 }
 
 .admin-header-badge {
@@ -144,23 +144,22 @@
 }
 
 .admin-badge-pill {
-    background: rgba(168, 85, 247, 0.12) !important;
-    color: #c084fc !important;
+    background: #eff6ff !important;
+    color: var(--adm-primary) !important;
     font-size: 0.78rem !important;
-    font-weight: 700 !important;
+    font-weight: 800 !important;
     padding: 6px 14px !important;
     border-radius: 99px !important;
-    border: 1px solid rgba(168, 85, 247, 0.3) !important;
+    border: 1px solid #bfdbfe !important;
     display: flex !important;
     align-items: center !important;
     gap: 6px !important;
     text-transform: uppercase !important;
     letter-spacing: 0.06em !important;
-    box-shadow: 0 0 10px rgba(168, 85, 247, 0.15) !important;
 }
 
 #customModal .close-btn {
-    background: rgba(255, 255, 255, 0.05) !important;
+    background: #f1f5f9 !important;
     color: var(--adm-text-secondary) !important;
     font-size: 0.85rem !important;
     padding: 8px 16px !important;
@@ -186,10 +185,9 @@
 }
 
 #customModal .close-btn:hover {
-    background: rgba(244, 63, 94, 0.18) !important;
-    border-color: rgba(244, 63, 94, 0.4) !important;
-    color: #fb7185 !important;
-    box-shadow: 0 0 12px rgba(244, 63, 94, 0.2) !important;
+    background: #ffe4e6 !important;
+    border-color: #fecdd3 !important;
+    color: var(--adm-rose) !important;
     transform: none !important;
 }
 
@@ -198,7 +196,7 @@
     display: flex;
     gap: 8px;
     padding: 10px 24px;
-    background: rgba(15, 23, 42, 0.7);
+    background: #f8fafc;
     border-bottom: 1px solid var(--adm-border);
     overflow-x: auto;
     scrollbar-width: none;
@@ -210,8 +208,8 @@
 
 #customModal .admin-tab-btn {
     padding: 10px 16px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid transparent;
+    background: #ffffff;
+    border: 1px solid var(--adm-border);
     border-radius: 10px;
     color: var(--adm-text-muted);
     font-size: 0.85rem;
@@ -226,24 +224,24 @@
 
 #customModal .admin-tab-btn i {
     font-size: 0.95rem;
-    opacity: 0.7;
+    opacity: 0.8;
     transition: transform 0.2s ease;
 }
 
 #customModal .admin-tab-btn:hover {
-    background: rgba(255, 255, 255, 0.07);
-    color: var(--adm-text-primary);
-    border-color: rgba(255, 255, 255, 0.1);
+    background: #eff6ff;
+    color: var(--adm-primary);
+    border-color: #bfdbfe;
 }
 
 #customModal .admin-tab-btn.active {
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(56, 189, 248, 0.15));
-    border-color: rgba(168, 85, 247, 0.4);
-    color: #e9d5ff;
-    box-shadow: 0 4px 14px rgba(168, 85, 247, 0.2);
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    border-color: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
 }
 #customModal .admin-tab-btn.active i {
-    color: #c084fc;
+    color: #ffffff;
     opacity: 1;
     transform: scale(1.1);
 }
@@ -254,11 +252,10 @@
     align-items: center;
     justify-content: space-between;
     padding: 14px 20px;
-    background: rgba(30, 41, 59, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: #ffffff;
+    border: 1px solid var(--adm-border);
     border-radius: 14px;
     margin-bottom: 20px;
-    backdrop-filter: blur(12px);
 }
 
 .tab-header-title {
@@ -277,7 +274,7 @@
 
 .btn-tab-save {
     padding: 9px 20px;
-    background: linear-gradient(135deg, #a855f7, #6366f1);
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
     color: #ffffff;
     border: none;
     border-radius: 10px;
@@ -288,13 +285,13 @@
     align-items: center;
     gap: 8px;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 14px rgba(168, 85, 247, 0.35);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
 }
 
 .btn-tab-save:hover {
-    background: linear-gradient(135deg, #9333ea, #4f46e5);
+    background: linear-gradient(135deg, #1d4ed8, #2563eb);
     transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(168, 85, 247, 0.5);
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4);
 }
 
 .btn-tab-save:active {
@@ -309,7 +306,7 @@
     max-width: 100%;
     margin: 0;
     width: 100%;
-    background: rgba(15, 23, 42, 0.5);
+    background: #f8fafc;
 }
 
 .admin-tab-content {
@@ -335,7 +332,7 @@
     justify-content: space-between !important;
     align-items: center !important;
     padding: 14px 28px !important;
-    background: rgba(15, 23, 42, 0.95) !important;
+    background: #ffffff !important;
     border-top: 1px solid var(--adm-border) !important;
     flex-shrink: 0 !important;
     margin: 0 !important;

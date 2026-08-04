@@ -6,8 +6,8 @@
  */
 export const KE_CONFIG = {
     // 👤 Hồ Sơ Cá Nhân
-    name: "",
-    schoolName: "",
+    name: "Phan Hoàng Kế",
+    schoolName: "Trường THPT",
     className: "",
     gradYear: "",
     classSlogan: "",

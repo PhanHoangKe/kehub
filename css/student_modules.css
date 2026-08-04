@@ -5,56 +5,57 @@
 /* --- 🎓 School & Class Banner Header --- */
 .school-banner-card {
     width: 100%;
-    background: var(--glass-bg);
+    background: #ffffff;
     border: 1px solid var(--glass-border);
-    border-radius: 28px;
-    padding: 28px 36px;
-    backdrop-filter: blur(20px);
+    border-left: 5px solid var(--accent-blue);
+    border-radius: var(--radius-soft);
+    padding: 24px 30px;
     box-shadow: var(--glass-shadow);
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 24px;
-    margin-bottom: 32px;
+    margin-bottom: 28px;
+    position: relative;
 }
 
 .school-info-group {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 18px;
 }
 
 .school-icon-badge {
-    width: 64px;
-    height: 64px;
-    border-radius: 20px;
-    background: linear-gradient(135deg, rgba(251, 191, 36, 0.25), rgba(244, 63, 94, 0.25));
-    border: 1px solid var(--accent-gold);
+    width: 58px;
+    height: 58px;
+    border-radius: var(--radius-soft);
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.8rem;
-    color: var(--accent-gold);
+    font-size: 1.6rem;
+    color: var(--accent-blue);
 }
 
 .school-details h3 {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: #fff;
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--text-primary);
     margin-bottom: 4px;
 }
 
 .school-details p {
     font-size: 0.95rem;
-    color: var(--accent-gold);
-    font-weight: 600;
+    color: var(--accent-blue);
+    font-weight: 700;
 }
 
 .school-slogan-box {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px dashed rgba(255, 255, 255, 0.2);
-    border-radius: 18px;
-    padding: 12px 20px;
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: var(--radius-soft);
+    padding: 12px 18px;
     font-style: italic;
     color: var(--text-secondary);
     font-size: 0.9rem;
@@ -63,27 +64,28 @@
 /* --- 📚 Achievements Grid --- */
 .achievements-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+    gap: 18px;
     width: 100%;
 }
 
 .achievement-card {
-    background: var(--glass-bg);
+    background: #ffffff;
     border: 1px solid var(--glass-border);
-    border-radius: 24px;
-    padding: 24px;
-    backdrop-filter: blur(16px);
-    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border-radius: var(--radius-soft);
+    padding: 22px;
+    box-shadow: var(--glass-shadow);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     display: flex;
     flex-direction: column;
     gap: 12px;
+    position: relative;
 }
 
 .achievement-card:hover {
-    transform: translateY(-6px);
-    border-color: var(--accent-gold);
-    box-shadow: 0 16px 36px rgba(251, 191, 36, 0.25);
+    transform: translateY(-4px);
+    border-color: var(--accent-blue);
+    box-shadow: 0 12px 28px rgba(37, 99, 235, 0.12);
 }
 
 .ach-header {
@@ -93,152 +95,153 @@
 }
 
 .ach-icon-box {
-    width: 46px;
-    height: 46px;
-    border-radius: 14px;
-    background: rgba(251, 191, 36, 0.15);
-    border: 1px solid rgba(251, 191, 36, 0.4);
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-soft);
+    background: #fef3c7;
+    border: 1px solid #fde68a;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--accent-gold);
-    font-size: 1.3rem;
+    color: var(--accent-amber);
+    font-size: 1.25rem;
 }
 
 .ach-year {
-    font-size: 0.8rem;
-    font-weight: 700;
+    font-size: 0.78rem;
+    font-weight: 800;
     padding: 4px 12px;
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--accent-amber);
+    border-radius: var(--radius-pill);
+    background: #eff6ff;
+    color: var(--accent-blue);
 }
 
 .achievement-card h4 {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-primary);
 }
 
 .achievement-card p {
     font-size: 0.88rem;
-    color: var(--text-muted);
+    color: var(--text-secondary);
     line-height: 1.5;
 }
 
 /* --- 🏆 Clubs Grid --- */
 .clubs-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
     width: 100%;
 }
 
 .club-card {
-    background: var(--glass-bg);
+    background: #ffffff;
     border: 1px solid var(--glass-border);
-    border-radius: 24px;
-    padding: 24px;
-    backdrop-filter: blur(16px);
+    border-radius: var(--radius-soft);
+    padding: 22px;
+    box-shadow: var(--glass-shadow);
     display: flex;
-    gap: 18px;
-    transition: all 0.35s ease;
+    gap: 16px;
+    transition: all 0.3s ease;
 }
 
 .club-card:hover {
-    transform: translateY(-5px);
-    border-color: rgba(56, 189, 248, 0.6);
-    box-shadow: 0 16px 36px rgba(56, 189, 248, 0.2);
+    transform: translateY(-4px);
+    border-color: var(--accent-blue);
+    box-shadow: 0 12px 28px rgba(37, 99, 235, 0.12);
 }
 
 .club-logo {
-    width: 64px;
-    height: 64px;
-    border-radius: 18px;
+    width: 58px;
+    height: 58px;
+    border-radius: var(--radius-soft);
     object-fit: cover;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid #e2e8f0;
     flex-shrink: 0;
 }
 
 .club-info h4 {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-primary);
     margin-bottom: 4px;
 }
 
 .club-role {
     display: inline-block;
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     font-weight: 700;
     color: var(--accent-cyan);
-    background: rgba(56, 189, 248, 0.12);
+    background: #e0f2fe;
     padding: 2px 10px;
-    border-radius: 12px;
-    margin-bottom: 8px;
+    border-radius: var(--radius-pill);
+    margin-bottom: 6px;
 }
 
 .club-info p {
     font-size: 0.85rem;
-    color: var(--text-muted);
+    color: var(--text-secondary);
 }
 
 /* --- ❤️ Friends Wall --- */
 .friends-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 18px;
     width: 100%;
 }
 
 .friend-card {
-    background: var(--glass-bg);
+    background: #ffffff;
     border: 1px solid var(--glass-border);
-    border-radius: 24px;
+    border-radius: var(--radius-soft);
     padding: 20px;
-    backdrop-filter: blur(16px);
+    box-shadow: var(--glass-shadow);
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 12px;
-    transition: all 0.35s ease;
+    gap: 10px;
+    transition: all 0.3s ease;
 }
 
 .friend-card:hover {
-    transform: translateY(-6px) scale(1.02);
+    transform: translateY(-4px) scale(1.02);
     border-color: var(--accent-rose);
-    box-shadow: 0 16px 36px rgba(244, 63, 94, 0.25);
+    box-shadow: 0 12px 28px rgba(225, 29, 72, 0.15);
 }
 
 .friend-avatar {
-    width: 72px;
-    height: 72px;
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid var(--accent-rose);
-    box-shadow: 0 6px 16px rgba(244, 63, 94, 0.3);
+    border: 3px solid #ffe4e6;
+    box-shadow: 0 4px 12px rgba(225, 29, 72, 0.15);
 }
 
 .friend-card h4 {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-primary);
 }
 
 .friend-nickname {
     font-size: 0.8rem;
-    color: var(--accent-amber);
-    font-weight: 600;
+    color: var(--accent-rose);
+    font-weight: 700;
 }
 
 .friend-quote {
     font-size: 0.85rem;
     color: var(--text-secondary);
     font-style: italic;
-    background: rgba(255, 255, 255, 0.05);
+    background: #f8fafc;
+    border: 1px dashed #e2e8f0;
     padding: 8px 14px;
-    border-radius: 14px;
+    border-radius: var(--radius-soft);
     width: 100%;
 }
 
@@ -246,25 +249,26 @@
 .diary-timeline {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 18px;
     width: 100%;
 }
 
 .diary-card {
-    background: var(--glass-bg);
+    background: #ffffff;
     border: 1px solid var(--glass-border);
-    border-radius: 24px;
-    padding: 24px 28px;
-    backdrop-filter: blur(16px);
+    border-left: 4px solid var(--accent-blue);
+    border-radius: var(--radius-soft);
+    padding: 22px 26px;
+    box-shadow: var(--glass-shadow);
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     transition: all 0.3s ease;
 }
 
 .diary-card:hover {
-    border-color: var(--accent-gold);
-    transform: translateX(6px);
+    border-color: var(--accent-blue);
+    transform: translateX(4px);
 }
 
 .diary-meta {
@@ -275,25 +279,26 @@
 }
 
 .diary-date {
-    color: var(--accent-gold);
-    font-weight: 700;
+    color: var(--accent-rose);
+    font-weight: 800;
     display: flex;
     align-items: center;
     gap: 6px;
 }
 
 .diary-mood {
-    background: rgba(255, 255, 255, 0.1);
+    background: #f1f5f9;
     padding: 4px 12px;
-    border-radius: 20px;
-    color: #fff;
-    font-weight: 600;
+    border-radius: var(--radius-pill);
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 0.8rem;
 }
 
 .diary-card h4 {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: #fff;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--text-primary);
 }
 
 .diary-card p {
@@ -305,27 +310,27 @@
 /* --- 💭 Goals & Bucket List --- */
 .goals-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+    gap: 18px;
     width: 100%;
 }
 
 .goal-card {
-    background: var(--glass-bg);
+    background: #ffffff;
     border: 1px solid var(--glass-border);
-    border-radius: 24px;
-    padding: 24px;
-    backdrop-filter: blur(16px);
+    border-radius: var(--radius-soft);
+    padding: 22px;
+    box-shadow: var(--glass-shadow);
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    transition: all 0.35s ease;
+    gap: 10px;
+    transition: all 0.3s ease;
 }
 
 .goal-card:hover {
-    transform: translateY(-5px);
+    transform: translateY(-4px);
     border-color: var(--accent-purple);
-    box-shadow: 0 16px 36px rgba(168, 85, 247, 0.25);
+    box-shadow: 0 12px 28px rgba(124, 58, 237, 0.15);
 }
 
 .goal-header {
@@ -336,31 +341,31 @@
 
 .goal-category {
     font-size: 0.75rem;
-    font-weight: 700;
+    font-weight: 800;
     text-transform: uppercase;
     color: var(--accent-purple);
-    background: rgba(168, 85, 247, 0.15);
+    background: #f3e8ff;
     padding: 4px 12px;
-    border-radius: 20px;
+    border-radius: var(--radius-pill);
 }
 
 .goal-target {
     font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--accent-gold);
+    font-weight: 800;
+    color: var(--accent-amber);
 }
 
 .goal-card h4 {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-primary);
 }
 
 .goal-status-badge {
     align-self: flex-start;
     font-size: 0.8rem;
-    font-weight: 600;
-    color: #34d399;
+    font-weight: 700;
+    color: #059669;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -404,73 +409,52 @@
 }
 
 /* ==========================================================================
-   LUXURY LOCATION NAVIGATION BUTTON (Nút Tìm Đường Đến Nhà Kế Sang Trọng)
+   LOCATION NAVIGATION BUTTON (Nút Tìm Đường Đến Nhà Kế)
    ========================================================================== */
 .header-location-btn {
     position: relative;
     display: inline-flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px 22px;
-    border-radius: 30px;
-    background: linear-gradient(135deg, rgba(14, 165, 233, 0.25), rgba(168, 85, 247, 0.25), rgba(245, 158, 11, 0.25));
-    border: 1px solid rgba(56, 189, 248, 0.5);
-    color: #ffffff;
-    font-size: 0.88rem;
+    gap: 8px;
+    padding: 8px 18px;
+    border-radius: var(--radius-pill);
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1e40af;
+    font-size: 0.85rem;
     font-weight: 700;
-    letter-spacing: 0.3px;
     cursor: pointer;
     overflow: hidden;
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    box-shadow: 0 8px 24px rgba(14, 165, 233, 0.3), 0 0 16px rgba(245, 158, 11, 0.2);
-    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.08);
+    transition: all 0.3s ease;
     z-index: 1;
 }
 
-.header-location-btn::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -60%;
-    width: 50%;
-    height: 200%;
-    background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255, 255, 255, 0.4),
-        transparent
-    );
-    transform: rotate(25deg);
-    animation: locationShimmer 3.5s infinite ease-in-out;
-    pointer-events: none;
-}
-
-@keyframes locationShimmer {
-    0% { left: -60%; }
-    20% { left: 140%; }
-    100% { left: 140%; }
-}
-
 .header-location-btn i {
-    font-size: 1.05rem;
-    color: #38bdf8;
-    filter: drop-shadow(0 0 8px #38bdf8);
-    transition: transform 0.3s ease, color 0.3s ease;
+    font-size: 1rem;
+    color: var(--accent-blue);
+    transition: transform 0.3s ease;
 }
 
 .header-location-btn span {
-    background: linear-gradient(135deg, #ffffff, #e2e8f0);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    color: #1e40af;
+    font-weight: 700;
 }
 
 .header-location-btn:hover {
-    transform: translateY(-3px) scale(1.04);
-    background: linear-gradient(135deg, rgba(14, 165, 233, 0.45), rgba(168, 85, 247, 0.45), rgba(245, 158, 11, 0.45));
-    border-color: rgba(251, 191, 36, 0.8);
-    box-shadow: 0 12px 32px rgba(14, 165, 233, 0.5), 0 0 25px rgba(251, 191, 36, 0.4);
+    transform: translateY(-2px);
+    background: #ffffff;
+    border-color: var(--accent-blue);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.18);
+}
+
+.header-location-btn:hover i {
+    transform: scale(1.15);
+    color: var(--accent-blue);
+}
+
+.header-location-btn:active {
+    transform: translateY(0);
 }
 
 .header-location-btn:hover i {
@@ -819,19 +803,18 @@
 
 /* Card nội dung */
 .journey-timeline-card {
-    background: var(--glass-bg);
+    background: #ffffff;
     border: 1px solid var(--glass-border);
-    border-radius: 24px;
+    border-radius: var(--radius-soft);
     overflow: hidden;
-    backdrop-filter: blur(16px);
     box-shadow: var(--glass-shadow);
     transition: all 0.35s ease;
 }
 
 .journey-timeline-card:hover {
-    transform: translateY(-5px);
-    border-color: rgba(251, 191, 36, 0.5);
-    box-shadow: 0 20px 48px rgba(251, 191, 36, 0.2);
+    transform: translateY(-4px);
+    border-color: var(--accent-blue);
+    box-shadow: 0 12px 28px rgba(37, 99, 235, 0.15);
 }
 
 .journey-timeline-card .journey-img-box {
@@ -867,12 +850,12 @@
 
 .journey-tag {
     font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--accent-amber);
-    background: rgba(245, 158, 11, 0.15);
-    border: 1px solid rgba(245, 158, 11, 0.35);
+    font-weight: 800;
+    color: var(--accent-blue);
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
     padding: 3px 10px;
-    border-radius: 20px;
+    border-radius: var(--radius-pill);
     display: inline-flex;
     align-items: center;
     gap: 5px;
@@ -888,8 +871,8 @@
 
 .journey-timeline-card .journey-details h4 {
     font-size: 1.05rem;
-    font-weight: 700;
-    color: #fff;
+    font-weight: 800;
+    color: var(--text-primary);
     line-height: 1.3;
 }
 

@@ -140,7 +140,7 @@ function extractClientIp(req) {
 // Memory Cache cho IP Geolocation
 const ipGeoCache = new Map();
 
-async function fetchWithTimeout(resource, timeoutMs = 1200) {
+async function fetchWithTimeout(resource, timeoutMs = 2000) {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeoutMs);
     try {
@@ -159,13 +159,16 @@ async function getIpLocation(ip) {
     }
     if (ipGeoCache.has(ip)) return ipGeoCache.get(ip);
 
-    // Nguồn 1: ip-api.com
-    try {
-        const res = await fetchWithTimeout(`http://ip-api.com/json/${ip}?fields=status,country,regionName,city,isp,org,lat,lon`, 1200);
-        if (res && res.ok) {
-            const data = await res.json();
-            if (data.status === 'success') {
-                const geo = {
+    const fallback = { city: 'Việt Nam', region: 'Việt Nam', country: 'Việt Nam', isp: 'Nhà mạng', lat: null, lng: null };
+
+    // Gọi song song cả 3 nguồn — lấy kết quả đầu tiên thành công, không chờ tuần tự
+    const sources = [
+        () => fetchWithTimeout(`http://ip-api.com/json/${ip}?fields=status,country,regionName,city,isp,org,lat,lon`, 2000)
+            .then(async res => {
+                if (!res || !res.ok) return null;
+                const data = await res.json();
+                if (data.status !== 'success') return null;
+                return {
                     city: data.city || data.regionName || 'Việt Nam',
                     region: data.regionName || data.city || 'Việt Nam',
                     country: data.country || 'Việt Nam',
@@ -173,19 +176,14 @@ async function getIpLocation(ip) {
                     lat: data.lat || null,
                     lng: data.lon || null
                 };
-                ipGeoCache.set(ip, geo);
-                return geo;
-            }
-        }
-    } catch (e) {}
+            }).catch(() => null),
 
-    // Nguồn 2: ipwho.is (Hỗ trợ HTTPS)
-    try {
-        const res = await fetchWithTimeout(`https://ipwho.is/${ip}`, 1200);
-        if (res && res.ok) {
-            const data = await res.json();
-            if (data.success) {
-                const geo = {
+        () => fetchWithTimeout(`https://ipwho.is/${ip}`, 2000)
+            .then(async res => {
+                if (!res || !res.ok) return null;
+                const data = await res.json();
+                if (!data.success) return null;
+                return {
                     city: data.city || data.region || 'Việt Nam',
                     region: data.region || data.city || 'Việt Nam',
                     country: data.country || 'Việt Nam',
@@ -193,19 +191,14 @@ async function getIpLocation(ip) {
                     lat: data.latitude || null,
                     lng: data.longitude || null
                 };
-                ipGeoCache.set(ip, geo);
-                return geo;
-            }
-        }
-    } catch (e) {}
+            }).catch(() => null),
 
-    // Nguồn 3: freeipapi.com
-    try {
-        const res = await fetchWithTimeout(`https://freeipapi.com/api/json/${ip}`, 1200);
-        if (res && res.ok) {
-            const data = await res.json();
-            if (data.cityName) {
-                const geo = {
+        () => fetchWithTimeout(`https://freeipapi.com/api/json/${ip}`, 2000)
+            .then(async res => {
+                if (!res || !res.ok) return null;
+                const data = await res.json();
+                if (!data.cityName) return null;
+                return {
                     city: data.cityName || 'Việt Nam',
                     region: data.regionName || data.cityName || 'Việt Nam',
                     country: data.countryName || 'Việt Nam',
@@ -213,13 +206,20 @@ async function getIpLocation(ip) {
                     lat: data.latitude || null,
                     lng: data.longitude || null
                 };
-                ipGeoCache.set(ip, geo);
-                return geo;
-            }
-        }
-    } catch (e) {}
+            }).catch(() => null),
+    ];
 
-    const fallback = { city: 'Việt Nam', region: 'Việt Nam', country: 'Việt Nam', isp: 'Nhà mạng', lat: null, lng: null };
+    // Dùng Promise.any để lấy kết quả đầu tiên hợp lệ — nhanh hơn tuần tự đáng kể
+    try {
+        const geo = await Promise.any(sources.map(fn => fn().then(r => r || Promise.reject())));
+        if (geo) {
+            ipGeoCache.set(ip, geo);
+            return geo;
+        }
+    } catch (e) {
+        // Tất cả đều thất bại
+    }
+
     ipGeoCache.set(ip, fallback);
     return fallback;
 }
@@ -399,6 +399,8 @@ async function syncFromCloudDB() {
                         fs.writeFileSync(DB_FILE, JSON.stringify(json.record, null, 2), 'utf8');
                         const legacyDB = path.join(__dirname, 'db.json');
                         try { fs.writeFileSync(legacyDB, JSON.stringify(json.record, null, 2), 'utf8'); } catch (e) {}
+                        // Invalidate cache sau khi ghi từ cloud
+                        _dbCache = null;
                         console.log('  ✅ [Cloud DB] Khôi phục 100% dữ liệu Cloud về đĩa cục bộ thành công!');
                         resolve(true);
                     } else {
@@ -464,7 +466,12 @@ function saveToCloudDB(data) {
 
 let writeQueue = Promise.resolve();
 
-function getDB() {
+// ── In-Memory DB Cache — tránh đọc file mỗi request ─────────────────────────
+// Thay vì readFileSync mỗi lần, cache DB trong memory và chỉ reload từ disk
+// khi cần thiết (sau khi ghi hoặc khởi động).
+let _dbCache = null;
+
+function _loadDBFromDisk() {
     let mainData = null;
     let legacyData = null;
 
@@ -504,11 +511,22 @@ function getDB() {
     return merged;
 }
 
-// Hàm ghi DB async với queue để tránh concurrent writes
+// getDB() trả về cache trong memory — không đọc disk mỗi request
+function getDB() {
+    if (!_dbCache) {
+        _dbCache = _loadDBFromDisk();
+    }
+    return _dbCache;
+}
+
+// Hàm ghi DB async với queue — cập nhật cache rồi ghi disk bất đồng bộ
 function saveDB(data) {
+    // Cập nhật cache ngay lập tức để các request tiếp theo thấy data mới
+    _dbCache = data;
+
     writeQueue = writeQueue.then(() => new Promise((resolve) => {
         try {
-            // Ghi đồng thời vào /data/db.json VÀ root db.json để không bao giờ bị đè rỗng khi git pull / redeploy
+            // Ghi đồng thời vào /data/db.json VÀ root db.json
             fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
             const legacyDB = path.join(__dirname, 'db.json');
             fs.writeFileSync(legacyDB, JSON.stringify(data, null, 2), 'utf8');
@@ -1345,6 +1363,26 @@ const server = http.createServer(async (req, res) => {
 
         const ext = path.extname(filePath).toLowerCase();
         const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+
+        // ── HTTP Cache Headers cho static assets ─────────────────────────────
+        // CSS/JS/fonts/images: cache 1 tuần phía trình duyệt (immutable nếu có hash)
+        // HTML: không cache để luôn lấy bản mới nhất
+        const staticExts = new Set(['.css','.js','.png','.jpg','.jpeg','.gif','.svg','.webp','.ico','.woff2','.mp3','.mp4']);
+        if (staticExts.has(ext)) {
+            res.setHeader('Cache-Control', 'public, max-age=604800'); // 7 ngày
+            // ETag dựa trên mtime + size để browser biết khi nào file thay đổi
+            const etag = `"${stats.mtime.getTime().toString(16)}-${stats.size.toString(16)}"`;
+            res.setHeader('ETag', etag);
+            if (req.headers['if-none-match'] === etag) {
+                res.writeHead(304);
+                res.end();
+                return;
+            }
+        } else {
+            // HTML và file khác: revalidate mỗi lần
+            res.setHeader('Cache-Control', 'no-cache');
+        }
+
         res.writeHead(200, { 'Content-Type': contentType });
         fs.createReadStream(filePath).pipe(res);
     });

@@ -1132,6 +1132,217 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
         });
     }
 
+    // ── XỬ LÝ NÚT LƯU ĐỘC LẬP TỪNG TAB (Tab-Scoped Save Buttons) ──────────────
+    document.querySelectorAll('.btn-tab-save').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const action = btn.getAttribute('data-tab-action');
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...`;
+
+            try {
+                const state = getState();
+
+                if (action === 'profile') {
+                    const inputName = document.getElementById('inputName');
+                    const inputSchoolName = document.getElementById('inputSchoolName');
+                    const inputClassName = document.getElementById('inputClassName');
+                    const inputClassSlogan = document.getElementById('inputClassSlogan');
+                    const inputQuote1 = document.getElementById('inputQuote1');
+                    const inputQuote2 = document.getElementById('inputQuote2');
+                    const inputQuote3 = document.getElementById('inputQuote3');
+                    const inputBirthdayDate = document.getElementById('inputBirthdayDate');
+                    const inputBalloonTiktokUrl = document.getElementById('inputBalloonTiktokUrl');
+                    const inputPhotoFile = document.getElementById('inputPhoto');
+                    const inputPhotoUrl = document.getElementById('inputPhotoUrl');
+
+                    if (inputName) state.name = inputName.value.trim();
+                    if (inputSchoolName) state.schoolName = inputSchoolName.value.trim();
+                    if (inputClassName) state.className = inputClassName.value.trim();
+                    if (inputClassSlogan) state.classSlogan = inputClassSlogan.value.trim();
+                    if (inputQuote1) state.quote1 = inputQuote1.value.trim();
+                    if (inputQuote2) state.quote2 = inputQuote2.value.trim();
+                    if (inputQuote3) state.quote3 = inputQuote3.value.trim();
+                    if (inputBirthdayDate) state.birthdayDate = inputBirthdayDate.value.trim();
+                    if (inputBalloonTiktokUrl) state.balloonTiktokUrl = inputBalloonTiktokUrl.value.trim();
+
+                    const inputLinkFacebook = document.getElementById('inputLinkFacebook');
+                    const inputLinkMessenger = document.getElementById('inputLinkMessenger');
+                    const inputLinkZalo = document.getElementById('inputLinkZalo');
+                    const inputLinkTiktok = document.getElementById('inputLinkTiktok');
+                    const inputLinkInstagram = document.getElementById('inputLinkInstagram');
+
+                    if (!state.socialLinks) state.socialLinks = {};
+                    if (inputLinkFacebook) state.socialLinks.facebook = inputLinkFacebook.value.trim();
+                    if (inputLinkMessenger) state.socialLinks.messenger = inputLinkMessenger.value.trim();
+                    if (inputLinkZalo) state.socialLinks.zalo = inputLinkZalo.value.trim();
+                    if (inputLinkTiktok) state.socialLinks.tiktok = inputLinkTiktok.value.trim();
+                    if (inputLinkInstagram) state.socialLinks.instagram = inputLinkInstagram.value.trim();
+
+                    if (inputPhotoFile && inputPhotoFile.files.length > 0) {
+                        const file = inputPhotoFile.files[0];
+                        const base64 = await readFileAsDataURL(file);
+                        state.photoUrl = await uploadFileToBackend(`avatar_${Date.now()}_${file.name}`, base64);
+                    } else if (inputPhotoUrl && inputPhotoUrl.value.trim() !== '') {
+                        state.photoUrl = inputPhotoUrl.value.trim();
+                    }
+
+                    const inputHomeLat = document.getElementById('inputHomeLat');
+                    const inputHomeLng = document.getElementById('inputHomeLng');
+                    const inputHomeAddress = document.getElementById('inputHomeAddress');
+                    if (inputHomeLat || inputHomeLng || inputHomeAddress) {
+                        state.homeLocation = {
+                            lat: inputHomeLat && inputHomeLat.value ? parseFloat(inputHomeLat.value) : 18.98686,
+                            lng: inputHomeLng && inputHomeLng.value ? parseFloat(inputHomeLng.value) : 105.46820,
+                            address: inputHomeAddress ? inputHomeAddress.value.trim() : 'Xã Quan Thành, Tỉnh Nghệ An'
+                        };
+                    }
+
+                    showToast("Đã lưu thông tin Hồ Sơ cá nhân! 👤✨");
+                } 
+                else if (action === 'music') {
+                    const trkFiles = document.querySelectorAll('.adm-trk-file');
+                    const trkUrls = document.querySelectorAll('.adm-trk-url');
+                    const trkTitles = document.querySelectorAll('.adm-trk-title');
+                    const trkArtists = document.querySelectorAll('.adm-trk-artist');
+                    const newPlaylist = [];
+
+                    for (let i = 0; i < trkUrls.length; i++) {
+                        let url = trkUrls[i].value.trim();
+                        const fileElem = trkFiles[i];
+                        if (fileElem && fileElem.files.length > 0) {
+                            const file = fileElem.files[0];
+                            const base64 = await readFileAsDataURL(file);
+                            url = await uploadFileToBackend(`track_${Date.now()}_${file.name}`, base64);
+                        } else if (!url && state.playlist && state.playlist[i]) {
+                            url = state.playlist[i].url;
+                        }
+
+                        const title = trkTitles[i] ? trkTitles[i].value.trim() : '';
+                        if (url || title) {
+                            newPlaylist.push({
+                                title: title || 'Bài Hát Thanh Xuân',
+                                artist: trkArtists[i] ? trkArtists[i].value.trim() : 'Kế',
+                                url
+                            });
+                        }
+                    }
+                    if (newPlaylist.length > 0) state.playlist = newPlaylist;
+                    showToast("Đã lưu Playlist Âm Nhạc! 🎵✨");
+                }
+                else if (action === 'favorites') {
+                    const inputFavMusic = document.getElementById('inputFavMusic');
+                    const inputFavMovie = document.getElementById('inputFavMovie');
+                    const inputFavBook = document.getElementById('inputFavBook');
+                    const inputFavDrink = document.getElementById('inputFavDrink');
+                    const inputFavFashion = document.getElementById('inputFavFashion');
+                    const inputFavLover = document.getElementById('inputFavLover');
+                    const inputFavLifestyle = document.getElementById('inputFavLifestyle');
+                    const inputFavColor = document.getElementById('inputFavColor');
+
+                    if (inputFavMusic) state.favMusic = inputFavMusic.value.trim();
+                    if (inputFavMovie) state.favMovie = inputFavMovie.value.trim();
+                    if (inputFavBook) state.favBook = inputFavBook.value.trim();
+                    if (inputFavDrink) state.favDrink = inputFavDrink.value.trim();
+                    if (inputFavFashion) state.favFashion = inputFavFashion.value.trim();
+                    if (inputFavLover) state.favLover = inputFavLover.value.trim();
+                    if (inputFavLifestyle) state.favLifestyle = inputFavLifestyle.value.trim();
+                    if (inputFavColor) state.favColor = inputFavColor.value.trim();
+
+                    showToast("Đã lưu Gu & Sở Thích cá nhân! 💖✨");
+                }
+                else if (action === 'milestones') {
+                    const jouTitles = document.querySelectorAll('.adm-jou-title');
+                    const jouTags = document.querySelectorAll('.adm-jou-tag');
+                    const jouDates = document.querySelectorAll('.adm-jou-date');
+                    const jouUrls = document.querySelectorAll('.adm-jou-url');
+                    const jouDescs = document.querySelectorAll('.adm-jou-desc');
+                    const newJourney = [];
+
+                    for (let i = 0; i < jouTitles.length; i++) {
+                        const title = jouTitles[i].value.trim();
+                        const url = jouUrls[i] ? jouUrls[i].value.trim() : '';
+                        if (title || url) {
+                            newJourney.push({
+                                title: title || 'Kỷ Niệm',
+                                tag: jouTags[i] ? jouTags[i].value.trim() : 'Hành Trình',
+                                date: jouDates[i] ? jouDates[i].value.trim() : '',
+                                url,
+                                desc: jouDescs[i] ? jouDescs[i].value.trim() : ''
+                            });
+                        }
+                    }
+                    if (newJourney.length > 0) state.journey = newJourney;
+                    showToast("Đã lưu Dấu Chân Thanh Xuân! 📍✨");
+                }
+                else if (action === 'memoryMap') {
+                    const mapNames  = document.querySelectorAll('.adm-map-name');
+                    const mapLabels = document.querySelectorAll('.adm-map-label');
+                    const mapLats   = document.querySelectorAll('.adm-map-lat');
+                    const mapLngs   = document.querySelectorAll('.adm-map-lng');
+                    const newMapLocations = [];
+                    for (let i = 0; i < mapNames.length; i++) {
+                        const name = mapNames[i].value.trim();
+                        if (name) {
+                            const lat = parseFloat(mapLats[i] ? mapLats[i].value : '');
+                            const lng = parseFloat(mapLngs[i] ? mapLngs[i].value : '');
+                            newMapLocations.push({
+                                name,
+                                label: mapLabels[i] ? mapLabels[i].value.trim() : '',
+                                lat: isNaN(lat) ? null : lat,
+                                lng: isNaN(lng) ? null : lng,
+                            });
+                        }
+                    }
+                    state.mapLocations = newMapLocations;
+                    showToast("Đã lưu Bản Đồ Kỷ Niệm! 🗺️✨");
+                }
+                else if (action === 'gallery') {
+                    const galFiles = document.querySelectorAll('.adm-gal-file');
+                    const galUrls = document.querySelectorAll('.adm-gal-url');
+                    const galCaps = document.querySelectorAll('.adm-gal-caption');
+                    const galDates = document.querySelectorAll('.adm-gal-date');
+                    const galLocs = document.querySelectorAll('.adm-gal-location');
+                    const newGallery = [];
+
+                    for (let i = 0; i < galUrls.length; i++) {
+                        let url = galUrls[i].value.trim();
+                        const fileElem = galFiles[i];
+                        if (fileElem && fileElem.files.length > 0) {
+                            const file = fileElem.files[0];
+                            const base64 = await readFileAsDataURL(file);
+                            url = await uploadFileToBackend(`gallery_${Date.now()}_${file.name}`, base64);
+                        } else if (!url && state.gallery && state.gallery[i]) {
+                            url = state.gallery[i].url;
+                        }
+
+                        if (url) {
+                            newGallery.push({
+                                url,
+                                caption: galCaps[i] ? galCaps[i].value.trim() : '',
+                                date: galDates[i] ? galDates[i].value.trim() : '',
+                                location: galLocs[i] ? galLocs[i].value.trim() : ''
+                            });
+                        }
+                    }
+                    if (newGallery.length > 0) state.gallery = newGallery;
+                    showToast("Đã lưu Thư Viện Ảnh Kỷ Niệm! 🖼️✨");
+                }
+
+                setState(state);
+                await saveBackendConfig(state);
+                refreshDOM();
+            } catch (err) {
+                console.error("Tab save error:", err);
+                showToast("❌ Có lỗi khi lưu dữ liệu tab!");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
+        });
+    });
+
     // Xử lý nút "Lấy Vị Trí Hiện Tại Làm Vị Trí Nhà" trong trang Admin
     const btnGetMyCurrentHomeLocation = document.getElementById('btnGetMyCurrentHomeLocation');
     if (btnGetMyCurrentHomeLocation) {

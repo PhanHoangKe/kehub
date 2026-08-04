@@ -842,6 +842,11 @@
 
                 <!-- TAB: HỒ SƠ CÁ NHÂN -->
                 <div id="tabProfile" class="admin-tab-content">
+                    <div class="tab-header-action-bar">
+                        <div class="tab-header-title"><i class="fa-solid fa-user-pen"></i> Quản Lý Hồ Sơ & Thông Tin Cá Nhân</div>
+                        <button type="button" class="btn-tab-save" data-tab-action="profile"><i class="fa-solid fa-floppy-disk"></i> Lưu Hồ Sơ</button>
+                    </div>
+
                     <div class="form-section-card">
                         <div class="form-section-title"><i class="fa-solid fa-id-card"></i> Thông Tin Cơ Bản</div>
                         <div class="form-grid-2">
@@ -982,13 +987,20 @@
 
                 <!-- TAB: PLAYLIST ÂM NHẠC -->
                 <div id="tabMusic" class="admin-tab-content">
-                    <div class="tab-subheading"><i class="fa-solid fa-list-music"></i> Quản Lý Playlist (Không Giới Hạn)</div>
+                    <div class="tab-header-action-bar">
+                        <div class="tab-header-title"><i class="fa-solid fa-music"></i> Quản Lý Playlist Âm Nhạc</div>
+                        <button type="button" class="btn-tab-save" data-tab-action="music"><i class="fa-solid fa-floppy-disk"></i> Lưu Playlist</button>
+                    </div>
                     <div class="admin-items-container" id="musicPlaylistAdminList"></div>
                     <button class="btn-add-item" id="btnAddPlaylistTrack"><i class="fa-solid fa-plus"></i> Thêm Bài Hát Mới</button>
                 </div>
 
                 <!-- TAB: SỞ THÍCH & GU CÁ NHÂN -->
                 <div id="tabFavorites" class="admin-tab-content">
+                    <div class="tab-header-action-bar">
+                        <div class="tab-header-title"><i class="fa-solid fa-heart"></i> Quản Lý Gu & Sở Thích Cá Nhân</div>
+                        <button type="button" class="btn-tab-save" data-tab-action="favorites"><i class="fa-solid fa-floppy-disk"></i> Lưu Sở Thích</button>
+                    </div>
                     <div class="form-section-card">
                         <div class="form-section-title"><i class="fa-solid fa-sparkles"></i> Gu & Sở Thích Cá Nhân</div>
                         <div class="form-grid-2">
@@ -1030,14 +1042,20 @@
 
                 <!-- TAB: DẤU CHÂN THANH XUÂN -->
                 <div id="tabMilestones" class="admin-tab-content">
-                    <div class="tab-subheading"><i class="fa-solid fa-map-location-dot"></i> Quản Lý Dấu Chân Thanh Xuân</div>
+                    <div class="tab-header-action-bar">
+                        <div class="tab-header-title"><i class="fa-solid fa-map-pin"></i> Quản Lý Dấu Chân Thanh Xuân</div>
+                        <button type="button" class="btn-tab-save" data-tab-action="milestones"><i class="fa-solid fa-floppy-disk"></i> Lưu Dấu Chân</button>
+                    </div>
                     <div class="admin-items-container" id="journeyAdminList"></div>
                     <button class="btn-add-item" id="btnAddJourneyCard"><i class="fa-solid fa-plus"></i> Thêm Cột Mốc Mới</button>
                 </div>
 
                 <!-- TAB: BẢN ĐỒ KỶ NIỆM -->
                 <div id="tabMemoryMap" class="admin-tab-content">
-                    <div class="tab-subheading"><i class="fa-solid fa-map-location-dot"></i> Bản Đồ Kỷ Niệm (Ghim Địa Điểm)</div>
+                    <div class="tab-header-action-bar">
+                        <div class="tab-header-title"><i class="fa-solid fa-map-location-dot"></i> Quản Lý Bản Đồ Kỷ Niệm</div>
+                        <button type="button" class="btn-tab-save" data-tab-action="memoryMap"><i class="fa-solid fa-floppy-disk"></i> Lưu Bản Đồ</button>
+                    </div>
                     <p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:16px;">
                         <i class="fa-solid fa-circle-info"></i> Thêm các địa điểm gắn với kỷ niệm. Tên địa điểm sẽ được tìm kiếm trên OpenStreetMap.
                     </p>
@@ -1047,7 +1065,13 @@
 
                 <!-- TAB: THƯ VIỆN ẢNH -->
                 <div id="tabGallery" class="admin-tab-content">
-                    <div class="tab-subheading"><i class="fa-solid fa-photo-film"></i> Quản Lý Bộ Sưu Tập Ảnh</div>
+                    <div class="tab-header-action-bar">
+                        <div class="tab-header-title"><i class="fa-solid fa-images"></i> Quản Lý Thư Viện Ảnh Kỷ Niệm</div>
+                        <button type="button" class="btn-tab-save" data-tab-action="gallery"><i class="fa-solid fa-floppy-disk"></i> Lưu Thư Viện Ảnh</button>
+                    </div>
+                    <div class="admin-items-container" id="galleryAdminList"></div>
+                    <button class="btn-add-item" id="btnAddGalleryPhoto"><i class="fa-solid fa-plus"></i> Thêm Ảnh Mới</button>
+                </div>
                     <div class="admin-items-container" id="galleryAdminList"></div>
                     <button class="btn-add-item" id="btnAddGalleryPhoto"><i class="fa-solid fa-plus"></i> Thêm Ảnh Mới</button>
                 </div>

@@ -80,12 +80,13 @@ function uploadToCloudinary(buffer, mime, folder = 'youth-memories') {
             let resourceType = 'image';
             if (mime.startsWith('video/') || mime.startsWith('audio/')) resourceType = 'video';
 
-            // Tạo chữ ký HMAC-SHA1 cho Cloudinary Signed Upload
+            // Tạo chữ ký SHA1 cho Cloudinary Signed Upload
+            // Cloudinary dùng SHA1(params_string + api_secret), không phải HMAC
             const timestamp = Math.floor(Date.now() / 1000).toString();
             const paramsToSign = `folder=${folder}&timestamp=${timestamp}`;
             const signature = crypto
-                .createHmac('sha1', CLOUDINARY_API_SECRET)
-                .update(paramsToSign)
+                .createHash('sha1')
+                .update(paramsToSign + CLOUDINARY_API_SECRET)
                 .digest('hex');
 
             // Build multipart/form-data thủ công (không dùng thư viện ngoài)

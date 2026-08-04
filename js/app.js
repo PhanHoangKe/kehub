@@ -326,6 +326,12 @@ function initAdminVisibility() {
     document.querySelectorAll('.admin-only').forEach(el => {
         el.style.display = isAdmin ? '' : 'none';
     });
+
+    // Hiện nút tạo chuyến đi mới khi là Admin
+    const btnCreateOuting = document.getElementById('btnToggleOutingForm');
+    if (btnCreateOuting) {
+        btnCreateOuting.style.display = isAdmin ? 'inline-flex' : 'none';
+    }
 }
 window.initAdminVisibility = initAdminVisibility;
 

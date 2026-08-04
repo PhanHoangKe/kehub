@@ -42,6 +42,7 @@
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/navigation.css">
     <link rel="stylesheet" href="css/student_modules.css">
+    <link rel="stylesheet" href="css/notebook_modal.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="css/admin.css">
 </head>
@@ -678,7 +679,7 @@
                         <p>Lưu giữ hình ảnh, video & kỷ niệm những chuyến phượt, dã ngoại và tụ tập cùng bạn bè!</p>
                     </div>
                     <div style="display: flex; gap: 10px; align-items: center;">
-                        <button id="btnToggleOutingForm" class="btn-create-outing admin-only">
+                        <button id="btnToggleOutingForm" class="btn-create-outing" id="btnCreateOuting" style="display:none;">
                             <i class="fa-solid fa-plus-circle"></i> <span>Tạo Chuyến Đi Mới</span>
                         </button>
                         <button class="btn-back-home" onclick="window.switchPage('home')">
@@ -1220,148 +1221,165 @@
     </div>
 
 
-    <!-- Modal Gửi Tin Nhắn Ẩn Danh -->
+    <!-- Modal Gửi Tin Nhắn Ẩn Danh - Phong Cách Học Đường -->
     <div id="anonymousModal" class="modal-overlay anonymous-modal">
-        <div class="big-tree-outside big-tree-right">
-            <div class="big-tree-sway">
 
-                <!-- Rễ cây nổi -->
-                <div class="tree-root root-l1"></div>
-                <div class="tree-root root-l2"></div>
-                <div class="tree-root root-r1"></div>
-                <div class="tree-root root-r2"></div>
-
-                <!-- Thân cây 3 lớp tạo chiều sâu -->
-                <div class="trunk-shadow"></div>
-                <div class="trunk-back"></div>
-                <div class="trunk-mid"></div>
-                <div class="trunk-front"></div>
-                <!-- Vân gỗ -->
-                <div class="trunk-bark bark-1"></div>
-                <div class="trunk-bark bark-2"></div>
-                <div class="trunk-bark bark-3"></div>
-                <div class="trunk-highlight"></div>
-
-                <!-- Cành cấp 1 — dày, gốc to đầu nhọn -->
-                <div class="t3-branch br-1a"></div>
-                <div class="t3-branch br-1b"></div>
-                <div class="t3-branch br-2a"></div>
-                <div class="t3-branch br-2b"></div>
-                <div class="t3-branch br-3a"></div>
-                <div class="t3-branch br-3b"></div>
-                <div class="t3-branch br-4a"></div>
-
-                <!-- Cành cấp 2 — mảnh hơn -->
-                <div class="t3-twig tw-1a"></div>
-                <div class="t3-twig tw-1b"></div>
-                <div class="t3-twig tw-2a"></div>
-                <div class="t3-twig tw-2b"></div>
-                <div class="t3-twig tw-3a"></div>
-                <div class="t3-twig tw-3b"></div>
-                <div class="t3-twig tw-4a"></div>
-                <div class="t3-twig tw-4b"></div>
-
-                <!-- Tán lá (JS render vào đây) -->
-                <div class="tree-leaves big-tree-leaves" id="bigTreeLeaves"></div>
-
-                <!-- Chậu 3D -->
-                <div class="pot3d">
-                    <div class="pot3d-rim"></div>
-                    <div class="pot3d-body">
-                        <div class="pot3d-shine"></div>
-                        <div class="pot3d-shadow-inner"></div>
-                    </div>
-                    <div class="pot3d-base"></div>
-                    <div class="pot3d-ground-shadow"></div>
-                </div>
-
-            </div>
+        <!-- Hidden tree elements kept for JS compatibility (không hiển thị) -->
+        <div style="display:none" aria-hidden="true">
+            <div id="bigTreeLeaves"></div>
+            <div id="fallenLeavesLayer"></div>
         </div>
 
-        <div class="fallen-leaves-layer-outside" id="fallenLeavesLayer"></div>
+        <!-- NOTEBOOK MODAL -->
+        <div class="notebook-modal-box">
 
-        <div class="modal-box anonymous-modal-box">
-            <div class="anonymous-modal-orb orb-a"></div>
-            <div class="anonymous-modal-orb orb-b"></div>
-
-            <div class="modal-header anonymous-modal-header">
-                <div class="anonymous-modal-title-wrap">
-                    <div class="anonymous-modal-icon-circle">
-                        <i class="fa-solid fa-mask"></i>
-                    </div>
-                    <div>
-                        <h3>GỬI TIN NHẮN ẨN DANH</h3>
-                        <p class="anonymous-modal-subtitle"><i class="fa-solid fa-lock"></i> Mã hóa đầu cuối · Chỉ chủ sở hữu đọc được</p>
-                    </div>
-                </div>
-                <button id="btnCloseAnonymousModal" class="close-btn anonymous-close-btn">&times;</button>
+            <!-- Gáy sổ bên trái -->
+            <div class="notebook-spine">
+                <div class="spine-ring"></div>
+                <div class="spine-ring"></div>
+                <div class="spine-ring"></div>
+                <div class="spine-ring"></div>
+                <div class="spine-ring"></div>
+                <div class="spine-ring"></div>
+                <div class="spine-ring"></div>
+                <div class="spine-ring"></div>
+                <div class="spine-text">✉ BÍ MẬT</div>
             </div>
-            <div class="modal-body anonymous-modal-body">
-                <div class="anonymous-tip-banner">
-                    <i class="fa-solid fa-lightbulb"></i>
-                    <span>Gửi lời nhắn, cảm xúc hay điều thầm kín bạn chưa dám nói. Tất cả đều hoàn toàn bí mật.</span>
+
+            <!-- Nội dung trang sổ -->
+            <div class="notebook-page">
+
+                <!-- Header trang sổ -->
+                <div class="notebook-header">
+                    <div class="notebook-header-lines">
+                        <div class="nb-line nb-line-red"></div>
+                        <div class="nb-line"></div>
+                    </div>
+                    <div class="notebook-title-area">
+                        <div class="notebook-stamp">
+                            <span class="stamp-icon">🤫</span>
+                            <span class="stamp-text">MẬT</span>
+                        </div>
+                        <div>
+                            <h3 class="notebook-title">GỬI THƯ BÍ MẬT</h3>
+                            <p class="notebook-subtitle">🔒 Hoàn toàn ẩn danh · Chỉ chủ sổ đọc được</p>
+                        </div>
+                    </div>
+                    <button id="btnCloseAnonymousModal" class="notebook-close-btn" title="Đóng">✕</button>
                 </div>
-                <div class="anonymous-textarea-wrap">
-                    <textarea id="inputAnonymousMessage" rows="5" class="anonymous-textarea" placeholder="Viết điều gì đó thầm kín gửi đến Kế..."></textarea>
-                    <div class="anonymous-textarea-footer">
-                        <span class="anonymous-char-count"><span id="anonymousCharCount">0</span> / 500</span>
-                        <span class="anonymous-badge">
-                            <i class="fa-solid fa-shield-halved"></i> End-to-end
+
+                <!-- Dòng kẻ trang sổ + Cây bút + Textarea -->
+                <div class="notebook-writing-area">
+
+                    <!-- Bút chì / Bút bi (hiệu ứng khi gõ) -->
+                    <div class="pen-container" id="penContainer">
+                        <div class="pen-body">
+                            <div class="pen-clip"></div>
+                            <div class="pen-band"></div>
+                            <div class="pen-tip-wrap">
+                                <div class="pen-tip"></div>
+                                <div class="pen-ink-dot" id="penInkDot"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cục tẩy (hiện khi xóa) -->
+                    <div class="eraser-container" id="eraserContainer">
+                        <div class="eraser-body">
+                            <div class="eraser-label">MONO</div>
+                            <div class="eraser-stripe"></div>
+                            <div class="eraser-crumbs" id="eraserCrumbs"></div>
+                        </div>
+                    </div>
+
+                    <!-- Dòng kẻ nền -->
+                    <div class="notebook-lines-bg">
+                        <div class="nb-ruled-line" style="top:32px"></div>
+                        <div class="nb-ruled-line" style="top:64px"></div>
+                        <div class="nb-ruled-line" style="top:96px"></div>
+                        <div class="nb-ruled-line" style="top:128px"></div>
+                        <div class="nb-ruled-line" style="top:160px"></div>
+                        <div class="nb-margin-line"></div>
+                    </div>
+
+                    <textarea id="inputAnonymousMessage" rows="5"
+                        class="notebook-textarea"
+                        placeholder="Viết điều thầm kín gửi đến Kế... ✍️"></textarea>
+
+                    <!-- Đếm ký tự + trạng thái bút -->
+                    <div class="notebook-footer-bar">
+                        <div class="pen-status-wrap">
+                            <span class="pen-status-dot" id="penStatusDot"></span>
+                            <span class="pen-status-text" id="penStatusText">Sẵn sàng viết...</span>
+                        </div>
+                        <span class="notebook-char-count">
+                            <span id="anonymousCharCount">0</span>/500
                         </span>
                     </div>
                 </div>
-                <!-- ── Media Attachment Bar ──────────────────────── -->
-                <div class="anon-media-bar">
-                    <div class="anon-media-bar-label">
-                        <i class="fa-solid fa-paperclip"></i> Đính kèm (tuỳ chọn)
-                    </div>
-                    <div class="anon-media-actions">
-                        <!-- Ghi âm -->
-                        <button type="button" id="btnAnonRecord" class="anon-media-btn" title="Ghi âm giọng nói">
-                            <i class="fa-solid fa-microphone"></i>
+
+                <!-- Đính kèm -->
+                <div class="notebook-attach-bar">
+                    <span class="attach-label">📎 Đính kèm:</span>
+                    <div class="attach-actions">
+                        <button type="button" id="btnAnonRecord" class="nb-attach-btn" title="Ghi âm giọng nói">
+                            <span class="nb-btn-icon">🎙️</span>
                             <span>Ghi Âm</span>
                         </button>
-                        <!-- Chọn ảnh / video từ thiết bị -->
-                        <button type="button" id="btnAnonPickFile" class="anon-media-btn" title="Chọn ảnh hoặc video">
-                            <i class="fa-solid fa-image"></i>
+                        <button type="button" id="btnAnonPickFile" class="nb-attach-btn" title="Chọn ảnh hoặc video">
+                            <span class="nb-btn-icon">🖼️</span>
                             <span>Ảnh / Video</span>
                         </button>
                         <input type="file" id="anonFileInput" accept="image/*,video/*" style="display:none;">
                     </div>
 
-                    <!-- Recording status bar -->
+                    <!-- Recording status -->
                     <div id="anonRecordStatus" class="anon-record-status" style="display:none;">
                         <span class="rec-dot"></span>
                         <span id="anonRecordTimer" class="rec-timer">00:00</span>
-                        <button type="button" id="btnAnonStopRecord" class="anon-media-btn anon-media-btn--stop">
+                        <button type="button" id="btnAnonStopRecord" class="nb-attach-btn nb-btn-stop">
                             <i class="fa-solid fa-stop"></i> Dừng
                         </button>
-                        <button type="button" id="btnAnonCancelRecord" class="anon-media-btn anon-media-btn--cancel">
+                        <button type="button" id="btnAnonCancelRecord" class="nb-attach-btn nb-btn-cancel">
                             <i class="fa-solid fa-xmark"></i>
                         </button>
                     </div>
 
-                    <!-- Attachment preview area -->
+                    <!-- Media preview -->
                     <div id="anonMediaPreview" class="anon-media-preview" style="display:none;">
-                        <div class="anon-preview-inner">
-                            <!-- Filled by JS -->
-                        </div>
+                        <div class="anon-preview-inner"></div>
                         <button type="button" id="btnAnonRemoveMedia" class="anon-remove-media" title="Xoá đính kèm">
                             <i class="fa-solid fa-xmark"></i>
                         </button>
                     </div>
                 </div>
 
-                <button id="btnSubmitAnonymous" class="anonymous-submit-btn">
-                    <span class="btn-inner">
-                        <i class="fa-solid fa-paper-plane"></i>
-                        <span>Gửi Ẩn Danh Ngay</span>
-                        <i class="fa-solid fa-sparkles btn-sparkle-right"></i>
-                    </span>
-                </button>
-            </div>
-        </div>
+                <!-- Nút gửi dạng con dấu / stamp -->
+                <div class="notebook-send-area">
+                    <div class="wax-seal-decoration">
+                        <span class="wax-seal">🕊️</span>
+                    </div>
+                    <button id="btnSubmitAnonymous" class="notebook-send-btn" disabled>
+                        <span class="send-btn-inner">
+                            <span class="send-icon">✉️</span>
+                            <span class="send-text">Niêm Phong & Gửi Đi</span>
+                        </span>
+                        <div class="send-btn-seal-effect"></div>
+                    </button>
+                </div>
+
+                <!-- Trang số / date -->
+                <div class="notebook-page-footer">
+                    <span class="page-num">Trang bí mật số 1</span>
+                    <span class="page-date" id="notebookDate"></span>
+                </div>
+
+            </div><!-- end notebook-page -->
+        </div><!-- end notebook-modal-box -->
     </div>
+
+
+
 
     <!-- Lightbox Popup Xem Ảnh HD (Slideshow + Swipe) -->
     <div id="lightboxModal" class="lightbox-modal">

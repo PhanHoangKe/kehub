@@ -481,6 +481,99 @@ export function initGuestbookEngine() {
         inputAnonymousMessage.addEventListener('input', updateCharCount);
     }
 
+    // ── Notebook Pen / Eraser animation engine ────────────────────────────
+    const penContainer    = document.getElementById('penContainer');
+    const eraserContainer = document.getElementById('eraserContainer');
+    const penStatusDot    = document.getElementById('penStatusDot');
+    const penStatusText   = document.getElementById('penStatusText');
+    const eraserCrumbs    = document.getElementById('eraserCrumbs');
+    const notebookDateEl  = document.getElementById('notebookDate');
+
+    // Set notebook date
+    if (notebookDateEl) {
+        const now = new Date();
+        notebookDateEl.textContent = now.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    let prevInputLen = 0;
+    let penWriteTimer = null;
+    let eraserHideTimer = null;
+
+    function spawnEraserCrumbs() {
+        if (!eraserCrumbs) return;
+        eraserCrumbs.innerHTML = '';
+        const count = Math.floor(Math.random() * 3) + 2;
+        for (let i = 0; i < count; i++) {
+            const crumb = document.createElement('div');
+            crumb.className = 'eraser-crumb';
+            crumb.style.animationDelay = `${i * 60}ms`;
+            crumb.style.width = `${Math.floor(Math.random() * 3) + 3}px`;
+            crumb.style.height = crumb.style.width;
+            eraserCrumbs.appendChild(crumb);
+        }
+        setTimeout(() => { if (eraserCrumbs) eraserCrumbs.innerHTML = ''; }, 800);
+    }
+
+    function showPen() {
+        if (!penContainer || !eraserContainer) return;
+        penContainer.classList.add('is-writing');
+        eraserContainer.classList.remove('is-erasing');
+        if (penStatusDot) { penStatusDot.className = 'pen-status-dot writing'; }
+        if (penStatusText) penStatusText.textContent = 'Đang viết...';
+    }
+
+    function showEraser() {
+        if (!penContainer || !eraserContainer) return;
+        penContainer.classList.remove('is-writing');
+        eraserContainer.classList.add('is-erasing');
+        if (penStatusDot) { penStatusDot.className = 'pen-status-dot erasing'; }
+        if (penStatusText) penStatusText.textContent = 'Đang xóa...';
+        spawnEraserCrumbs();
+    }
+
+    function hideBoth() {
+        if (!penContainer || !eraserContainer) return;
+        penContainer.classList.remove('is-writing');
+        eraserContainer.classList.remove('is-erasing');
+        if (penStatusDot) { penStatusDot.className = 'pen-status-dot'; }
+        if (penStatusText) penStatusText.textContent = 'Sẵn sàng viết...';
+    }
+
+    if (inputAnonymousMessage) {
+        inputAnonymousMessage.addEventListener('input', () => {
+            const curLen = inputAnonymousMessage.value.length;
+            clearTimeout(penWriteTimer);
+            clearTimeout(eraserHideTimer);
+
+            if (curLen > prevInputLen) {
+                showPen();
+            } else if (curLen < prevInputLen) {
+                showEraser();
+            }
+            prevInputLen = curLen;
+
+            penWriteTimer = setTimeout(() => {
+                hideBoth();
+            }, 800);
+        });
+
+        inputAnonymousMessage.addEventListener('focus', () => {
+            if (inputAnonymousMessage.value.length > 0) return;
+            if (penContainer) {
+                penContainer.style.opacity = '0.35';
+                penContainer.style.transform = 'rotate(-38deg) translateY(2px)';
+            }
+        });
+
+        inputAnonymousMessage.addEventListener('blur', () => {
+            hideBoth();
+            if (penContainer) {
+                penContainer.style.opacity = '';
+                penContainer.style.transform = '';
+            }
+        });
+    }
+
     // ── Media Attachment Engine ───────────────────────────────────────────
     // DOM refs
     const btnAnonRecord      = document.getElementById('btnAnonRecord');

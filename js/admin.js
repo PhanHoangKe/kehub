@@ -214,8 +214,13 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
         });
     }
 
-    // Helper upload file lên Backend Node.js Server
+    // Helper upload file lên Backend Node.js Server (Tối ưu giữ ảnh 100% không mất khi redeploy)
     async function uploadFileToBackend(filename, base64Data) {
+        // Dành cho ảnh: Trả về trực tiếp Base64 Data URL để lưu thẳng vào db.json
+        // Giúp ảnh tồn tại vĩnh viễn 100% ngay cả khi Render xoá thư mục /uploads/
+        if (base64Data && base64Data.startsWith('data:image/')) {
+            return base64Data;
+        }
         try {
             const token = localStorage.getItem('admin_token');
             const headers = { 'Content-Type': 'application/json' };

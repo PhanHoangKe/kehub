@@ -13,6 +13,9 @@ function readFileAsDataURL(file) {
 }
 
 async function uploadFileToBackend(filename, base64Data) {
+    if (base64Data && base64Data.startsWith('data:image/')) {
+        return base64Data;
+    }
     try {
         const res = await fetch('/api/upload', {
             method: 'POST',

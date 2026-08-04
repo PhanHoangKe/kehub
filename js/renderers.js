@@ -469,3 +469,68 @@ function renderPager(container, current, total, onPageChange) {
     btnNext.addEventListener('click', () => { if (current < total) onPageChange(current + 1); });
     container.appendChild(btnNext);
 }
+
+// ── Outings (Nhật Ký Đi Chơi & Vi Vu) ───────────────────────────────────────
+export function renderOutings(state) {
+    const container = document.getElementById('outingsListGrid');
+    if (!container) return;
+
+    const list = (state.outings || (state.config && state.config.outings)) || [];
+    if (!list.length) {
+        container.innerHTML = `
+            <div class="empty-outing-box">
+                <i class="fa-solid fa-compass empty-icon"></i>
+                <p>Chưa có chuyến đi nào được lưu. Hãy bấm "Tạo Chuyến Đi Mới" để lưu giữ kỷ niệm đi chơi nhé!</p>
+            </div>`;
+        return;
+    }
+
+    container.innerHTML = list.map(item => {
+        const mediaList = Array.isArray(item.media) ? item.media : [];
+        const mediaHtml = mediaList.map(m => {
+            if (m.type === 'video' || (m.url && m.url.match(/\.(mp4|webm|mov)(\?.*)?$/i))) {
+                return `
+                    <div class="outing-media-item video-item">
+                        <video controls preload="metadata" class="outing-video-player">
+                            <source src="${m.url}" type="video/mp4">
+                            Trình duyệt của bạn không hỗ trợ phát video này.
+                        </video>
+                    </div>`;
+            } else {
+                return `
+                    <div class="outing-media-item photo-item" onclick="window.openOutingPhoto('${escapeHTML(m.url)}')">
+                        <img src="${m.url}" alt="${escapeHTML(item.title)}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80'">
+                        <div class="photo-overlay"><i class="fa-solid fa-expand"></i></div>
+                    </div>`;
+            }
+        }).join('');
+
+        return `
+            <div class="outing-card" data-id="${item.id}">
+                <div class="outing-card-badge"><i class="fa-solid fa-map-pin"></i></div>
+                <div class="outing-header">
+                    <div class="outing-title-group">
+                        <h3><i class="fa-solid fa-location-dot"></i> ${escapeHTML(item.title)}</h3>
+                        <div class="outing-meta-tags">
+                            <span class="meta-tag date"><i class="fa-regular fa-calendar"></i> ${escapeHTML(item.date || '')}</span>
+                            ${item.location ? `<span class="meta-tag loc"><i class="fa-solid fa-route"></i> ${escapeHTML(item.location)}</span>` : ''}
+                            ${item.weather ? `<span class="meta-tag weather"><i class="fa-solid fa-cloud-sun"></i> ${escapeHTML(item.weather)}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+
+                ${item.content ? `<p class="outing-content-text">${escapeHTML(item.content)}</p>` : ''}
+
+                ${mediaList.length ? `<div class="outing-media-gallery gallery-cols-${Math.min(mediaList.length, 3)}">${mediaHtml}</div>` : ''}
+
+                <div class="outing-card-footer">
+                    <button class="btn-outing-heart" onclick="window.reactOuting('${item.id}')">
+                        <i class="fa-solid fa-heart"></i> <span id="outingHeart-${item.id}">${item.hearts || 0}</span> Thích
+                    </button>
+                    <button class="btn-outing-delete admin-only" onclick="window.deleteOuting('${item.id}')" title="Xóa chuyến đi">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            </div>`;
+    }).join('');
+}

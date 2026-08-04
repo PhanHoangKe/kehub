@@ -23,6 +23,7 @@ import {
     renderGallery,
     renderJourney,
     renderMemoryMap,
+    renderOutings,
 } from './renderers.js';
 
 // ── Global State ─────────────────────────────────────────────────────────────
@@ -118,6 +119,7 @@ export function applyStateToDOM() {
     renderGallery(state);
     renderJourney(state);
     renderMemoryMap(state);
+    renderOutings(state);
 
     // Cập nhật Cấu hình Icon Meme Reactions (5 Icon)
     if (state.reactionsConfig && Array.isArray(state.reactionsConfig) && state.reactionsConfig.length > 0) {
@@ -697,7 +699,167 @@ function initApp() {
     initAdminVisibility();
     initLightbox();
     initVisitorTracking();
+    initOutingsEngine();
     revealHomePageElements();
+}
+
+function initOutingsEngine() {
+    const btnToggle = document.getElementById('btnToggleOutingForm');
+    const btnClose = document.getElementById('btnCloseOutingForm');
+    const formBox = document.getElementById('outingFormBox');
+    const form = document.getElementById('formAddOuting');
+    const fileInput = document.getElementById('inputOutingFiles');
+    const previewGrid = document.getElementById('outingMediaPreviewGrid');
+
+    let selectedMedia = [];
+
+    if (btnToggle && formBox) {
+        btnToggle.addEventListener('click', () => {
+            const isHidden = formBox.style.display === 'none' || !formBox.style.display;
+            formBox.style.display = isHidden ? 'block' : 'none';
+            if (isHidden) {
+                document.getElementById('inputOutingTitle')?.focus();
+            }
+        });
+    }
+
+    if (btnClose && formBox) {
+        btnClose.addEventListener('click', () => {
+            formBox.style.display = 'none';
+        });
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files || []);
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    const dataUrl = evt.target.result;
+                    const type = file.type.startsWith('video') ? 'video' : 'image';
+                    selectedMedia.push({ type, data: dataUrl, name: file.name });
+                    renderPreviews();
+                };
+                reader.readAsDataURL(file);
+            });
+            fileInput.value = '';
+        });
+    }
+
+    function renderPreviews() {
+        if (!previewGrid) return;
+        previewGrid.innerHTML = selectedMedia.map((m, idx) => `
+            <div class="preview-thumb-box">
+                ${m.type === 'video' ? `<video src="${m.data}"></video>` : `<img src="${m.data}" />`}
+                <button type="button" class="btn-remove-preview" onclick="window.removeOutingMediaPreview(${idx})"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        `).join('');
+    }
+
+    window.removeOutingMediaPreview = function(idx) {
+        selectedMedia.splice(idx, 1);
+        renderPreviews();
+    };
+
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('inputOutingTitle')?.value?.trim();
+            const date = document.getElementById('inputOutingDate')?.value || new Date().toISOString().split('T')[0];
+            const weather = document.getElementById('inputOutingWeather')?.value?.trim();
+            const content = document.getElementById('inputOutingContent')?.value?.trim();
+
+            if (!title) {
+                showToast('Vui lòng nhập tên chuyến đi', 'warning');
+                return;
+            }
+
+            const btnSubmit = document.getElementById('btnSubmitOuting');
+            if (btnSubmit) { btnSubmit.disabled = true; btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang đăng...'; }
+
+            try {
+                const payload = {
+                    title,
+                    date,
+                    weather,
+                    content,
+                    media: selectedMedia.map(m => ({ type: m.type, data: m.data }))
+                };
+
+                const res = await fetch('/api/outings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.success) {
+                        showToast('Đã đăng nhật ký chuyến đi thành công! 🎉', 'success');
+                        if (!state.outings) state.outings = [];
+                        state.outings.unshift(data.outing);
+                        renderOutings(state);
+
+                        form.reset();
+                        selectedMedia = [];
+                        renderPreviews();
+                        if (formBox) formBox.style.display = 'none';
+                    } else {
+                        showToast(data.message || 'Lỗi đăng chuyến đi', 'error');
+                    }
+                }
+            } catch (err) {
+                showToast('Không thể kết nối máy chủ', 'error');
+            } finally {
+                if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Đăng Nhật Ký Chuyến Đi'; }
+            }
+        });
+    }
+
+    window.openOutingPhoto = function(url) {
+        const modal = document.getElementById('lightboxModal');
+        const img = document.getElementById('lightboxImg');
+        if (modal && img) {
+            img.src = url;
+            modal.classList.add('active');
+        }
+    };
+
+    window.reactOuting = async function(id) {
+        try {
+            const res = await fetch('/api/outings/react', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success) {
+                    const el = document.getElementById(`outingHeart-${id}`);
+                    if (el) el.textContent = data.hearts;
+                    showToast('Đã thả tim chuyến đi! ❤️', 'info');
+                }
+            }
+        } catch (e) {}
+    };
+
+    window.deleteOuting = async function(id) {
+        if (!confirm('Bạn có chắc muốn xóa nhật ký chuyến đi này không?')) return;
+        try {
+            const res = await fetch('/api/outings/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            if (res.ok) {
+                showToast('Đã xóa chuyến đi!', 'info');
+                if (state.outings) {
+                    state.outings = state.outings.filter(o => o.id !== id);
+                }
+                renderOutings(state);
+            }
+        } catch (e) {}
+    };
 }
 
 if (document.readyState === 'loading') {

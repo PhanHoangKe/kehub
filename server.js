@@ -679,6 +679,7 @@ const server = http.createServer(async (req, res) => {
             wishes: db.wishes,
             hearts: db.hearts,
             reactions: db.reactions,
+            outings: (db.config && db.config.outings) || [],
         };
         if (isValidSession(token)) {
             safeDB.anonymousMessages = db.anonymousMessages || [];
@@ -788,6 +789,110 @@ const server = http.createServer(async (req, res) => {
             jsonResponse(res, 200, { success: true, wish: newWish, wishes: db.wishes });
         } catch (e) {
             jsonResponse(res, 400, { success: false, message: 'Lỗi ghi lời chúc' });
+        }
+        return;
+    }
+
+    // ── POST /api/outings — Thêm chuyến đi chơi mới (kèm ảnh/video) ──────────
+    if (pathname === '/api/outings' && req.method === 'POST') {
+        try {
+            const body = await readBody(req, 50 * 1024 * 1024);
+            const payload = JSON.parse(body);
+
+            const title    = sanitizeString(payload.title    || 'Chuyến Đi Mới', 200);
+            const location = sanitizeString(payload.location || '', 200);
+            const date     = sanitizeString(payload.date     || new Date().toISOString().split('T')[0], 50);
+            const weather  = sanitizeString(payload.weather  || '☀️ Nắng đẹp', 100);
+            const content  = sanitizeString(payload.content  || '', 2000);
+            const rawMedia = Array.isArray(payload.media) ? payload.media : [];
+
+            const savedMedia = [];
+            for (const item of rawMedia) {
+                if (item.data) {
+                    const validation = validateBase64File(item.data);
+                    if (validation.ok) {
+                        const prefix   = `outing_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+                        const filename = `${prefix}${validation.ext}`;
+                        const filePath = path.join(UPLOADS_DIR, filename);
+                        fs.writeFileSync(filePath, validation.buffer);
+                        savedMedia.push({
+                            type: validation.mime.startsWith('video') ? 'video' : 'image',
+                            url: `/uploads/${filename}`
+                        });
+                    }
+                } else if (item.url) {
+                    savedMedia.push({
+                        type: item.type || (item.url.match(/\.(mp4|webm|mov)(\?.*)?$/i) ? 'video' : 'image'),
+                        url: item.url
+                    });
+                }
+            }
+
+            const db = getDB();
+            if (!db.config) db.config = {};
+            if (!db.config.outings) db.config.outings = [];
+
+            const newOuting = {
+                id: `out_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
+                title,
+                location,
+                date,
+                weather,
+                content,
+                media: savedMedia,
+                hearts: 0,
+                createdAt: new Date().toISOString()
+            };
+
+            db.config.outings.unshift(newOuting);
+            await saveDB(db);
+            jsonResponse(res, 200, { success: true, outing: newOuting, outings: db.config.outings });
+        } catch (e) {
+            console.error('Lỗi /api/outings:', e.message);
+            jsonResponse(res, 500, { success: false, message: 'Lỗi lưu chuyến đi' });
+        }
+        return;
+    }
+
+    // ── POST /api/outings/delete — Xóa nhật ký đi chơi ───────────────────────
+    if (pathname === '/api/outings/delete' && req.method === 'POST') {
+        try {
+            const body = await readBody(req, 1024);
+            const payload = JSON.parse(body);
+            const id = payload.id;
+
+            const db = getDB();
+            if (db.config && db.config.outings) {
+                db.config.outings = db.config.outings.filter(o => o.id !== id);
+                await saveDB(db);
+            }
+            jsonResponse(res, 200, { success: true, outings: (db.config && db.config.outings) || [] });
+        } catch (e) {
+            jsonResponse(res, 400, { success: false, message: 'Lỗi xóa chuyến đi' });
+        }
+        return;
+    }
+
+    // ── POST /api/outings/react — Thả tim chuyến đi chơi ─────────────────────
+    if (pathname === '/api/outings/react' && req.method === 'POST') {
+        try {
+            const body = await readBody(req, 512);
+            const payload = JSON.parse(body);
+            const id = payload.id;
+
+            const db = getDB();
+            if (db.config && db.config.outings) {
+                const outing = db.config.outings.find(o => o.id === id);
+                if (outing) {
+                    outing.hearts = (outing.hearts || 0) + 1;
+                    await saveDB(db);
+                    jsonResponse(res, 200, { success: true, hearts: outing.hearts });
+                    return;
+                }
+            }
+            jsonResponse(res, 404, { success: false, message: 'Không tìm thấy chuyến đi' });
+        } catch (e) {
+            jsonResponse(res, 400, { success: false, message: 'Lỗi thả tim' });
         }
         return;
     }

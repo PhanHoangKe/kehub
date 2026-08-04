@@ -670,6 +670,71 @@
                 </section>
             </div>
 
+            <!-- PAGE 8: NHẬT KÝ ĐI CHƠI -->
+            <div id="page-outings" class="view-page">
+                <div class="page-header-box">
+                    <div class="page-title-group">
+                        <h2><i class="fa-solid fa-compass"></i> NHẬT KÝ ĐI CHƠI & VI VU</h2>
+                        <p>Lưu giữ hình ảnh, video & kỷ niệm những chuyến phượt, dã ngoại và tụ tập cùng bạn bè!</p>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button id="btnToggleOutingForm" class="btn-create-outing">
+                            <i class="fa-solid fa-plus-circle"></i> <span>Tạo Chuyến Đi Mới</span>
+                        </button>
+                        <button class="btn-back-home" onclick="window.switchPage('home')">
+                            <i class="fa-solid fa-arrow-left"></i> Trang Chủ
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Form Tạo Chuyến Đi Mới -->
+                <div id="outingFormBox" class="outing-form-box" style="display: none;">
+                    <div class="outing-form-header">
+                        <h3><i class="fa-solid fa-map-location-dot"></i> Ghi Nhật Ký Chuyến Đi Mới</h3>
+                        <button id="btnCloseOutingForm" class="btn-close-form"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <form id="formAddOuting" onsubmit="return false;">
+                        <div class="outing-form-grid">
+                            <div class="form-group">
+                                <label><i class="fa-solid fa-location-dot"></i> Tên chuyến đi & Địa điểm *</label>
+                                <input type="text" id="inputOutingTitle" placeholder="Ví dụ: Phượt Tam Đảo, Cà Phê Hồ Tây..." required />
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fa-regular fa-calendar"></i> Ngày đi chơi</label>
+                                <input type="date" id="inputOutingDate" />
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fa-solid fa-cloud-sun"></i> Thời tiết / Cảm xúc</label>
+                                <input type="text" id="inputOutingWeather" placeholder="Ví dụ: ☀️ Nắng vàng rực rỡ, 🌧️ Mưa chill..." />
+                            </div>
+                            <div class="form-group full-width">
+                                <label><i class="fa-solid fa-pen-nib"></i> Câu chuyện & Kỷ niệm chuyến đi</label>
+                                <textarea id="inputOutingContent" rows="3" placeholder="Chia sẻ những khoảnh khắc đáng nhớ nhất..."></textarea>
+                            </div>
+                            <div class="form-group full-width">
+                                <label><i class="fa-solid fa-photo-film"></i> Tải Ảnh / Video chuyến đi</label>
+                                <div class="media-upload-area">
+                                    <input type="file" id="inputOutingFiles" accept="image/*,video/*" multiple style="display:none;" />
+                                    <button type="button" class="btn-select-media" onclick="document.getElementById('inputOutingFiles').click()">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i> Chọn Ảnh & Video từ thiết bị
+                                    </button>
+                                    <span class="media-hint">Hỗ trợ JPG, PNG, WebP & Video MP4, MOV, WebM (Tối đa 30MB)</span>
+                                </div>
+                                <div id="outingMediaPreviewGrid" class="outing-media-preview-grid"></div>
+                            </div>
+                        </div>
+                        <div class="outing-form-actions">
+                            <button type="submit" id="btnSubmitOuting" class="btn-submit-outing">
+                                <i class="fa-solid fa-paper-plane"></i> Đăng Nhật Ký Chuyến Đi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Danh Sách Chuyến Đi -->
+                <div id="outingsListGrid" class="outings-list-grid"></div>
+            </div>
+
         </div>
     </main>
 
@@ -690,6 +755,9 @@
         </button>
         <button class="nav-dock-btn" data-page="diary" data-label="Nhật Ký Thanh Xuân" title="Nhật Ký Thanh Xuân">
             <i class="fa-solid fa-book-open"></i> <span>Nhật Ký</span>
+        </button>
+        <button class="nav-dock-btn" data-page="outings" data-label="Nhật Ký Đi Chơi" title="Nhật Ký Đi Chơi & Vi Vu">
+            <i class="fa-solid fa-compass"></i> <span>Đi Chơi</span>
         </button>
         <button class="nav-dock-btn" data-page="taste" data-label="Gu Cá Nhân & Style Hub" title="Gu Cá Nhân & Style Hub">
             <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Gu Cá Nhân</span>

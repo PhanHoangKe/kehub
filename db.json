@@ -5,55 +5,8 @@
   "likes": 0,
   "visitors": [
     {
-      "id": "vis_1785853958057_jmmn",
-      "sessionId": "s_1785853957944_kp7bb7",
-      "ip": "127.0.0.1",
-      "city": "Localhost",
-      "region": "Nội bộ",
-      "country": "Máy chủ local",
-      "isp": "Mạng LAN",
-      "lat": null,
-      "lng": null,
-      "accuracy": null,
-      "isGps": false,
-      "os": "Windows",
-      "device": "Windows PC",
-      "gpu": "Intel Intel(R) Iris(R) Xe Graphics (0x0000A7A0)",
-      "cpuCores": 16,
-      "ramGB": 16,
-      "browser": "Chrome",
-      "referrer": "Trực tiếp / Bookmark",
-      "screen": "1536x864",
-      "viewport": "1536x695",
-      "dpr": 1.25,
-      "language": "en-US",
-      "timezone": "Asia/Saigon",
-      "touchPoints": 0,
-      "connection": "4g",
-      "battery": "43%",
-      "sectionsVisited": [
-        "Trang chủ"
-      ],
-      "timelineLogs": [
-        {
-          "time": "21:32:38",
-          "event": "Truy cập trang web",
-          "detail": "Nguồn: Trực tiếp / Bookmark"
-        },
-        {
-          "time": "21:32:41",
-          "event": "Thao tác: Định vị trạm sóng (Tan Phong, Tinh Thanh Hoa)",
-          "detail": ""
-        }
-      ],
-      "clicks": 2,
-      "firstSeen": "2026-08-04T14:32:38.057Z",
-      "lastSeen": "2026-08-04T14:32:41.096Z",
-      "durationSeconds": 3
-    },
-    {
-      "id": "vis_1785853932293_zeek",
-      "sessionId": "s_1785853932078_kzcg19",
+      "id": "vis_1785854654828_qiav",
+      "sessionId": "s_1785854654652_i4sbz0",
       "ip": "127.0.0.1",
       "city": "Localhost",
       "region": "Nội bộ",
@@ -77,83 +30,47 @@
       "timezone": "Asia/Saigon",
       "touchPoints": 0,
       "connection": "4g",
-      "battery": "43%",
+      "battery": "32%",
       "sectionsVisited": [
-        "Trang chủ"
+        "Trang chủ",
+        "Chuyển mục"
       ],
       "timelineLogs": [
         {
-          "time": "21:32:12",
+          "time": "21:44:14",
           "event": "Truy cập trang web",
           "detail": "Nguồn: Trực tiếp / Bookmark"
         },
         {
-          "time": "21:32:12",
+          "time": "21:44:14",
           "event": "Thao tác: Định vị trạm sóng (Tan Phong, Tinh Thanh Hoa)",
           "detail": ""
+        },
+        {
+          "time": "21:44:22",
+          "event": "Thao tác: Nhật Ký Đi Chơi & Vi Vu",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "21:44:26",
+          "event": "Thao tác: Tạo Chuyến Đi Mới",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "21:44:32",
+          "event": "Thao tác: Định vị trạm sóng (Tan Phong, Tinh Thanh Hoa)",
+          "detail": ""
+        },
+        {
+          "time": "21:44:34",
+          "event": "Thao tác: Tạo Chuyến Đi Mới",
+          "detail": "Mục: Chuyển mục"
         }
       ],
-      "clicks": 2,
-      "firstSeen": "2026-08-04T14:32:12.244Z",
-      "lastSeen": "2026-08-04T14:32:12.376Z",
-      "durationSeconds": 0
-    },
-    {
-      "id": "vis_1785842184883_u09l",
-      "sessionId": "s_1785841612399_nlagnh",
-      "ip": "113.23.44.192",
-      "city": "Hanoi",
-      "region": "Hanoi",
-      "country": "Vietnam",
-      "isp": "FPT Telecom Company",
-      "lat": 21.018401,
-      "lng": 105.8460922,
-      "accuracy": null,
-      "isGps": false,
-      "os": "Windows",
-      "device": "Windows PC",
-      "gpu": "Intel Intel(R) Iris(R) Xe Graphics (0x0000A7A0)",
-      "cpuCores": 16,
-      "ramGB": 16,
-      "browser": "Edge",
-      "referrer": "https://l.facebook.com/",
-      "screen": "1536x864",
-      "viewport": "1528x732",
-      "dpr": 1.25,
-      "language": "vi",
-      "timezone": "Asia/Saigon",
-      "touchPoints": 0,
-      "connection": "4g",
-      "battery": "71%",
-      "sectionsVisited": [
-        "Trang chủ"
-      ],
-      "timelineLogs": [
-        {
-          "time": "11:16:24",
-          "event": "Truy cập trang web",
-          "detail": "Nguồn: https://l.facebook.com/"
-        },
-        {
-          "time": "11:16:38",
-          "event": "Thao tác: Định vị trạm sóng (Tan Phong, Tinh Thanh Hoa)",
-          "detail": ""
-        },
-        {
-          "time": "11:21:31",
-          "event": "Thao tác: Định vị trạm sóng (Tan Phong, Tinh Thanh Hoa)",
-          "detail": ""
-        },
-        {
-          "time": "11:21:42",
-          "event": "Thao tác: Định vị trạm sóng (Tan Phong, Tinh Thanh Hoa)",
-          "detail": ""
-        }
-      ],
-      "clicks": 4,
-      "firstSeen": "2026-08-04T11:16:24.755Z",
-      "lastSeen": "2026-08-04T11:28:50.523Z",
-      "durationSeconds": 746
+      "clicks": 6,
+      "firstSeen": "2026-08-04T14:44:14.785Z",
+      "lastSeen": "2026-08-04T14:44:58.642Z",
+      "durationSeconds": 44
     },
     {
       "id": "vis_1785816965396_93zk",
@@ -291,7 +208,14 @@
     "diary": [],
     "goals": [],
     "journey": [],
-    "gallery": [],
+    "gallery": [
+      {
+        "url": "",
+        "caption": "Khoảnh khắc mới",
+        "date": "Vừa xong",
+        "location": ""
+      }
+    ],
     "playlist": [
       {
         "title": "Bài Hát Mới",

@@ -306,7 +306,7 @@ function sanitizeUrl(str, maxLen = 7 * 1024 * 1024) {
 }
 
 // ── File Upload Validation (Magic Bytes) ─────────────────────────────────────
-// Các định dạng cho phép: jpg, png, gif, webp, mp3, mp4, ogg, wav
+// Các định dạng cho phép: jpg, png, gif, webp, mp3, mp4, ogg, wav, webm
 const ALLOWED_MAGIC = [
     { magic: Buffer.from([0xFF, 0xD8, 0xFF]),             mime: 'image/jpeg',  ext: '.jpg'  },
     { magic: Buffer.from([0x89, 0x50, 0x4E, 0x47]),      mime: 'image/png',   ext: '.png'  },
@@ -319,6 +319,8 @@ const ALLOWED_MAGIC = [
     { magic: Buffer.from([0x66, 0x74, 0x79, 0x70]), offset: 4, mime: 'video/mp4', ext: '.mp4' },
     { magic: Buffer.from([0x4F, 0x67, 0x67, 0x53]),      mime: 'audio/ogg',   ext: '.ogg'  },
     { magic: Buffer.from([0x52, 0x49, 0x46, 0x46]),      mime: 'audio/wav',   ext: '.wav'  }, // RIFF...WAVE
+    // WebM (Matroska EBML header) — định dạng MediaRecorder mặc định trên Chrome/Edge/Firefox
+    { magic: Buffer.from([0x1A, 0x45, 0xDF, 0xA3]),      mime: 'audio/webm',  ext: '.webm' },
 ];
 
 function detectFileType(buffer) {
@@ -366,24 +368,28 @@ function validateBase64File(base64DataUrl) {
 
     let detected = detectFileType(fileBuffer);
     if (!detected) {
-        // Fallback kiểm tra theo MIME header từ client nếu magic bytes chưa liệt kê đủ
-        if (mimeHeader.startsWith('video/')) {
+        // Fallback kiểm tra theo MIME header từ client nếu magic bytes chưa liệt kê đủ.
+        // Normalize: bỏ phần tham số sau ';' (vd: 'audio/webm;codecs=opus' → 'audio/webm')
+        const baseMime = mimeHeader.split(';')[0].trim();
+        if (baseMime.startsWith('video/')) {
             let ext = '.mp4';
-            if (mimeHeader.includes('webm')) ext = '.webm';
-            else if (mimeHeader.includes('quicktime') || mimeHeader.includes('mov')) ext = '.mov';
-            else if (mimeHeader.includes('3gp')) ext = '.3gp';
-            detected = { mime: mimeHeader, ext };
-        } else if (mimeHeader.startsWith('image/')) {
+            if (baseMime.includes('webm')) ext = '.webm';
+            else if (baseMime.includes('quicktime') || baseMime.includes('mov')) ext = '.mov';
+            else if (baseMime.includes('3gp')) ext = '.3gp';
+            detected = { mime: baseMime, ext };
+        } else if (baseMime.startsWith('image/')) {
             let ext = '.png';
-            if (mimeHeader.includes('jpeg') || mimeHeader.includes('jpg')) ext = '.jpg';
-            else if (mimeHeader.includes('gif')) ext = '.gif';
-            else if (mimeHeader.includes('webp')) ext = '.webp';
-            detected = { mime: mimeHeader, ext };
-        } else if (mimeHeader.startsWith('audio/')) {
+            if (baseMime.includes('jpeg') || baseMime.includes('jpg')) ext = '.jpg';
+            else if (baseMime.includes('gif')) ext = '.gif';
+            else if (baseMime.includes('webp')) ext = '.webp';
+            detected = { mime: baseMime, ext };
+        } else if (baseMime.startsWith('audio/')) {
             let ext = '.mp3';
-            if (mimeHeader.includes('ogg')) ext = '.ogg';
-            else if (mimeHeader.includes('wav')) ext = '.wav';
-            detected = { mime: mimeHeader, ext };
+            if (baseMime.includes('webm')) ext = '.webm';
+            else if (baseMime.includes('ogg')) ext = '.ogg';
+            else if (baseMime.includes('wav')) ext = '.wav';
+            else if (baseMime.includes('mp4') || baseMime.includes('aac')) ext = '.m4a';
+            detected = { mime: baseMime, ext };
         }
     }
 
@@ -742,9 +748,12 @@ const server = http.createServer(async (req, res) => {
                 }
 
                 // Chỉ cho phép ảnh, audio, video — không cho phép file khác
+                // audio/webm & audio/webm;codecs=opus là định dạng MediaRecorder mặc định trên Chrome/Edge/Firefox
                 const allowedMimes = ['image/jpeg','image/png','image/gif','image/webp',
                                       'audio/mpeg','audio/ogg','audio/wav',
-                                      'video/mp4','video/ogg'];
+                                      'audio/webm','audio/webm;codecs=opus',
+                                      'audio/mp4','audio/aac',
+                                      'video/mp4','video/webm','video/ogg'];
                 if (!allowedMimes.includes(validation.mime)) {
                     jsonResponse(res, 400, { success: false, message: 'Định dạng file không được phép' });
                     return;

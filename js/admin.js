@@ -584,7 +584,10 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
         if (!adminAnonymousList) return;
 
         try {
-            const res = await fetch('/api/data');
+            const token = localStorage.getItem('admin_token');
+            const headers = {};
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            const res = await fetch('/api/data', { headers, credentials: 'include' });
             const data = await res.json();
             const msgs = data.anonymousMessages || [];
 
@@ -601,27 +604,29 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
 
                 // Render media attachment nếu có
                 let mediaHTML = '';
-                if (msg.mediaUrl) {
+                // Ưu tiên mediaUrl (file đã upload), fallback sang mediaData (base64) nếu chưa có URL
+                const mediaSrc = msg.mediaUrl || msg.mediaData || null;
+                if (mediaSrc) {
                     const type = msg.mediaType || '';
                     if (type === 'audio') {
                         mediaHTML = `
                             <div class="anon-media-attach">
                                 <span class="anon-media-tag"><i class="fa-solid fa-microphone"></i> Ghi âm</span>
-                                <audio controls class="anon-admin-audio" src="${escapeHTML(msg.mediaUrl)}"></audio>
+                                <audio controls class="anon-admin-audio" src="${escapeHTML(mediaSrc)}"></audio>
                             </div>`;
                     } else if (type === 'image') {
                         mediaHTML = `
                             <div class="anon-media-attach">
                                 <span class="anon-media-tag"><i class="fa-solid fa-image"></i> Ảnh</span>
-                                <img class="anon-admin-img" src="${escapeHTML(msg.mediaUrl)}"
+                                <img class="anon-admin-img" src="${escapeHTML(mediaSrc)}"
                                      alt="Ảnh ẩn danh"
-                                     onclick="window.open('${escapeHTML(msg.mediaUrl)}','_blank')">
+                                     onclick="window.open('${escapeHTML(msg.mediaUrl || '#')}','_blank')">
                             </div>`;
                     } else if (type === 'video') {
                         mediaHTML = `
                             <div class="anon-media-attach">
                                 <span class="anon-media-tag"><i class="fa-solid fa-video"></i> Video</span>
-                                <video controls class="anon-admin-video" src="${escapeHTML(msg.mediaUrl)}"></video>
+                                <video controls class="anon-admin-video" src="${escapeHTML(mediaSrc)}"></video>
                             </div>`;
                     }
                 }

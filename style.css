@@ -5342,6 +5342,11 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
         opacity: 0;
         transform: translateY(6px);
     }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 
 /* ==========================================================================
    OPTIMIZED NATIVE-LIKE MOBILE APP UI & UX (Tối Ưu Giao Diện Điện Thoại)

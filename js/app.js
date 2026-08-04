@@ -356,10 +356,14 @@ async function initVisitorTracking() {
             battery
         };
 
+        const token = localStorage.getItem('admin_token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
         // Gửi ping ban đầu
         fetch('/api/track/ping', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify(pingData)
         }).catch(() => {});
 
@@ -568,9 +572,13 @@ async function initVisitorTracking() {
                 actionText = actionText.replace(/\s+/g, ' ').slice(0, 50);
 
                 if (actionText) {
+                    const token = localStorage.getItem('admin_token');
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (token) headers['Authorization'] = `Bearer ${token}`;
+
                     fetch('/api/track/event', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers,
                         body: JSON.stringify({
                             sessionId,
                             action: actionText,
@@ -583,9 +591,13 @@ async function initVisitorTracking() {
 
         // Heartbeat 25s
         setInterval(() => {
+            const token = localStorage.getItem('admin_token');
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
             fetch('/api/track/event', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers,
                 body: JSON.stringify({ sessionId })
             }).catch(() => {});
         }, 25000);

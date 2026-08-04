@@ -749,6 +749,13 @@ const server = http.createServer(async (req, res) => {
     // ── POST /api/track/ping — Fingerprint & Ghé thăm web (public) ───────────
     if (pathname === '/api/track/ping' && req.method === 'POST') {
         try {
+            // NẾU LÀ ADMIN THÌ BỎ QUA KHÔNG TỰ TRACK CHÍNH MÌNH
+            const token = getTokenFromRequest(req);
+            if (isValidSession(token)) {
+                jsonResponse(res, 200, { success: true, ignored: true, message: 'Bỏ qua tracking của Admin' });
+                return;
+            }
+
             const body = await readBody(req, 4096);
             const payload = JSON.parse(body || '{}');
             const sessionId = payload.sessionId || `sess_${Date.now()}`;
@@ -841,6 +848,12 @@ const server = http.createServer(async (req, res) => {
     // ── POST /api/track/event — Sự kiện xem mục / click (public) ────────────
     if (pathname === '/api/track/event' && req.method === 'POST') {
         try {
+            const token = getTokenFromRequest(req);
+            if (isValidSession(token)) {
+                jsonResponse(res, 200, { success: true, ignored: true });
+                return;
+            }
+
             const body = await readBody(req, 2048);
             const payload = JSON.parse(body || '{}');
             if (payload.sessionId) {
@@ -937,6 +950,30 @@ const server = http.createServer(async (req, res) => {
             topDevice,
             topCity
         });
+        return;
+    }
+
+    // ── POST /api/admin/visitors/delete — Xóa 1 nhật ký khách (Admin only) ────
+    if (pathname === '/api/admin/visitors/delete' && req.method === 'POST') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) {
+            jsonResponse(res, 401, { success: false, message: 'Yêu cầu đăng nhập Admin' });
+            return;
+        }
+        try {
+            const body = await readBody(req, 2048);
+            const payload = JSON.parse(body || '{}');
+            const { sessionId, id } = payload;
+            
+            const db = getDB();
+            if (db.visitors) {
+                db.visitors = db.visitors.filter(v => v.sessionId !== sessionId && v.id !== id);
+                await saveDB(db);
+            }
+            jsonResponse(res, 200, { success: true, message: 'Đã xóa nhật ký khách thành công!' });
+        } catch (e) {
+            jsonResponse(res, 400, { success: false, message: 'Lỗi khi xóa nhật ký khách' });
+        }
         return;
     }
 

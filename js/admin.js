@@ -335,9 +335,11 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
 
                 const accuracyStr = v.accuracy ? `<span style="color:#4ade80;"> • Sai số: ~${v.accuracy}m</span>` : '';
 
+                const deleteBtnHtml = `<button type="button" class="btn-delete-visitor" style="background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.4);padding:3px 10px;border-radius:6px;font-size:0.75rem;font-weight:bold;cursor:pointer;margin-left:8px;" title="Xóa nhật ký khách này"><i class="fa-solid fa-trash-can"></i> Xóa</button>`;
+
                 card.innerHTML = `
                     <div class="admin-item-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:4px;">
-                        <span><i class="fa-solid fa-user-ninja" style="color:#a855f7;"></i> Khách #${index + 1} — <strong style="color:#f472b6;">${escapeHTML(v.city || 'Việt Nam')}</strong> (${escapeHTML(v.isp || 'Nhà mạng')}) ${statusBadge} ${geoBadge} ${gmapBtn}</span>
+                        <span><i class="fa-solid fa-user-ninja" style="color:#a855f7;"></i> Khách #${index + 1} — <strong style="color:#f472b6;">${escapeHTML(v.city || 'Việt Nam')}</strong> (${escapeHTML(v.isp || 'Nhà mạng')}) ${statusBadge} ${geoBadge} ${gmapBtn} ${deleteBtnHtml}</span>
                         <span style="font-size:0.78rem;color:#94a3b8;"><i class="fa-solid fa-clock"></i> ${timeStr}</span>
                     </div>
                     <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:6px;font-size:0.82rem;color:#cbd5e1;background:rgba(0,0,0,0.25);padding:10px;border-radius:8px;margin-bottom:8px;">
@@ -360,6 +362,37 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                         </div>
                     </details>
                 `;
+
+                const btnDelete = card.querySelector('.btn-delete-visitor');
+                if (btnDelete) {
+                    btnDelete.addEventListener('click', async (evt) => {
+                        evt.stopPropagation();
+                        if (confirm(`🗑️ Bạn có chắc muốn xóa nhật ký của Khách (IP: ${v.ip})?`)) {
+                            try {
+                                const token = localStorage.getItem('admin_token');
+                                const headers = { 'Content-Type': 'application/json' };
+                                if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                                const res = await fetch('/api/admin/visitors/delete', {
+                                    method: 'POST',
+                                    headers,
+                                    credentials: 'include',
+                                    body: JSON.stringify({ sessionId: v.sessionId, id: v.id })
+                                });
+                                const resData = await res.json();
+                                if (resData.success) {
+                                    showToast("Đã xóa nhật ký khách thành công! 🗑️", "info");
+                                    loadAdminVisitorsList();
+                                } else {
+                                    alert(resData.message || "Không thể xóa nhật ký.");
+                                }
+                            } catch (e) {
+                                alert("Lỗi kết nối khi xóa.");
+                            }
+                        }
+                    });
+                }
+
                 adminVisitorsList.appendChild(card);
             });
         } catch (e) {

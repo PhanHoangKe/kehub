@@ -295,8 +295,31 @@ function initQuoteSlider() {
 
 // ── Admin Visibility ──────────────────────────────────────────────────────────
 function initAdminVisibility() {
-    document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'inline-flex');
+    const token = localStorage.getItem('admin_token');
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasAdminQuery = urlParams.get('admin') === 'true';
+    const isAdmin = Boolean(token) || hasAdminQuery;
+
+    document.querySelectorAll('.admin-only').forEach(el => {
+        el.style.display = isAdmin ? 'inline-flex' : 'none';
+    });
 }
+window.initAdminVisibility = initAdminVisibility;
+
+// Phím tắt Ctrl + Shift + A để mở Admin đăng nhập khi nút bị ẩn
+document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+        e.preventDefault();
+        const token = localStorage.getItem('admin_token');
+        if (!token && window.showAdminLoginModal) {
+            window.showAdminLoginModal().then(success => {
+                if (success) initAdminVisibility();
+            });
+        } else if (window.openAdminModal) {
+            window.openAdminModal();
+        }
+    }
+});
 
 // ── Lightbox ──────────────────────────────────────────────────────────────────
 // Lightbox controls được khởi tạo tự động trong renderers.js khi renderGallery() chạy lần đầu.

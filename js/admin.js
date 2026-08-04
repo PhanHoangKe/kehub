@@ -126,6 +126,7 @@ function promptAdminLogin() {
                 if (data.success) {
                     if (data.token) localStorage.setItem('admin_token', data.token);
                     _adminAuthenticated = true;
+                    if (window.initAdminVisibility) window.initAdminVisibility();
                     loginModal.style.display = 'none';
                     loginModal.classList.remove('active');
                     resolve(true);

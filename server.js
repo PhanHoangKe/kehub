@@ -397,10 +397,16 @@ async function syncFromCloudDB() {
                     const json = JSON.parse(body);
                     if (json && json.record && typeof json.record === 'object' && Object.keys(json.record).length > 0) {
                         fs.writeFileSync(DB_FILE, JSON.stringify(json.record, null, 2), 'utf8');
+                        const legacyDB = path.join(__dirname, 'db.json');
+                        try { fs.writeFileSync(legacyDB, JSON.stringify(json.record, null, 2), 'utf8'); } catch (e) {}
                         console.log('  ✅ [Cloud DB] Khôi phục 100% dữ liệu Cloud về đĩa cục bộ thành công!');
                         resolve(true);
                     } else {
-                        console.error('  ⚠️  [Cloud DB] Dữ liệu từ JSONBin rỗng hoặc sai cấu trúc:', body.slice(0, 100));
+                        if (res.statusCode === 401) {
+                            console.error('  ⚠️  [Cloud DB] JSONBin BÁO LỖI 401: API Key hoặc Bin ID trên Render không chính xác/không thuộc tài khoản!');
+                        } else {
+                            console.error('  ⚠️  [Cloud DB] Dữ liệu từ JSONBin rỗng hoặc sai cấu trúc:', body.slice(0, 100));
+                        }
                         resolve(false);
                     }
                 } catch (e) {
@@ -440,6 +446,8 @@ function saveToCloudDB(data) {
         }, (res) => {
             if (res.statusCode >= 200 && res.statusCode < 300) {
                 console.log('  ☁️  [Cloud DB] Đã sao lưu dữ liệu mới lên JSONBin.io!');
+            } else if (res.statusCode === 401) {
+                console.error('  ⚠️  [Cloud DB LỖI 401] JSONBIN_API_KEY hoặc JSONBIN_BIN_ID bị từ chối truy cập.');
             } else {
                 console.error('  ⚠️  [Cloud DB] JSONBin báo status:', res.statusCode);
             }

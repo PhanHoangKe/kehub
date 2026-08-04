@@ -581,7 +581,7 @@ async function _runVisitorTracking() {
                         });
                     } catch (e) {}
 
-                    btnCheckinLocation.innerHTML = `<i class="fa-solid fa-route"></i> <span>🗺️ Tìm Đường Đến Nhà Kế</span>`;
+                    btnCheckinLocation.innerHTML = `<i class="fa-solid fa-map-location-dot"></i> <span>Tìm Đường Đến Nhà Kế</span>`;
 
                     if (typeof showToast === 'function') {
                         showToast('🚗 Đang mở ứng dụng Google Maps để dẫn đường tới Nhà Kế...', 'info');

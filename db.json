@@ -5,6 +5,122 @@
   "likes": 0,
   "visitors": [
     {
+      "id": "vis_1785856504096_5tx4",
+      "sessionId": "s_1785856503917_qg0t44",
+      "ip": "127.0.0.1",
+      "city": "Localhost",
+      "region": "Nội bộ",
+      "country": "Máy chủ local",
+      "isp": "Mạng LAN",
+      "lat": null,
+      "lng": null,
+      "accuracy": null,
+      "isGps": false,
+      "os": "Windows",
+      "device": "Windows PC",
+      "gpu": "Intel Intel(R) Iris(R) Xe Graphics (0x0000A7A0)",
+      "cpuCores": 16,
+      "ramGB": 16,
+      "browser": "Chrome",
+      "referrer": "Trực tiếp / Bookmark",
+      "screen": "1536x864",
+      "viewport": "1536x695",
+      "dpr": 1.25,
+      "language": "en-US",
+      "timezone": "Asia/Saigon",
+      "touchPoints": 0,
+      "connection": "4g",
+      "battery": "75% (⚡ Đang sạc)",
+      "sectionsVisited": [
+        "Trang chủ",
+        "Chuyển mục"
+      ],
+      "timelineLogs": [
+        {
+          "time": "22:15:04",
+          "event": "Truy cập trang web",
+          "detail": "Nguồn: Trực tiếp / Bookmark"
+        },
+        {
+          "time": "22:15:04",
+          "event": "Thao tác: Định vị trạm sóng (Tan Phong, Tinh Thanh Hoa)",
+          "detail": ""
+        },
+        {
+          "time": "22:15:04",
+          "event": "Thao tác: Nhật Ký Đi Chơi & Vi Vu",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "22:15:07",
+          "event": "Thao tác: Định vị trạm sóng (Tan Phong, Tinh Thanh Hoa)",
+          "detail": ""
+        },
+        {
+          "time": "22:15:09",
+          "event": "Thao tác: Xóa chuyến đi",
+          "detail": "Mục: Chuyển mục"
+        }
+      ],
+      "clicks": 5,
+      "firstSeen": "2026-08-04T15:15:04.047Z",
+      "lastSeen": "2026-08-04T15:15:58.947Z",
+      "durationSeconds": 55
+    },
+    {
+      "id": "vis_1785856237144_5wiv",
+      "sessionId": "s_1785856236985_bzzug0",
+      "ip": "127.0.0.1",
+      "city": "Localhost",
+      "region": "Nội bộ",
+      "country": "Máy chủ local",
+      "isp": "Mạng LAN",
+      "lat": null,
+      "lng": null,
+      "accuracy": null,
+      "isGps": false,
+      "os": "Windows",
+      "device": "Windows PC",
+      "gpu": "Intel Intel(R) Iris(R) Xe Graphics (0x0000A7A0)",
+      "cpuCores": 16,
+      "ramGB": 16,
+      "browser": "Chrome",
+      "referrer": "Trực tiếp / Bookmark",
+      "screen": "1536x864",
+      "viewport": "1536x695",
+      "dpr": 1.25,
+      "language": "en-US",
+      "timezone": "Asia/Saigon",
+      "touchPoints": 0,
+      "connection": "4g",
+      "battery": "70% (⚡ Đang sạc)",
+      "sectionsVisited": [
+        "Trang chủ",
+        "Chuyển mục"
+      ],
+      "timelineLogs": [
+        {
+          "time": "22:10:37",
+          "event": "Truy cập trang web",
+          "detail": "Nguồn: Trực tiếp / Bookmark"
+        },
+        {
+          "time": "22:10:37",
+          "event": "Thao tác: Định vị trạm sóng (Tan Phong, Tinh Thanh Hoa)",
+          "detail": ""
+        },
+        {
+          "time": "22:13:36",
+          "event": "Thao tác: Nhật Ký Đi Chơi & Vi Vu",
+          "detail": "Mục: Chuyển mục"
+        }
+      ],
+      "clicks": 3,
+      "firstSeen": "2026-08-04T15:10:37.101Z",
+      "lastSeen": "2026-08-04T15:13:36.257Z",
+      "durationSeconds": 179
+    },
+    {
       "id": "vis_1785855166001_2g8h",
       "sessionId": "s_1785854173041_ybvk8s",
       "ip": "113.23.44.192",
@@ -258,7 +374,7 @@
     "audioFallbackUrl": "",
     "quote1": "Thank you for being here.",
     "quote2": "The best is yet to come.",
-    "quote3": "Chúc bạn có 1 ngày thật vui vẻ và 1 đời bình an.",
+    "quote3": "Chúc bạn có 1 ngày thật vui vẻ v�� 1 đời bình an.",
     "birthdayDate": "2004-12-17",
     "displayMode": "vinyl",
     "favMusic": "",
@@ -307,19 +423,7 @@
       "lng": 105.46819519445486,
       "address": "Quan Thành Commune, Nghệ An Province"
     },
-    "outings": [
-      {
-        "id": "out_1785855264880_342886",
-        "title": "Quảng trường PĐL",
-        "location": "",
-        "date": "2026-08-04",
-        "weather": "Ban đêm",
-        "content": "Chẳng cs 1 aiii",
-        "media": [],
-        "hearts": 1,
-        "createdAt": "2026-08-04T14:54:24.880Z"
-      }
-    ]
+    "outings": []
   },
   "anonymousMessages": [
     {

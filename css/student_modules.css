@@ -1750,17 +1750,25 @@
 }
 
 .btn-outing-delete {
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    color: #ef4444;
     font-size: 0.9rem;
     cursor: pointer;
-    padding: 6px;
-    transition: color 0.2s ease;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
 }
 
 .btn-outing-delete:hover {
-    color: #ef4444;
+    background: #ef4444;
+    color: #ffffff;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
 }
 
 .empty-outing-box {

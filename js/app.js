@@ -323,7 +323,7 @@ function initAdminVisibility() {
     const isAdmin = Boolean(token) || hasAdminQuery;
 
     document.querySelectorAll('.admin-only').forEach(el => {
-        el.style.display = isAdmin ? 'inline-flex' : 'none';
+        el.style.display = isAdmin ? '' : 'none';
     });
 }
 window.initAdminVisibility = initAdminVisibility;

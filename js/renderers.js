@@ -536,4 +536,8 @@ export function renderOutings(state) {
                 </div>
             </div>`;
     }).join('');
+
+    if (window.initAdminVisibility) {
+        window.initAdminVisibility();
+    }
 }

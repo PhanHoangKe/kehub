@@ -490,6 +490,7 @@ function getDB() {
 
     // Khôi phục photoUrl nếu 1 bên có dữ liệu mà bên kia bị trống
     if (!merged.config.photoUrl && backup.config.photoUrl) merged.config.photoUrl = backup.config.photoUrl;
+    if (!merged.config.photoUrl && merged.config.photoFallbackUrl) merged.config.photoUrl = merged.config.photoFallbackUrl;
     if ((!merged.config.gallery || merged.config.gallery.length === 0) && backup.config.gallery && backup.config.gallery.length > 0) {
         merged.config.gallery = backup.config.gallery;
     }

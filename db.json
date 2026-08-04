@@ -1,27 +1,20 @@
 {
   "config": {
-    "name": "",
-    "schoolName": "",
-    "className": "",
-    "gradYear": "",
-    "quote1": "",
-    "quote2": "",
-    "quote3": "",
-    "birthdayDate": "",
-    "socialLinks": {
-      "facebook": "",
-      "instagram": "",
-      "tiktok": "",
-      "zalo": "",
-      "messenger": ""
-    },
-    "classSlogan": "",
+    "name": "Phan Hoàng Kế",
+    "schoolName": "THPT Yên Thành 2",
+    "className": "12A4-2019-2022",
+    "gradYear": "2022",
+    "classSlogan": "Nice to meet you",
     "photoUrl": "",
-    "photoFallbackUrl": "",
-    "balloonTiktokUrl": "",
+    "photoFallbackUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80",
+    "balloonTiktokUrl": "https://vt.tiktok.com/ZS4yqo4sJ/",
     "audioUrl": "",
     "audioFallbackUrl": "",
-    "displayMode": "glass",
+    "quote1": "Thank you for being here.",
+    "quote2": "The best is yet to come.",
+    "quote3": "Chúc bạn có 1 ngày thật vui vẻ và 1 đời bình an.",
+    "birthdayDate": "2004-12-17",
+    "displayMode": "vinyl",
     "favMusic": "",
     "favMovie": "",
     "favBook": "",
@@ -34,6 +27,13 @@
     "isCapsuleLocked": false,
     "sealedAt": "",
     "graduationMessage": "",
+    "socialLinks": {
+      "facebook": "",
+      "messenger": "",
+      "zalo": "",
+      "tiktok": "",
+      "instagram": ""
+    },
     "achievements": [],
     "clubs": [],
     "friends": [],
@@ -41,9 +41,31 @@
     "goals": [],
     "journey": [],
     "gallery": [],
-    "playlist": []
+    "playlist": [
+      {
+        "title": "Bài Hát Mới",
+        "artist": "Kế",
+        "url": "https://vt.tiktok.com/ZS4yqo4sJ/"
+      }
+    ],
+    "mapLocations": [],
+    "homeLocation": {
+      "lat": 18.986855120269766,
+      "lng": 105.46819519445486,
+      "address": "Quan Thành Commune, Nghệ An Province"
+    }
   },
   "wishes": [],
   "hearts": 0,
-  "anonymousMessages": []
+  "anonymousMessages": [
+    {
+      "id": 1785810531885,
+      "message": "Ê",
+      "mediaUrl": null,
+      "mediaData": null,
+      "mediaType": null,
+      "createdAt": "2026-08-04T02:28:51.885Z"
+    }
+  ],
+  "visitors": []
 }

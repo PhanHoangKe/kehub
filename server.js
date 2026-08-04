@@ -848,6 +848,14 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
+    // ── GET /ping — Health check cho UptimeRobot / uptime monitors ─────────────
+    // Endpoint nhẹ, không đọc DB, dùng để giữ server không sleep trên Render Free
+    if (pathname === '/ping' && req.method === 'GET') {
+        res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('pong');
+        return;
+    }
+
     // ── GET /api/data — Trả toàn bộ dữ liệu (public) ────────────────────────
     if (pathname === '/api/data' && req.method === 'GET') {
         const db = getDB();

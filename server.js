@@ -360,9 +360,12 @@ const JSONBIN_BIN_ID = process.env.JSONBIN_BIN_ID || '';
 const JSONBIN_API_KEY = process.env.JSONBIN_API_KEY || process.env.JSONBIN_SECRET || '';
 
 async function syncFromCloudDB() {
-    if (!JSONBIN_BIN_ID || !JSONBIN_API_KEY) return;
-    try {
-        console.log('  ☁️  [Cloud DB] Đang đồng bộ dữ liệu mới nhất từ JSONBin.io...');
+    if (!JSONBIN_BIN_ID || !JSONBIN_API_KEY) {
+        console.log('  ⚠️  [Cloud DB] Không tìm thấy JSONBIN_BIN_ID hoặc JSONBIN_API_KEY. Sử dụng db.json cục bộ.');
+        return false;
+    }
+    return new Promise((resolve) => {
+        console.log('  ☁️  [Cloud DB] Đang đồng bộ dữ liệu mới nhất từ JSONBin.io trước khi mở Server...');
         const reqUrl = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`;
         const parsed = url.parse(reqUrl);
         const options = {
@@ -373,26 +376,37 @@ async function syncFromCloudDB() {
                 'X-Master-Key': JSONBIN_API_KEY
             }
         };
-        https.get(options, (res) => {
+        const req = https.request(options, (res) => {
             let body = '';
             res.on('data', chunk => body += chunk);
             res.on('end', () => {
                 try {
                     const json = JSON.parse(body);
-                    if (json && json.record) {
+                    if (json && json.record && typeof json.record === 'object' && Object.keys(json.record).length > 0) {
                         fs.writeFileSync(DB_FILE, JSON.stringify(json.record, null, 2), 'utf8');
-                        console.log('  ✅ [Cloud DB] Đồng bộ dữ liệu Cloud về đĩa thành công!');
+                        console.log('  ✅ [Cloud DB] Khôi phục 100% dữ liệu Cloud về đĩa cục bộ thành công!');
+                        resolve(true);
+                    } else {
+                        console.error('  ⚠️  [Cloud DB] Dữ liệu từ JSONBin rỗng hoặc sai cấu trúc:', body.slice(0, 100));
+                        resolve(false);
                     }
                 } catch (e) {
-                    console.error('  ⚠️  [Cloud DB] Lỗi parse JSONBin:', e.message);
+                    console.error('  ⚠️  [Cloud DB] Lỗi parse dữ liệu JSONBin:', e.message);
+                    resolve(false);
                 }
             });
-        }).on('error', (err) => {
-            console.error('  ⚠️  [Cloud DB] Lỗi tải từ JSONBin:', err.message);
         });
-    } catch (e) {
-        console.error('  ⚠️  [Cloud DB] Exception syncFromCloudDB:', e.message);
-    }
+        req.on('error', (err) => {
+            console.error('  ⚠️  [Cloud DB] Lỗi kết nối tải từ JSONBin:', err.message);
+            resolve(false);
+        });
+        req.setTimeout(8000, () => {
+            req.destroy();
+            console.error('  ⚠️  [Cloud DB] Kết nối JSONBin quá 8 giây (Timeout)');
+            resolve(false);
+        });
+        req.end();
+    });
 }
 
 function saveToCloudDB(data) {
@@ -554,6 +568,17 @@ const server = http.createServer(async (req, res) => {
             }
 
             const token = createSession();
+
+            // Tự động xóa ngay IP Admin khỏi danh sách visitor khi đăng nhập thành công
+            const db = getDB();
+            if (db.visitors && Array.isArray(db.visitors)) {
+                const initialLen = db.visitors.length;
+                db.visitors = db.visitors.filter(v => v.ip !== clientIP && v.ip !== '127.0.0.1' && v.ip !== '::1');
+                if (db.visitors.length !== initialLen) {
+                    saveDB(db);
+                }
+            }
+
             // Set cookie HttpOnly, SameSite=Strict
             res.setHeader('Set-Cookie', `admin_token=${token}; HttpOnly; SameSite=Strict; Max-Age=${SESSION_TTL_MS / 1000}; Path=/`);
             jsonResponse(res, 200, { success: true, token });
@@ -917,7 +942,17 @@ const server = http.createServer(async (req, res) => {
         }
 
         const db = getDB();
-        const visitors = db.visitors || [];
+        const clientIp = extractClientIp(req);
+        let visitors = db.visitors || [];
+
+        // TỰ ĐỘNG LỌC BỎ IP VÀ SESSION CỦA CHÍNH ADMIN KHỎI DANH SÁCH TRACKING
+        const initialCount = visitors.length;
+        visitors = visitors.filter(v => v.ip !== clientIp && v.ip !== '127.0.0.1' && v.ip !== '::1');
+        if (visitors.length !== initialCount) {
+            db.visitors = visitors;
+            saveDB(db);
+        }
+
         const nowMs = Date.now();
 
         // Đếm số người đang online (lastSeen trong vòng 5 phút)
@@ -1284,13 +1319,19 @@ const server = http.createServer(async (req, res) => {
     });
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-    console.log('===================================================');
-    console.log('  🚀 YOUTH MEMORIES BACKEND SERVER ĐANG CHẠY:');
-    console.log(`  👉 Localhost: http://localhost:${PORT}`);
-    console.log(`  👉 Admin:     http://localhost:${PORT}/?admin=true`);
-    console.log('  🔐 Đặt password qua biến môi trường ADMIN_PASSWORD');
-    console.log(`  🔐 Password hiện tại: ${ADMIN_PASSWORD === 'youth2026!@#secure' ? 'MẶC ĐỊNH (nên đổi!)' : 'Đã tùy chỉnh ✓'}`);
-    console.log('===================================================');
-    syncFromCloudDB();
-});
+(async () => {
+    // 1. Tải và khôi phục 100% dữ liệu từ Cloud DB trước khi mở Cổng Server
+    await syncFromCloudDB();
+
+    // 2. Mở cổng Server sau khi đĩa local đã có dữ liệu hoàn chỉnh
+    server.listen(PORT, '0.0.0.0', () => {
+        console.log('===================================================');
+        console.log('  🚀 YOUTH MEMORIES BACKEND SERVER ĐANG CHẠY:');
+        console.log(`  👉 Localhost: http://localhost:${PORT}`);
+        console.log(`  👉 Admin:     http://localhost:${PORT}/?admin=true`);
+        console.log('  🔐 Đặt password qua biến môi trường ADMIN_PASSWORD');
+        console.log(`  🔐 Password hiện tại: ${ADMIN_PASSWORD === 'youth2026!@#secure' ? 'MẶC ĐỊNH (nên đổi!)' : 'Đã tùy chỉnh ✓'}`);
+        console.log('  🛡️  [Cloud Restore] Bảo vệ dữ liệu 100% khi khởi động / redeploy');
+        console.log('===================================================');
+    });
+})();

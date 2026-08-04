@@ -457,33 +457,52 @@ function saveToCloudDB(data) {
 let writeQueue = Promise.resolve();
 
 function getDB() {
-    try {
-        if (fs.existsSync(DB_FILE)) {
-            const data = fs.readFileSync(DB_FILE, 'utf8');
-            return JSON.parse(data);
-        }
-    } catch (e) {
-        console.error('Lỗi đọc db.json:', e);
+    let mainData = null;
+    let legacyData = null;
+
+    if (fs.existsSync(DB_FILE)) {
+        try { mainData = JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); } catch (e) {}
     }
-    // Cũng kiểm tra db.json cũ ở thư mục gốc (migration lần đầu)
+
     const legacyDB = path.join(__dirname, 'db.json');
     if (fs.existsSync(legacyDB)) {
-        try {
-            const data = JSON.parse(fs.readFileSync(legacyDB, 'utf8'));
-            // Migrate sang thư mục mới
-            fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
-            console.log('Đã migrate db.json từ thư mục gốc sang /data/');
-            return data;
-        } catch (e) {}
+        try { legacyData = JSON.parse(fs.readFileSync(legacyDB, 'utf8')); } catch (e) {}
     }
-    return { config: {}, wishes: [], hearts: 0, reactions: {} };
+
+    if (!mainData && !legacyData) {
+        return { config: {}, wishes: [], hearts: 0, reactions: {}, anonymousMessages: [], visitors: [] };
+    }
+
+    // Merge thông minh giữa /data/db.json và root db.json từ Git
+    const merged = mainData ? JSON.parse(JSON.stringify(mainData)) : JSON.parse(JSON.stringify(legacyData));
+    const backup = legacyData || mainData;
+
+    if (!merged.config) merged.config = {};
+    if (!backup.config) backup.config = {};
+
+    // Khôi phục photoUrl nếu 1 bên có dữ liệu mà bên kia bị trống
+    if (!merged.config.photoUrl && backup.config.photoUrl) merged.config.photoUrl = backup.config.photoUrl;
+    if ((!merged.config.gallery || merged.config.gallery.length === 0) && backup.config.gallery && backup.config.gallery.length > 0) {
+        merged.config.gallery = backup.config.gallery;
+    }
+    if ((!merged.visitors || merged.visitors.length === 0) && backup.visitors && backup.visitors.length > 0) {
+        merged.visitors = backup.visitors;
+    }
+    if ((!merged.anonymousMessages || merged.anonymousMessages.length === 0) && backup.anonymousMessages && backup.anonymousMessages.length > 0) {
+        merged.anonymousMessages = backup.anonymousMessages;
+    }
+
+    return merged;
 }
 
 // Hàm ghi DB async với queue để tránh concurrent writes
 function saveDB(data) {
     writeQueue = writeQueue.then(() => new Promise((resolve) => {
         try {
+            // Ghi đồng thời vào /data/db.json VÀ root db.json để không bao giờ bị đè rỗng khi git pull / redeploy
             fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
+            const legacyDB = path.join(__dirname, 'db.json');
+            fs.writeFileSync(legacyDB, JSON.stringify(data, null, 2), 'utf8');
             saveToCloudDB(data);
         } catch (e) {
             console.error('Lỗi ghi db.json:', e);
@@ -793,7 +812,12 @@ const server = http.createServer(async (req, res) => {
             const sessionId = payload.sessionId || `sess_${Date.now()}`;
             const clientIp = extractClientIp(req);
             const uaString = req.headers['user-agent'] || '';
-            const { os, device, browser } = parseUserAgent(uaString);
+            const { os, device: parsedDevice, browser } = parseUserAgent(uaString);
+            const deviceModel = payload.deviceModel ? payload.deviceModel : parsedDevice;
+            const gpu = payload.gpu || null;
+            const cpuCores = payload.cpuCores || null;
+            const ramGB = payload.ramGB || null;
+
             let geo = await getIpLocation(clientIp);
 
             // CHỈ reverseGeocode và coi là GPS chuẩn khi client gửi payload.isGps === true
@@ -830,7 +854,10 @@ const server = http.createServer(async (req, res) => {
                     accuracy: isRealGps ? (payload.accuracy || null) : null,
                     isGps: isRealGps,
                     os,
-                    device,
+                    device: deviceModel,
+                    gpu,
+                    cpuCores,
+                    ramGB,
                     browser,
                     referrer: payload.referrer || 'Trực tiếp / Bookmark',
                     screen: payload.screen || '-',
@@ -855,6 +882,10 @@ const server = http.createServer(async (req, res) => {
             } else {
                 visitor.lastSeen = now;
                 visitor.ip = clientIp;
+                if (deviceModel && deviceModel !== parsedDevice) visitor.device = deviceModel;
+                if (gpu) visitor.gpu = gpu;
+                if (cpuCores) visitor.cpuCores = cpuCores;
+                if (ramGB) visitor.ramGB = ramGB;
                 if (lat) visitor.lat = lat;
                 if (lng) visitor.lng = lng;
                 if (payload.accuracy) visitor.accuracy = payload.accuracy;

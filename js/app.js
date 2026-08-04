@@ -327,6 +327,36 @@ async function getBatteryStatus() {
     return null;
 }
 
+async function getDeepHardwareInfo() {
+    let deviceModel = '';
+    let gpu = '';
+    const cpuCores = navigator.hardwareConcurrency || null;
+    const ramGB = navigator.deviceMemory || null;
+
+    try {
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        if (gl) {
+            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            if (debugInfo) {
+                const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || '';
+                gpu = renderer.replace(/^ANGLE\s*\(([^,]+),?\s*/, '$1 ').replace(/Direct3D11.*$/, '').trim();
+            }
+        }
+    } catch (e) {}
+
+    if (navigator.userAgentData && typeof navigator.userAgentData.getHighEntropyValues === 'function') {
+        try {
+            const hints = await navigator.userAgentData.getHighEntropyValues(['model', 'platformVersion', 'architecture', 'bitness']);
+            if (hints && hints.model) {
+                deviceModel = hints.model;
+            }
+        } catch (e) {}
+    }
+
+    return { deviceModel, gpu, cpuCores, ramGB };
+}
+
 async function initVisitorTracking() {
     try {
         let sessionId = sessionStorage.getItem('v_sess_id');
@@ -341,6 +371,7 @@ async function initVisitorTracking() {
         const language = navigator.language || 'vi-VN';
         const touchPoints = navigator.maxTouchPoints || 0;
         const dpr = window.devicePixelRatio || 1;
+        const hwInfo = await getDeepHardwareInfo();
 
         const pingData = {
             sessionId,
@@ -353,7 +384,11 @@ async function initVisitorTracking() {
             timezone,
             touchPoints,
             connection,
-            battery
+            battery,
+            deviceModel: hwInfo.deviceModel,
+            gpu: hwInfo.gpu,
+            cpuCores: hwInfo.cpuCores,
+            ramGB: hwInfo.ramGB
         };
 
         const token = localStorage.getItem('admin_token');

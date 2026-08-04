@@ -342,6 +342,10 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
 
                 const deleteBtnHtml = `<button type="button" class="btn-delete-visitor" style="background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.4);padding:3px 10px;border-radius:6px;font-size:0.75rem;font-weight:bold;cursor:pointer;margin-left:8px;" title="Xóa nhật ký khách này"><i class="fa-solid fa-trash-can"></i> Xóa</button>`;
 
+                const gpuStr = v.gpu ? ` • 🎮 GPU: ${escapeHTML(v.gpu)}` : '';
+                const cpuStr = v.cpuCores ? ` • ⚡ Chip: ${v.cpuCores} Nhân CPU` : '';
+                const ramStr = v.ramGB ? ` • 💾 RAM: ${v.ramGB}GB` : '';
+
                 card.innerHTML = `
                     <div class="admin-item-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:4px;">
                         <span><i class="fa-solid fa-user-ninja" style="color:#a855f7;"></i> Khách #${index + 1} — <strong style="color:#f472b6;">${escapeHTML(v.city || 'Việt Nam')}</strong> (${escapeHTML(v.isp || 'Nhà mạng')}) ${statusBadge} ${geoBadge} ${gmapBtn} ${deleteBtnHtml}</span>
@@ -350,12 +354,12 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                     <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:6px;font-size:0.82rem;color:#cbd5e1;background:rgba(0,0,0,0.25);padding:10px;border-radius:8px;margin-bottom:8px;">
                         <div>🌐 <strong>IP Thật:</strong> <span style="font-family:monospace;color:#facc15;">${escapeHTML(v.ip)}</span></div>
                         <div>📍 <strong>🏡 Vị trí chi tiết:</strong> ${locationTitle} ${v.lat && v.lng ? `<br><small style="color:#38bdf8;">Tọa độ: ${v.lat.toFixed(5)}, ${v.lng.toFixed(5)}${accuracyStr}</small>` : ''}</div>
-                        <div>📱 <strong>Thiết bị & OS:</strong> ${escapeHTML(v.device)} • ${escapeHTML(v.os)}</div>
+                        <div>📱 <strong>Tên Thiết bị:</strong> <span style="color:#38bdf8;font-weight:bold;">${escapeHTML(v.device)}</span> • ${escapeHTML(v.os)}</div>
                         <div>💻 <strong>Trình duyệt:</strong> ${escapeHTML(v.browser)}</div>
                         <div>🔗 <strong>Nguồn đến (Referrer):</strong> <span style="color:#38bdf8;word-break:break-all;">${escapeHTML(v.referrer)}</span></div>
                         <div>⏱️ <strong>Thời gian ở lại:</strong> <span style="color:#4ade80;font-weight:bold;">${durationText}</span> (${v.clicks || 1} lượt click)</div>
                         <div style="grid-column:1 / -1;font-size:0.78rem;color:#94a3b8;border-top:1px solid rgba(255,255,255,0.06);padding-top:4px;">
-                            ⚙️ <strong>Thông số máy:</strong> Lang: ${escapeHTML(v.language)} • TZ: ${escapeHTML(v.timezone)}${screenStr}${networkStr}${batteryStr}
+                            ⚙️ <strong>Phần cứng chuyên sâu:</strong> ${screenStr}${networkStr}${batteryStr}${gpuStr}${cpuStr}${ramStr}
                         </div>
                     </div>
                     <details style="font-size:0.8rem;color:#94a3b8;cursor:pointer;">

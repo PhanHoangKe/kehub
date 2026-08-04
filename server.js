@@ -343,11 +343,15 @@ function detectFileType(buffer) {
 }
 
 function validateBase64File(base64DataUrl) {
-    const matches = base64DataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    if (!base64DataUrl || typeof base64DataUrl !== 'string') {
+        return { ok: false, error: 'Dữ liệu file rỗng' };
+    }
+    const matches = base64DataUrl.match(/^data:([a-zA-Z0-9\/\-\+\.]+);base64,(.+)$/);
     if (!matches || matches.length !== 3) {
         return { ok: false, error: 'Định dạng base64 không đúng' };
     }
 
+    const mimeHeader = matches[1].toLowerCase();
     let fileBuffer;
     try {
         fileBuffer = Buffer.from(matches[2], 'base64');
@@ -355,12 +359,34 @@ function validateBase64File(base64DataUrl) {
         return { ok: false, error: 'Không thể decode base64' };
     }
 
-    // Giới hạn kích thước: 15MB
-    if (fileBuffer.length > 15 * 1024 * 1024) {
-        return { ok: false, error: 'File quá lớn (tối đa 15MB)' };
+    // Giới hạn kích thước: 50MB (cho phép video lớn hơn)
+    if (fileBuffer.length > 50 * 1024 * 1024) {
+        return { ok: false, error: 'File quá lớn (tối đa 50MB)' };
     }
 
-    const detected = detectFileType(fileBuffer);
+    let detected = detectFileType(fileBuffer);
+    if (!detected) {
+        // Fallback kiểm tra theo MIME header từ client nếu magic bytes chưa liệt kê đủ
+        if (mimeHeader.startsWith('video/')) {
+            let ext = '.mp4';
+            if (mimeHeader.includes('webm')) ext = '.webm';
+            else if (mimeHeader.includes('quicktime') || mimeHeader.includes('mov')) ext = '.mov';
+            else if (mimeHeader.includes('3gp')) ext = '.3gp';
+            detected = { mime: mimeHeader, ext };
+        } else if (mimeHeader.startsWith('image/')) {
+            let ext = '.png';
+            if (mimeHeader.includes('jpeg') || mimeHeader.includes('jpg')) ext = '.jpg';
+            else if (mimeHeader.includes('gif')) ext = '.gif';
+            else if (mimeHeader.includes('webp')) ext = '.webp';
+            detected = { mime: mimeHeader, ext };
+        } else if (mimeHeader.startsWith('audio/')) {
+            let ext = '.mp3';
+            if (mimeHeader.includes('ogg')) ext = '.ogg';
+            else if (mimeHeader.includes('wav')) ext = '.wav';
+            detected = { mime: mimeHeader, ext };
+        }
+    }
+
     if (!detected) {
         return { ok: false, error: 'Định dạng file không được hỗ trợ' };
     }
@@ -802,6 +828,7 @@ const server = http.createServer(async (req, res) => {
             const title    = sanitizeString(payload.title    || 'Chuyến Đi Mới', 200);
             const location = sanitizeString(payload.location || '', 200);
             const date     = sanitizeString(payload.date     || new Date().toISOString().split('T')[0], 50);
+            const time     = sanitizeString(payload.time     || '', 50);
             const weather  = sanitizeString(payload.weather  || '☀️ Nắng đẹp', 100);
             const content  = sanitizeString(payload.content  || '', 2000);
             const rawMedia = Array.isArray(payload.media) ? payload.media : [];
@@ -815,14 +842,17 @@ const server = http.createServer(async (req, res) => {
                         const filename = `${prefix}${validation.ext}`;
                         const filePath = path.join(UPLOADS_DIR, filename);
                         fs.writeFileSync(filePath, validation.buffer);
+                        const isVid = (item.type === 'video') || validation.mime.startsWith('video');
                         savedMedia.push({
-                            type: validation.mime.startsWith('video') ? 'video' : 'image',
+                            type: isVid ? 'video' : 'image',
                             url: `/uploads/${filename}`
                         });
+                    } else {
+                        console.warn('File upload validation failed:', validation.error);
                     }
                 } else if (item.url) {
                     savedMedia.push({
-                        type: item.type || (item.url.match(/\.(mp4|webm|mov)(\?.*)?$/i) ? 'video' : 'image'),
+                        type: item.type || (item.url.match(/\.(mp4|webm|mov|m4v|3gp)(\?.*)?$/i) ? 'video' : 'image'),
                         url: item.url
                     });
                 }
@@ -837,6 +867,7 @@ const server = http.createServer(async (req, res) => {
                 title,
                 location,
                 date,
+                time,
                 weather,
                 content,
                 media: savedMedia,

@@ -670,8 +670,6 @@ async function _runVisitorTracking() {
     } catch (err) {}
 }
 
-// Wrapper công khai: defer toàn bộ tracking ra sau khi browser rảnh
-// Đảm bảo không block TTI (Time to Interactive) hay LCP khi trang đang render
 function initVisitorTracking() {
     scheduleIdleTask(() => _runVisitorTracking(), 3000);
 }
@@ -749,8 +747,10 @@ function initOutingsEngine() {
     function renderPreviews() {
         if (!previewGrid) return;
         previewGrid.innerHTML = selectedMedia.map((m, idx) => `
-            <div class="preview-thumb-box">
-                ${m.type === 'video' ? `<video src="${m.data}"></video>` : `<img src="${m.data}" />`}
+            <div class="preview-thumb-box ${m.type === 'video' ? 'video-preview' : ''}">
+                ${m.type === 'video' 
+                    ? `<video src="${m.data}" controls muted playsinline></video><div class="video-preview-badge"><i class="fa-solid fa-video"></i> VIDEO</div>` 
+                    : `<img src="${m.data}" />`}
                 <button type="button" class="btn-remove-preview" onclick="window.removeOutingMediaPreview(${idx})"><i class="fa-solid fa-xmark"></i></button>
             </div>
         `).join('');
@@ -766,6 +766,7 @@ function initOutingsEngine() {
             e.preventDefault();
             const title = document.getElementById('inputOutingTitle')?.value?.trim();
             const date = document.getElementById('inputOutingDate')?.value || new Date().toISOString().split('T')[0];
+            const time = document.getElementById('inputOutingTime')?.value || '';
             const weather = document.getElementById('inputOutingWeather')?.value?.trim();
             const content = document.getElementById('inputOutingContent')?.value?.trim();
 
@@ -781,6 +782,7 @@ function initOutingsEngine() {
                 const payload = {
                     title,
                     date,
+                    time,
                     weather,
                     content,
                     media: selectedMedia.map(m => ({ type: m.type, data: m.data }))

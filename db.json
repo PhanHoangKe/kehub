@@ -37,40 +37,85 @@
       ],
       "timelineLogs": [
         {
-          "time": "21:44:14",
-          "event": "Truy cập trang web",
-          "detail": "Nguồn: Trực tiếp / Bookmark"
-        },
-        {
-          "time": "21:44:14",
-          "event": "Thao tác: Định vị trạm sóng (Tan Phong, Tinh Thanh Hoa)",
-          "detail": ""
-        },
-        {
-          "time": "21:44:22",
-          "event": "Thao tác: Nhật Ký Đi Chơi & Vi Vu",
-          "detail": "Mục: Chuyển mục"
-        },
-        {
-          "time": "21:44:26",
+          "time": "21:55:35",
           "event": "Thao tác: Tạo Chuyến Đi Mới",
           "detail": "Mục: Chuyển mục"
         },
         {
-          "time": "21:44:32",
-          "event": "Thao tác: Định vị trạm sóng (Tan Phong, Tinh Thanh Hoa)",
-          "detail": ""
+          "time": "21:55:41",
+          "event": "Thao tác: Chọn Ảnh & Video từ thiết bị",
+          "detail": "Mục: Chuyển mục"
         },
         {
-          "time": "21:44:34",
-          "event": "Thao tác: Tạo Chuyến Đi Mới",
+          "time": "21:55:46",
+          "event": "Thao tác: Đăng Nhật Ký Chuyến Đi",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "21:56:37",
+          "event": "Thao tác: 0 Thích",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "21:56:37",
+          "event": "Thao tác: 0 Thích",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "21:56:37",
+          "event": "Thao tác: 0 Thích",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "21:56:37",
+          "event": "Thao tác: 3 Thích",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "21:56:37",
+          "event": "Thao tác: 4 Thích",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "21:56:38",
+          "event": "Thao tác: 5 Thích",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "21:56:38",
+          "event": "Thao tác: 6 Thích",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "21:56:38",
+          "event": "Thao tác: 7 Thích",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "21:56:38",
+          "event": "Thao tác: 8 Thích",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "21:56:39",
+          "event": "Thao tác: 9 Thích",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "21:56:39",
+          "event": "Thao tác: 10 Thích",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "21:56:39",
+          "event": "Thao tác: 11 Thích",
           "detail": "Mục: Chuyển mục"
         }
       ],
-      "clicks": 6,
+      "clicks": 23,
       "firstSeen": "2026-08-04T14:44:14.785Z",
-      "lastSeen": "2026-08-04T14:44:58.642Z",
-      "durationSeconds": 44
+      "lastSeen": "2026-08-04T14:59:48.644Z",
+      "durationSeconds": 934
     },
     {
       "id": "vis_1785816965396_93zk",
@@ -228,7 +273,36 @@
       "lat": 18.986855120269766,
       "lng": 105.46819519445486,
       "address": "Quan Thành Commune, Nghệ An Province"
-    }
+    },
+    "outings": [
+      {
+        "id": "out_1785855347010_4583c1",
+        "title": "aaaa",
+        "location": "",
+        "date": "2026-08-04",
+        "weather": "a",
+        "content": "a",
+        "media": [
+          {
+            "type": "image",
+            "url": "/uploads/outing_1785855347009_732a294c.jpg"
+          }
+        ],
+        "hearts": 0,
+        "createdAt": "2026-08-04T14:55:47.011Z"
+      },
+      {
+        "id": "out_1785855312632_c4de36",
+        "title": "aa",
+        "location": "",
+        "date": "2026-08-04",
+        "weather": "dd",
+        "content": "dd",
+        "media": [],
+        "hearts": 12,
+        "createdAt": "2026-08-04T14:55:12.633Z"
+      }
+    ]
   },
   "anonymousMessages": [
     {

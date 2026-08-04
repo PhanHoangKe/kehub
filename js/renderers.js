@@ -488,11 +488,12 @@ export function renderOutings(state) {
     container.innerHTML = list.map(item => {
         const mediaList = Array.isArray(item.media) ? item.media : [];
         const mediaHtml = mediaList.map(m => {
-            if (m.type === 'video' || (m.url && m.url.match(/\.(mp4|webm|mov)(\?.*)?$/i))) {
+            const isVideo = m.type === 'video' || (m.url && m.url.match(/\.(mp4|webm|mov|m4v|3gp|ogv)(\?.*)?$/i));
+            if (isVideo) {
                 return `
                     <div class="outing-media-item video-item">
-                        <video controls preload="metadata" class="outing-video-player">
-                            <source src="${m.url}" type="video/mp4">
+                        <video controls playsinline preload="metadata" class="outing-video-player" src="${m.url}">
+                            <source src="${m.url}">
                             Trình duyệt của bạn không hỗ trợ phát video này.
                         </video>
                     </div>`;
@@ -512,7 +513,9 @@ export function renderOutings(state) {
                     <div class="outing-title-group">
                         <h3><i class="fa-solid fa-location-dot"></i> ${escapeHTML(item.title)}</h3>
                         <div class="outing-meta-tags">
-                            <span class="meta-tag date"><i class="fa-regular fa-calendar"></i> ${escapeHTML(item.date || '')}</span>
+                            <span class="meta-tag date">
+                                <i class="fa-regular fa-calendar-days"></i> ${escapeHTML(item.date || '')}${item.time ? ` • <i class="fa-regular fa-clock"></i> ${escapeHTML(item.time)}` : ''}
+                            </span>
                             ${item.location ? `<span class="meta-tag loc"><i class="fa-solid fa-route"></i> ${escapeHTML(item.location)}</span>` : ''}
                             ${item.weather ? `<span class="meta-tag weather"><i class="fa-solid fa-cloud-sun"></i> ${escapeHTML(item.weather)}</span>` : ''}
                         </div>

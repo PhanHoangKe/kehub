@@ -1,7 +1,7 @@
 /**
  * app.js - Entry Point khởi chạy toàn bộ hệ thống Youth Memory Showcase SPA
  */
-import { KE_CONFIG } from './config.js';
+import { KE_CONFIG, escapeHTML } from './config.js';
 import { initParticleEngine } from './particles.js';
 import { initAudioEngine } from './audio.js';
 import { initCountdownEngine } from './countdown.js';
@@ -142,6 +142,7 @@ export function applyStateToDOM() {
 
     if (audioEngine && audioEngine.renderPlaylist) audioEngine.renderPlaylist();
     if (balloonEngine && balloonEngine.updateBalloonVisibility) balloonEngine.updateBalloonVisibility();
+    applySpotlightHighlight(state);
 }
 
 // ── Tải dữ liệu từ backend ───────────────────────────────────────────────────
@@ -756,6 +757,33 @@ function initAnnouncerEngine(getState) {
         }
     }, 1200);
 }
+
+function applySpotlightHighlight(state) {
+    document.querySelectorAll('.spotlight-highlighted').forEach(el => el.classList.remove('spotlight-highlighted'));
+    const oldPointer = document.getElementById('spotlightPointerBox');
+    if (oldPointer) oldPointer.remove();
+
+    const cfg = (state && state.spotlightConfig) || {};
+    if (!cfg || cfg.active === false || !cfg.target || cfg.target === 'none') {
+        return;
+    }
+
+    const targetBtn = document.querySelector(`.nav-dock-btn[data-page="${cfg.target}"]`);
+    if (targetBtn) {
+        targetBtn.classList.add('spotlight-highlighted');
+
+        const pointerBox = document.createElement('div');
+        pointerBox.id = 'spotlightPointerBox';
+        pointerBox.className = 'spotlight-pointer-box';
+        const badgeText = cfg.badgeText || 'HOT NEW! 🔥';
+        pointerBox.innerHTML = `
+            <span class="spotlight-hand-icon">👈</span>
+            <span class="spotlight-badge">${escapeHTML(badgeText)}</span>
+        `;
+        targetBtn.appendChild(pointerBox);
+    }
+}
+window.applySpotlightHighlight = applySpotlightHighlight;
 
 function initOutingsEngine() {
     const btnToggle = document.getElementById('btnToggleOutingForm');

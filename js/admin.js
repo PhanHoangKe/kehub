@@ -412,31 +412,32 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
 
     // Admin Tabs Switching & Smart Tab-Scoped Polling
     let _visitorPollTimer = null;
-    const adminTabBtns = document.querySelectorAll('.admin-tab-btn');
-    const adminTabContents = document.querySelectorAll('.admin-tab-content');
 
-    adminTabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            adminTabBtns.forEach(b => b.classList.remove('active'));
-            adminTabContents.forEach(c => c.classList.remove('active'));
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.admin-tab-btn');
+        if (!btn) return;
 
-            btn.classList.add('active');
-            const targetTab = btn.getAttribute('data-tab');
-            const targetContent = document.getElementById(targetTab);
-            if (targetContent) targetContent.classList.add('active');
+        const targetTab = btn.getAttribute('data-tab');
+        if (!targetTab) return;
 
-            // Dừng polling của tab trước đó (nếu có)
-            if (_visitorPollTimer) {
-                clearInterval(_visitorPollTimer);
-                _visitorPollTimer = null;
-            }
+        document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
 
-            // Kích hoạt smart polling CHỈ KHI đang mở Tab Visitors
-            if (targetTab === 'tabVisitors') {
-                loadAdminVisitorsList();
-                _visitorPollTimer = setInterval(loadAdminVisitorsList, 2000);
-            }
-        });
+        btn.classList.add('active');
+        const targetContent = document.getElementById(targetTab);
+        if (targetContent) targetContent.classList.add('active');
+
+        if (_visitorPollTimer) {
+            clearInterval(_visitorPollTimer);
+            _visitorPollTimer = null;
+        }
+
+        if (targetTab === 'tabVisitors') {
+            try { loadAdminVisitorsList(); } catch (err) {}
+            _visitorPollTimer = setInterval(() => {
+                try { loadAdminVisitorsList(); } catch (err) {}
+            }, 2000);
+        }
     });
 
     const btnRefreshVisitors = document.getElementById('btnRefreshVisitors');
@@ -478,6 +479,9 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
 
         const inputAnnouncementText = document.getElementById('inputAnnouncementText');
         const inputAnnouncementActive = document.getElementById('inputAnnouncementActive');
+        const inputSpotlightTarget = document.getElementById('inputSpotlightTarget');
+        const inputSpotlightBadgeText = document.getElementById('inputSpotlightBadgeText');
+        const inputSpotlightActive = document.getElementById('inputSpotlightActive');
 
         if (inputName) inputName.value = state.name || '';
         if (inputSchoolName) inputSchoolName.value = state.schoolName || '';
@@ -491,6 +495,11 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
         if (inputBalloonTiktokUrl) inputBalloonTiktokUrl.value = state.balloonTiktokUrl || '';
         if (inputAnnouncementText) inputAnnouncementText.value = state.announcementText || '';
         if (inputAnnouncementActive) inputAnnouncementActive.checked = state.announcementActive !== false;
+
+        const spotCfg = state.spotlightConfig || {};
+        if (inputSpotlightTarget) inputSpotlightTarget.value = spotCfg.target || 'none';
+        if (inputSpotlightBadgeText) inputSpotlightBadgeText.value = spotCfg.badgeText || '';
+        if (inputSpotlightActive) inputSpotlightActive.checked = spotCfg.active !== false;
 
         const inputLinkFacebook = document.getElementById('inputLinkFacebook');
         const inputLinkMessenger = document.getElementById('inputLinkMessenger');
@@ -548,12 +557,12 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
         if (admStatTracks) admStatTracks.textContent = (state.playlist || []).length;
         if (admStatGallery) admStatGallery.textContent = (state.gallery || []).length;
 
-        renderAdminPlaylistList();
-        renderAdminGalleryList();
-        renderAdminJourneyList();
-        renderAdminMapLocationsList();
-        renderAdminReactionsList();
-        fetchAndRenderAnonymousMessages();
+        try { renderAdminPlaylistList(); } catch (err) {}
+        try { renderAdminGalleryList(); } catch (err) {}
+        try { renderAdminJourneyList(); } catch (err) {}
+        try { renderAdminMapLocationsList(); } catch (err) {}
+        try { renderAdminReactionsList(); } catch (err) {}
+        try { fetchAndRenderAnonymousMessages(); } catch (err) {}
 
         customModal.classList.add('active');
     }
@@ -1277,14 +1286,24 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                     if (inputAnnouncementText) state.announcementText = inputAnnouncementText.value.trim();
                     if (inputAnnouncementActive) state.announcementActive = inputAnnouncementActive.checked;
 
-                    await saveBackendConfig(state);
-                    refreshDOM();
+                    const inputSpotlightTarget = document.getElementById('inputSpotlightTarget');
+                    const inputSpotlightBadgeText = document.getElementById('inputSpotlightBadgeText');
+                    const inputSpotlightActive = document.getElementById('inputSpotlightActive');
+                    state.spotlightConfig = {
+                        target: inputSpotlightTarget ? inputSpotlightTarget.value : 'none',
+                        badgeText: inputSpotlightBadgeText ? inputSpotlightBadgeText.value.trim() : 'HOT NEW! 🔥',
+                        active: inputSpotlightActive ? inputSpotlightActive.checked : false
+                    };
+
+                    if (window.applySpotlightHighlight) {
+                        window.applySpotlightHighlight(state);
+                    }
 
                     if (window.triggerAnnouncerShout) {
                         window.triggerAnnouncerShout(state.announcementText, state.announcementActive);
                     }
 
-                    showToast("Đã lưu thông tin Hồ Sơ cá nhân! 👤✨");
+                    showToast("Đã lưu thông tin Hồ Sơ cá nhân & Tiêu điểm nổi bật! 👤✨");
                 }
                 else if (action === 'music') {
                     const trkFiles = document.querySelectorAll('.adm-trk-file');

@@ -1261,6 +1261,7 @@ const server = http.createServer(async (req, res) => {
                 'isCapsuleLocked','sealedAt','graduationMessage','socialLinks',
                 'achievements','clubs','friends','diary','goals','journey',
                 'gallery','playlist','mapLocations','homeLocation',
+                'spotlightConfig','announcementText','announcementActive','reactionsConfig','outings',
             ];
             const sanitized = {};
             for (const key of allowed) {

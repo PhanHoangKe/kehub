@@ -2006,5 +2006,102 @@
     }
 }
 
+/* ==========================================================================
+   FEATURE SPOTLIGHT HIGHLIGHT SYSTEM (NÚT ĐỎ LỬA & BÀN TAY CHỈ TRỎ 🔥👈)
+   ========================================================================== */
+.nav-dock-btn.spotlight-highlighted {
+    position: relative !important;
+    background: linear-gradient(135deg, #ff4757, #ff6b81) !important;
+    border-color: #ff4757 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 25px rgba(255, 71, 87, 0.9), 0 0 45px rgba(255, 107, 129, 0.6) !important;
+    animation: flamePulseGlow 1.2s infinite alternate ease-in-out !important;
+    z-index: 99 !important;
+}
+
+@keyframes flamePulseGlow {
+    0% {
+        transform: scale(1.1) rotate(-3deg);
+        box-shadow: 0 0 15px rgba(255, 71, 87, 0.7), 0 0 30px rgba(255, 71, 87, 0.4);
+    }
+    100% {
+        transform: scale(1.22) rotate(3deg);
+        box-shadow: 0 0 32px rgba(255, 71, 87, 1), 0 0 55px rgba(255, 107, 129, 0.8);
+    }
+}
+
+.spotlight-pointer-box {
+    position: absolute;
+    left: 54px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    pointer-events: none;
+    z-index: 9999;
+    animation: handPointBounce 0.8s infinite alternate ease-in-out;
+}
+
+@keyframes handPointBounce {
+    0% { transform: translateY(-50%) translateX(0); }
+    100% { transform: translateY(-50%) translateX(8px); }
+}
+
+.spotlight-pointer-box .spotlight-badge {
+    display: inline-block !important;
+    background: linear-gradient(135deg, #ff4757 0%, #ff6b81 100%);
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 5px 12px;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.6);
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1.5px solid #ffffff;
+    animation: badgeFlameGlow 1s infinite alternate ease-in-out;
+}
+
+@keyframes badgeFlameGlow {
+    0% { text-shadow: 0 0 5px #fff, 0 0 10px #ff4757; }
+    100% { text-shadow: 0 0 10px #fff, 0 0 20px #ff6b81; }
+}
+
+.spotlight-pointer-box .spotlight-hand-icon {
+    display: inline-block !important;
+    font-size: 1.6rem;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
+    animation: fingerWiggle 0.6s infinite alternate ease-in-out;
+}
+
+@keyframes fingerWiggle {
+    0% { transform: rotate(0deg) scale(1); }
+    100% { transform: rotate(-12deg) scale(1.25); }
+}
+
+/* Mobile Adjustments for Spotlight Pointer */
+@media (max-width: 768px) {
+    .spotlight-pointer-box {
+        left: 50% !important;
+        top: -44px !important;
+        transform: translateX(-50%) !important;
+        flex-direction: column-reverse;
+        gap: 2px;
+        animation: handPointBounceMobile 0.8s infinite alternate ease-in-out !important;
+    }
+
+    @keyframes handPointBounceMobile {
+        0% { transform: translateX(-50%) translateY(0); }
+        100% { transform: translateX(-50%) translateY(-6px); }
+    }
+
+    .spotlight-hand-icon {
+        font-size: 1.3rem;
+        transform: rotate(90deg);
+    }
+}
+
 
 

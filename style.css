@@ -5276,3 +5276,76 @@ body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #02
     }
 }
 
+/* ==========================================================================
+   Admin Modal Tab Navigation & Modular Tab Scoped Styling
+   ========================================================================== */
+.admin-tab-nav {
+    display: flex;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(15, 23, 42, 0.65);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(56, 189, 248, 0.4) transparent;
+}
+
+.admin-tab-nav::-webkit-scrollbar {
+    height: 4px;
+}
+
+.admin-tab-nav::-webkit-scrollbar-thumb {
+    background: rgba(56, 189, 248, 0.4);
+    border-radius: 4px;
+}
+
+.admin-tab-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.25s ease;
+}
+
+.admin-tab-btn:hover {
+    background: rgba(56, 189, 248, 0.12);
+    border-color: rgba(56, 189, 248, 0.3);
+    color: #38bdf8;
+}
+
+.admin-tab-btn.active {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(168, 85, 247, 0.25));
+    border: 1px solid #38bdf8;
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+}
+
+.admin-tab-content {
+    display: none;
+    animation: fadeInTab 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.admin-tab-content.active {
+    display: block;
+}
+
+@keyframes fadeInTab {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+

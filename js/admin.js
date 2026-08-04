@@ -273,6 +273,23 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             adminVisitorsList.innerHTML = '';
             const nowMs = Date.now();
 
+            const onlineCount = visitors.filter(v => {
+                const lastMs = new Date(v.lastSeen).getTime();
+                return (nowMs - lastMs) <= 5 * 60 * 1000;
+            }).length;
+
+            const tabVisitorsBadge = document.getElementById('tabVisitorsBadge');
+            if (tabVisitorsBadge) {
+                if (onlineCount > 0) {
+                    tabVisitorsBadge.textContent = onlineCount;
+                    tabVisitorsBadge.style.display = 'inline-block';
+                } else {
+                    tabVisitorsBadge.style.display = 'none';
+                }
+            }
+
+            if (statOnlineNow) statOnlineNow.textContent = onlineCount;
+
             visitors.forEach((v, index) => {
                 const card = document.createElement('div');
                 card.className = 'admin-item-card';
@@ -350,7 +367,8 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
         }
     }
 
-    // Admin Tabs Switching
+    // Admin Tabs Switching & Smart Tab-Scoped Polling
+    let _visitorPollTimer = null;
     const adminTabBtns = document.querySelectorAll('.admin-tab-btn');
     const adminTabContents = document.querySelectorAll('.admin-tab-content');
 
@@ -364,8 +382,16 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             const targetContent = document.getElementById(targetTab);
             if (targetContent) targetContent.classList.add('active');
 
+            // Dừng polling của tab trước đó (nếu có)
+            if (_visitorPollTimer) {
+                clearInterval(_visitorPollTimer);
+                _visitorPollTimer = null;
+            }
+
+            // Kích hoạt smart polling CHỈ KHI đang mở Tab Visitors
             if (targetTab === 'tabVisitors') {
                 loadAdminVisitorsList();
+                _visitorPollTimer = setInterval(loadAdminVisitorsList, 5000);
             }
         });
     });
@@ -586,12 +612,24 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
     }
 
     if (btnCloseModal && customModal) {
-        btnCloseModal.addEventListener('click', () => customModal.classList.remove('active'));
+        btnCloseModal.addEventListener('click', () => {
+            customModal.classList.remove('active');
+            if (_visitorPollTimer) {
+                clearInterval(_visitorPollTimer);
+                _visitorPollTimer = null;
+            }
+        });
     }
 
     const btnCancelSettings = document.getElementById('btnCancelSettings');
     if (btnCancelSettings && customModal) {
-        btnCancelSettings.addEventListener('click', () => customModal.classList.remove('active'));
+        btnCancelSettings.addEventListener('click', () => {
+            customModal.classList.remove('active');
+            if (_visitorPollTimer) {
+                clearInterval(_visitorPollTimer);
+                _visitorPollTimer = null;
+            }
+        });
     }
 
     // List Management Renderers

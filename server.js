@@ -1023,6 +1023,112 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
+    // ── POST /api/admin/profile — Cập nhật riêng Hồ sơ Cá nhân (Admin only) ────
+    if (pathname === '/api/admin/profile' && req.method === 'POST') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) {
+            jsonResponse(res, 401, { success: false, message: 'Yêu cầu đăng nhập Admin' });
+            return;
+        }
+        try {
+            const body = await readBody(req, 10 * 1024 * 1024);
+            const payload = JSON.parse(body);
+            const db = getDB();
+            if (!db.config) db.config = {};
+            const allowed = [
+                'name','schoolName','className','classSlogan','photoUrl','quote1','quote2','quote3',
+                'birthdayDate','balloonTiktokUrl','favMusic','favMovie','favBook','favDrink','favFashion',
+                'favLover','favLifestyle','favColor','socialLinks'
+            ];
+            for (const key of allowed) {
+                if (payload[key] !== undefined) db.config[key] = payload[key];
+            }
+            if (db.config.photoUrl) db.config.photoUrl = sanitizeUrl(db.config.photoUrl);
+            if (db.config.balloonTiktokUrl) db.config.balloonTiktokUrl = sanitizeUrl(db.config.balloonTiktokUrl);
+
+            await saveDB(db);
+            jsonResponse(res, 200, { success: true, message: 'Đã cập nhật Hồ sơ thành công!', config: db.config });
+        } catch (e) {
+            jsonResponse(res, 400, { success: false, message: 'Lỗi dữ liệu Hồ sơ' });
+        }
+        return;
+    }
+
+    // ── POST /api/admin/gallery — Cập nhật riêng Album Ảnh (Admin only) ───────
+    if (pathname === '/api/admin/gallery' && req.method === 'POST') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) {
+            jsonResponse(res, 401, { success: false, message: 'Yêu cầu đăng nhập Admin' });
+            return;
+        }
+        try {
+            const body = await readBody(req, 20 * 1024 * 1024);
+            const payload = JSON.parse(body);
+            if (!Array.isArray(payload.gallery)) {
+                jsonResponse(res, 400, { success: false, message: 'Gallery phải là một mảng' });
+                return;
+            }
+            const db = getDB();
+            if (!db.config) db.config = {};
+            db.config.gallery = payload.gallery;
+            await saveDB(db);
+            jsonResponse(res, 200, { success: true, message: 'Đã lưu Album Ảnh thành công!', gallery: db.config.gallery });
+        } catch (e) {
+            jsonResponse(res, 400, { success: false, message: 'Lỗi dữ liệu Album Ảnh' });
+        }
+        return;
+    }
+
+    // ── POST /api/admin/timeline — Cập nhật riêng Dấu Chân Thanh Xuân (Admin only) 
+    if (pathname === '/api/admin/timeline' && req.method === 'POST') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) {
+            jsonResponse(res, 401, { success: false, message: 'Yêu cầu đăng nhập Admin' });
+            return;
+        }
+        try {
+            const body = await readBody(req, 10 * 1024 * 1024);
+            const payload = JSON.parse(body);
+            if (!Array.isArray(payload.journey)) {
+                jsonResponse(res, 400, { success: false, message: 'Journey phải là một mảng' });
+                return;
+            }
+            const db = getDB();
+            if (!db.config) db.config = {};
+            db.config.journey = payload.journey;
+            await saveDB(db);
+            jsonResponse(res, 200, { success: true, message: 'Đã lưu Dấu Chân Thanh Xuân thành công!', journey: db.config.journey });
+        } catch (e) {
+            jsonResponse(res, 400, { success: false, message: 'Lỗi dữ liệu Dấu Chân' });
+        }
+        return;
+    }
+
+    // ── POST /api/admin/playlist — Cập nhật riêng Danh Sách Nhạc (Admin only) ──
+    if (pathname === '/api/admin/playlist' && req.method === 'POST') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) {
+            jsonResponse(res, 401, { success: false, message: 'Yêu cầu đăng nhập Admin' });
+            return;
+        }
+        try {
+            const body = await readBody(req, 10 * 1024 * 1024);
+            const payload = JSON.parse(body);
+            if (!Array.isArray(payload.playlist)) {
+                jsonResponse(res, 400, { success: false, message: 'Playlist phải là một mảng' });
+                return;
+            }
+            const db = getDB();
+            if (!db.config) db.config = {};
+            db.config.playlist = payload.playlist;
+            await saveDB(db);
+            jsonResponse(res, 200, { success: true, message: 'Đã lưu Playlist nhạc thành công!', playlist: db.config.playlist });
+        } catch (e) {
+            jsonResponse(res, 400, { success: false, message: 'Lỗi dữ liệu Playlist' });
+        }
+        return;
+    }
+
     // ── POST /api/upload — Upload file (Admin only, magic bytes check) ────────
     if (pathname === '/api/upload' && req.method === 'POST') {
         const token = getTokenFromRequest(req);

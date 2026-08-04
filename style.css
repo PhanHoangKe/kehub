@@ -5508,25 +5508,83 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
         height: 340px !important;
     }
 
-    /* ── Vertical Mood Dock on Mobile ── */
-    .vertical-mood-dock {
-        right: 8px !important;
-        top: 25% !important;
-        padding: 8px 5px !important;
-        gap: 8px !important;
-        background: rgba(255, 255, 255, 0.92) !important;
-        border: 1px solid var(--glass-border) !important;
-        backdrop-filter: blur(12px) !important;
+    /* ── Touch & Mobile Smoothness ── */
+    * {
+        -webkit-tap-highlight-color: transparent;
     }
 
-    .mood-dock-title {
-        display: none !important;
+    body {
+        -webkit-text-size-adjust: 100%;
     }
 
-    .mood-btn-circle {
-        width: 36px !important;
-        height: 36px !important;
-        font-size: 0.95rem !important;
+    /* ── Safe Area Insets for iOS Home Indicator ── */
+    .app-nav-dock {
+        bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    /* ── Mobile Grid System ── */
+    .achievements-grid,
+    .clubs-grid,
+    .friends-grid,
+    .goals-grid,
+    .outings-list-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+
+    .gallery-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+
+    /* ── Action Cards on Mobile ── */
+    .action-card {
+        padding: 16px 14px !important;
+        border-radius: 20px !important;
+    }
+
+    .action-card-title {
+        font-size: 1.05rem !important;
+    }
+
+    .action-card-desc {
+        font-size: 0.82rem !important;
+    }
+
+    /* ── Time Capsule & Quote Boxes ── */
+    .time-capsule-section,
+    .guestbook-section,
+    .quote-box {
+        padding: 20px 16px !important;
+        border-radius: 24px !important;
+    }
+
+    .quote-text {
+        font-size: 1.05rem !important;
+        line-height: 1.5 !important;
+    }
+
+    /* ── Lightbox & Modals Mobile Touch ── */
+    .lightbox-content {
+        max-width: 95vw !important;
+        max-height: 80vh !important;
+        border-radius: 16px !important;
+    }
+
+    .lightbox-nav {
+        width: 44px !important;
+        height: 44px !important;
+        font-size: 1.1rem !important;
+    }
+
+    /* ── Inputs on Mobile (Prevent iOS Safari Auto Zoom) ── */
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    input[type="url"],
+    textarea,
+    select {
+        font-size: 16px !important;
     }
 }
 

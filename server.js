@@ -40,9 +40,162 @@ const DATA_DIR = path.join(__dirname, 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
 
-// Đảm bảo thư mục tồn tại
+// Đảm bảo thư mục tồn tại (vẫn giữ /uploads/ làm fallback khi Cloudinary chưa cấu hình)
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+
+// ── Cloudinary Config ────────────────────────────────────────────────────────
+// Đặt 3 biến môi trường để bật Cloudinary. Nếu chưa cấu hình, fallback về disk local.
+// Đăng ký miễn phí tại: https://cloudinary.com/users/register_free
+const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || '';
+const CLOUDINARY_API_KEY    = process.env.CLOUDINARY_API_KEY    || '';
+const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET || '';
+const CLOUDINARY_ENABLED    = !!(CLOUDINARY_CLOUD_NAME && CLOUDINARY_API_KEY && CLOUDINARY_API_SECRET);
+
+if (CLOUDINARY_ENABLED) {
+    console.log('  ☁️  [Cloudinary] Đã cấu hình — ảnh/video/audio sẽ lưu vĩnh viễn trên Cloud.');
+} else {
+    console.log('  ⚠️  [Cloudinary] Chưa cấu hình — file sẽ lưu tạm vào /uploads/ (mất khi redeploy).');
+}
+
+/**
+ * Upload một file (dạng Buffer) lên Cloudinary qua REST API (không cần SDK).
+ * Cloudinary hỗ trợ ảnh (jpg/png/gif/webp), video (mp4/webm), audio (mp3/ogg/webm).
+ *
+ * @param {Buffer} buffer    - Nội dung file
+ * @param {string} mime      - MIME type, vd: 'image/jpeg', 'audio/webm', 'video/mp4'
+ * @param {string} folder    - Thư mục trên Cloudinary, vd: 'youth-memories/anon'
+ * @returns {Promise<string|null>} URL public nếu thành công, null nếu thất bại
+ */
+function uploadToCloudinary(buffer, mime, folder = 'youth-memories') {
+    return new Promise((resolve) => {
+        if (!CLOUDINARY_ENABLED) {
+            resolve(null);
+            return;
+        }
+
+        try {
+            // Xác định resource_type: Cloudinary chia 3 loại: image | video | raw
+            // audio (mp3/ogg/webm) phải dùng resource_type=video (Cloudinary xử lý audio qua video pipeline)
+            let resourceType = 'image';
+            if (mime.startsWith('video/') || mime.startsWith('audio/')) resourceType = 'video';
+
+            // Tạo chữ ký HMAC-SHA1 cho Cloudinary Signed Upload
+            const timestamp = Math.floor(Date.now() / 1000).toString();
+            const paramsToSign = `folder=${folder}&timestamp=${timestamp}`;
+            const signature = crypto
+                .createHmac('sha1', CLOUDINARY_API_SECRET)
+                .update(paramsToSign)
+                .digest('hex');
+
+            // Build multipart/form-data thủ công (không dùng thư viện ngoài)
+            const boundary = `----CloudinaryBoundary${crypto.randomBytes(8).toString('hex')}`;
+            const CRLF = '\r\n';
+
+            function part(name, value) {
+                return `--${boundary}${CRLF}Content-Disposition: form-data; name="${name}"${CRLF}${CRLF}${value}${CRLF}`;
+            }
+
+            // Xác định extension từ mime để đặt tên file
+            const extMap = {
+                'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif', 'image/webp': 'webp',
+                'audio/mpeg': 'mp3', 'audio/ogg': 'ogg', 'audio/wav': 'wav',
+                'audio/webm': 'webm', 'audio/webm;codecs=opus': 'webm', 'audio/mp4': 'm4a',
+                'video/mp4': 'mp4', 'video/webm': 'webm', 'video/ogg': 'ogv',
+            };
+            const ext = extMap[mime] || extMap[mime.split(';')[0].trim()] || 'bin';
+            const publicId = `${folder.replace('/', '_')}_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+
+            const textParts = Buffer.from(
+                part('api_key',    CLOUDINARY_API_KEY) +
+                part('timestamp',  timestamp) +
+                part('folder',     folder) +
+                part('signature',  signature)
+            );
+
+            const filePartHeader = Buffer.from(
+                `--${boundary}${CRLF}` +
+                `Content-Disposition: form-data; name="file"; filename="${publicId}.${ext}"${CRLF}` +
+                `Content-Type: ${mime}${CRLF}${CRLF}`
+            );
+            const filePartFooter = Buffer.from(`${CRLF}--${boundary}--${CRLF}`);
+
+            const body = Buffer.concat([textParts, filePartHeader, buffer, filePartFooter]);
+
+            const uploadUrl = url.parse(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`);
+            const options = {
+                hostname: uploadUrl.hostname,
+                path:     uploadUrl.path,
+                method:   'POST',
+                headers: {
+                    'Content-Type':   `multipart/form-data; boundary=${boundary}`,
+                    'Content-Length': body.length,
+                },
+            };
+
+            const req = https.request(options, (res) => {
+                let data = '';
+                res.on('data', chunk => { data += chunk; });
+                res.on('end', () => {
+                    try {
+                        const json = JSON.parse(data);
+                        if (json.secure_url) {
+                            console.log(`  ☁️  [Cloudinary] Upload thành công: ${json.secure_url}`);
+                            resolve(json.secure_url);
+                        } else {
+                            console.error('  ⚠️  [Cloudinary] Upload lỗi:', json.error?.message || data.slice(0, 200));
+                            resolve(null);
+                        }
+                    } catch (e) {
+                        console.error('  ⚠️  [Cloudinary] Parse response lỗi:', e.message);
+                        resolve(null);
+                    }
+                });
+            });
+
+            req.on('error', (err) => {
+                console.error('  ⚠️  [Cloudinary] Request lỗi:', err.message);
+                resolve(null);
+            });
+
+            req.setTimeout(30000, () => {
+                req.destroy();
+                console.error('  ⚠️  [Cloudinary] Upload timeout (30s)');
+                resolve(null);
+            });
+
+            req.write(body);
+            req.end();
+        } catch (e) {
+            console.error('  ⚠️  [Cloudinary] Exception:', e.message);
+            resolve(null);
+        }
+    });
+}
+
+/**
+ * Lưu file: thử Cloudinary trước, fallback về disk local nếu Cloudinary chưa cấu hình/thất bại.
+ * @returns {Promise<string>} URL (Cloudinary https:// hoặc /uploads/filename)
+ */
+async function saveFile(buffer, mime, folder = 'youth-memories') {
+    // Thử Cloudinary
+    const cloudUrl = await uploadToCloudinary(buffer, mime, folder);
+    if (cloudUrl) return cloudUrl;
+
+    // Fallback: lưu vào disk local
+    const extMap = {
+        'image/jpeg': '.jpg', 'image/png': '.png', 'image/gif': '.gif', 'image/webp': '.webp',
+        'audio/mpeg': '.mp3', 'audio/ogg': '.ogg', 'audio/wav': '.wav',
+        'audio/webm': '.webm', 'audio/webm;codecs=opus': '.webm', 'audio/mp4': '.m4a',
+        'video/mp4': '.mp4', 'video/webm': '.webm', 'video/ogg': '.ogv',
+    };
+    const ext      = extMap[mime] || extMap[mime.split(';')[0].trim()] || '.bin';
+    const prefix   = folder.split('/').pop() || 'file';
+    const filename = `${prefix}_${Date.now()}_${crypto.randomBytes(4).toString('hex')}${ext}`;
+    const filePath = path.join(UPLOADS_DIR, filename);
+    fs.writeFileSync(filePath, buffer);
+    return `/uploads/${filename}`;
+}
 
 // ── Cấu hình Admin ───────────────────────────────────────────────────────────
 // Đặt password qua env var ADMIN_PASSWORD, mặc định là chuỗi ngẫu nhiên
@@ -769,12 +922,11 @@ const server = http.createServer(async (req, res) => {
                     return;
                 }
 
-                // Lưu file
-                const prefix   = `anon_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
-                const filename = `${prefix}${validation.ext}`;
-                const filePath = path.join(UPLOADS_DIR, filename);
-                fs.writeFileSync(filePath, validation.buffer);
-                savedMediaUrl = `/uploads/${filename}`;
+                // Upload lên Cloudinary (hoặc fallback disk)
+                const folder = validation.mime.startsWith('audio') ? 'youth-memories/anon/audio'
+                             : validation.mime.startsWith('video') ? 'youth-memories/anon/video'
+                             : 'youth-memories/anon/image';
+                savedMediaUrl = await saveFile(validation.buffer, validation.mime, folder);
             }
 
             const db = getDB();
@@ -847,15 +999,10 @@ const server = http.createServer(async (req, res) => {
                 if (item.data) {
                     const validation = validateBase64File(item.data);
                     if (validation.ok) {
-                        const prefix   = `outing_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
-                        const filename = `${prefix}${validation.ext}`;
-                        const filePath = path.join(UPLOADS_DIR, filename);
-                        fs.writeFileSync(filePath, validation.buffer);
                         const isVid = (item.type === 'video') || validation.mime.startsWith('video');
-                        savedMedia.push({
-                            type: isVid ? 'video' : 'image',
-                            url: `/uploads/${filename}`
-                        });
+                        const folder = isVid ? 'youth-memories/outings/video' : 'youth-memories/outings/image';
+                        const fileUrl = await saveFile(validation.buffer, validation.mime, folder);
+                        savedMedia.push({ type: isVid ? 'video' : 'image', url: fileUrl });
                     } else {
                         console.warn('File upload validation failed:', validation.error);
                     }
@@ -1419,17 +1566,16 @@ const server = http.createServer(async (req, res) => {
             }
 
             // Tên file an toàn: chỉ dùng timestamp + extension được detect từ magic bytes
-            const safeName = `upload_${Date.now()}_${crypto.randomBytes(4).toString('hex')}${validation.ext}`;
-            const savePath = path.join(UPLOADS_DIR, safeName);
-            fs.writeFileSync(savePath, validation.buffer);
+            const fileUrl = await saveFile(
+                validation.buffer,
+                validation.mime,
+                validation.mime.startsWith('video') ? 'youth-memories/admin/video'
+                : validation.mime.startsWith('audio') ? 'youth-memories/admin/audio'
+                : 'youth-memories/admin/image'
+            );
 
-            // Nếu là hình ảnh, trả về Data URL để lưu trực tiếp vào JSON DB (bảo đảm tồn tại vĩnh viễn trên Cloud)
-            if (validation.mime.startsWith('image/')) {
-                const dataUrl = `data:${validation.mime};base64,${validation.buffer.toString('base64')}`;
-                jsonResponse(res, 200, { success: true, fileUrl: dataUrl });
-            } else {
-                jsonResponse(res, 200, { success: true, fileUrl: `./uploads/${safeName}` });
-            }
+            // Trả về URL (Cloudinary https:// hoặc /uploads/... local)
+            jsonResponse(res, 200, { success: true, fileUrl });
         } catch (e) {
             jsonResponse(res, 500, { success: false, message: 'Lỗi lưu file' });
         }

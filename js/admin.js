@@ -445,10 +445,11 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
     }
 
     const urlParams = new URLSearchParams(window.location.search);
-    const isAdmin = urlParams.get('admin') === 'true';
+    const isParamAdmin = urlParams.get('admin') === 'true';
+    const hasAdminToken = Boolean(localStorage.getItem('admin_token'));
     if (btnCustomization) {
-        btnCustomization.style.display = 'inline-flex';
-        if (isAdmin) {
+        btnCustomization.style.display = (hasAdminToken || isParamAdmin) ? 'inline-flex' : 'none';
+        if (isParamAdmin) {
             setTimeout(() => btnCustomization.click(), 500);
         }
     }

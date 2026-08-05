@@ -314,13 +314,18 @@
     width: 100% !important;
     background: var(--adm-bg) !important;
     min-width: 0 !important;
+    /* Flex column để tab-content fill hết chiều cao */
+    display: flex !important;
+    flex-direction: column !important;
+    align-self: stretch !important;
 }
 .admin-tab-content {
     display: none;
     flex-direction: column;
     gap: 0;
     animation: tabIn 0.22s cubic-bezier(0.16,1,0.3,1);
-    height: 100%;
+    flex: 1;
+    min-height: 0;
     width: 100%;
     min-width: 0;
     overflow: hidden;
@@ -333,11 +338,13 @@
 
 /* Content inner scroll area */
 .adm-tab-scroll {
-    flex: 1; overflow-y: auto;
+    flex: 1;
+    overflow-y: auto;
     overflow-x: hidden;
     padding: 24px 28px;
     display: flex; flex-direction: column; gap: 18px;
     min-width: 0;
+    min-height: 0;
     width: 100%;
     box-sizing: border-box;
 }
@@ -413,10 +420,8 @@
     background: rgba(255,255,255,0.09); color: var(--adm-text); border-color: var(--adm-line-2);
 }
 
-/* Old tab-header-action-bar kept for compat but restyled */
-.tab-header-action-bar {
-    display: none; /* replaced by adm-tab-topbar */
-}
+/* Old tab-header-action-bar kept for compat but fully hidden */
+.tab-header-action-bar { display: none !important; }
 
 /* ── OVERVIEW TAB — Bento Grid ────────────────────────────────────────────── */
 .adm-bento {

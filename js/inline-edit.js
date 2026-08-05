@@ -76,7 +76,7 @@ export function initInlineEditEngine(getState, saveBackendConfig) {
 
         if (isInlineEditing) {
             btnInlineToggle.classList.add('active');
-            showToast("✏️ Đã bật Chế Độ Chỉnh Sửa Trực Tiếp! Bạn chỉ cần chạm vào chữ để sửa.");
+            showToast(`<i class="fa-solid fa-pen"></i> Đã bật Chế Độ Chỉnh Sửa Trực Tiếp! Bạn chỉ cần chạm vào chữ để sửa.`);
         } else {
             btnInlineToggle.classList.remove('active');
             showToast("🔒 Đã tắt chế độ sửa trực tiếp.");
@@ -101,7 +101,7 @@ export function initInlineEditEngine(getState, saveBackendConfig) {
                     const state = getState();
                     const currentUrl = (state.socialLinks && state.socialLinks[social.key]) || elem.href;
                     
-                    const newUrl = prompt(`🔗 Vui lòng dán link ${social.name} của bạn vào đây:`, currentUrl);
+                    const newUrl = prompt(`Vui lòng dán link ${social.name} của bạn vào đây:`, currentUrl);
                     if (newUrl !== null && newUrl.trim() !== '') {
                         if (!state.socialLinks) state.socialLinks = {};
                         state.socialLinks[social.key] = newUrl.trim();
@@ -289,7 +289,7 @@ async function extractTikTokAudio(tiktokUrl) {
                     }
 
                     if (modalQuickMusic) modalQuickMusic.classList.remove('active');
-                    showToast(`🎵 Đã thêm "${title}" & tự động quay đĩa phát nhạc! 💿`);
+                    showToast(`<i class="fa-solid fa-music"></i> Đã thêm "${title}" & tự động quay đĩa phát nhạc! <i class="fa-solid fa-compact-disc"></i>`);
 
                     // Reset form
                     if (quickTrackTitle) quickTrackTitle.value = '';

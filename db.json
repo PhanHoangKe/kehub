@@ -3,6 +3,120 @@
   "project": "youth-memories",
   "config": {},
   "reactions": {},
-  "visitors": [],
+  "visitors": [
+    {
+      "id": "vis_1785909833261_em2u",
+      "sessionId": "s_1785908981265_j85ff9",
+      "ip": "127.0.0.1",
+      "city": "Localhost",
+      "region": "Nội bộ",
+      "country": "Máy chủ local",
+      "isp": "Mạng LAN",
+      "lat": null,
+      "lng": null,
+      "accuracy": null,
+      "isGps": false,
+      "os": "Windows",
+      "device": "Windows PC",
+      "gpu": "Intel Intel(R) Iris(R) Xe Graphics (0x0000A7A0)",
+      "cpuCores": 16,
+      "ramGB": 16,
+      "browser": "Chrome",
+      "referrer": "Trực tiếp / Bookmark",
+      "screen": "1536x864",
+      "viewport": "1536x695",
+      "dpr": 1.25,
+      "language": "en-US",
+      "timezone": "Asia/Saigon",
+      "touchPoints": 0,
+      "connection": "4g",
+      "battery": "100% (⚡ Đang sạc)",
+      "sectionsVisited": [
+        "Trang chủ",
+        "Chuyển mục"
+      ],
+      "timelineLogs": [
+        {
+          "time": "13:04:12",
+          "event": "Thao tác: Khách Thăm 1",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "13:08:59",
+          "event": "Thao tác: Khách Thăm",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "13:09:00",
+          "event": "Thao tác: Hộp Thư Ẩn",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "13:09:00",
+          "event": "Thao tác: Định vị trạm sóng (Tan Phong, Tinh Thanh Hoa)",
+          "detail": ""
+        },
+        {
+          "time": "13:09:01",
+          "event": "Thao tác: Tổng Quan",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "13:09:02",
+          "event": "Thao tác: Khách Thăm 1",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "13:09:03",
+          "event": "Thao tác: Hồ Sơ",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "13:09:03",
+          "event": "Thao tác: Thư Viện Ảnh",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "13:09:04",
+          "event": "Thao tác: Playlist",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "13:09:04",
+          "event": "Thao tác: Sở Thích",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "13:09:05",
+          "event": "Thao tác: Dấu Chân",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "13:09:05",
+          "event": "Thao tác: Bản Đồ",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "13:09:06",
+          "event": "Thao tác: Icon Meme",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "13:09:07",
+          "event": "Thao tác: Khách Thăm 1",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "13:09:09",
+          "event": "Thao tác: close-btn",
+          "detail": "Mục: Chuyển mục"
+        }
+      ],
+      "clicks": 28,
+      "firstSeen": "2026-08-05T06:03:53.260Z",
+      "lastSeen": "2026-08-05T06:09:23.504Z",
+      "durationSeconds": 330
+    }
+  ],
   "anonymousMessages": []
 }

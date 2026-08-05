@@ -52,36 +52,71 @@ const CLOUDINARY_API_KEY    = process.env.CLOUDINARY_API_KEY    || '';
 const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET || '';
 const CLOUDINARY_ENABLED    = !!(CLOUDINARY_CLOUD_NAME && CLOUDINARY_API_KEY && CLOUDINARY_API_SECRET);
 
+// ── Smart Circuit Breaker (Modern Adaptive Fail-Stop) ───────────────────────
+//   • Lỗi HARD (401/403/404/sai cấu hình/missing params)  → TẮT VĨNH VIỄN cho đến restart server
+//   • Lỗi SOFT (mạng ECONNRESET / 5xx / timeout)           → retry 2 lần với exponential backoff
+//     * Nếu vẫn thất bại → tạm tắt 5 phút (cooldown), sau đó thử lại
+let cldState = { enabled: CLOUDINARY_ENABLED, reason: null, disabledUntil: 0, mode: 'active' };
+let jbnState = { enabled: !!(JSONBIN_BIN_ID && JSONBIN_API_KEY), reason: null, disabledUntil: 0, mode: 'active' };
+
+function _cldCooldownMs(attempt)   { return 1000 * Math.pow(2, attempt); } // 1s, 2s, 4s
+function _jbnCooldownMs(attempt)   { return 1000 * Math.pow(2, attempt); }
+
+function _disableHard(state, integration, reason) {
+    state.mode = 'hard-off';
+    state.enabled = false;
+    state.reason = reason;
+    console.error(`  🔌 [${integration}] ⛔ TẮT VĨNH VIỄN cho đến restart server — lý do: ${reason}`);
+    console.error(`     💡 Sửa lỗi trong file .env sau đó restart lại server để bật lại.`);
+}
+function _softFailCooldown(state, integration, reason, minutes = 5) {
+    if (state.mode === 'hard-off') return; // HARD-OFF priority hơn
+    state.mode = 'cooldown';
+    state.disabledUntil = Date.now() + minutes * 60 * 1000;
+    if (!state._lastSoftLog || Date.now() - state._lastSoftLog > 30000) { // chỉ log mỗi 30s tránh spam
+        console.warn(`  ⏸️  [${integration}] Tạm tắt ${minutes} phút (lỗi tạm thời sẽ thử lại sau): ${reason}`);
+        state._lastSoftLog = Date.now();
+    }
+}
+function _isAvailable(state, integration) {
+    if (state.mode === 'hard-off') return false;
+    if (state.mode === 'cooldown' && Date.now() < state.disabledUntil) return false;
+    // Hết cooldown → quay active
+    if (state.mode === 'cooldown') {
+        state.mode = 'active';
+        state._lastSoftLog = 0;
+        console.log(`  🔄 [${integration}] Hết tạm dừng → thử lại tích hợp.`);
+    }
+    return state.enabled;
+}
+function _sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
 if (CLOUDINARY_ENABLED) {
-    console.log('  ☁️  [Cloudinary] Đã cấu hình — ảnh/video/audio sẽ lưu vĩnh viễn trên Cloud.');
+    console.log('  ☁️  [Cloudinary] Đã cấu hình — ảnh/video/audio sẽ ưu tiên lưu trên Cloud.');
 } else {
-    console.log('  ⚠️  [Cloudinary] Chưa cấu hình — file sẽ lưu tạm vào /uploads/ (mất khi redeploy).');
+    console.log('  ⚠️  [Cloudinary] Chưa cấu hình — file sẽ chỉ lưu vào /uploads/ local.');
 }
 
 /**
  * Upload một file (dạng Buffer) lên Cloudinary qua REST API (không cần SDK).
  * Cloudinary hỗ trợ ảnh (jpg/png/gif/webp), video (mp4/webm), audio (mp3/ogg/webm).
  *
+ * Modern behaviour (Circuit Breaker):
+ *   • Tự động retry 2 lần (tổng 3 lượt gọi) với exponential backoff (1s → 2s)
+ *   • Lỗi HARD (401/403/invalid credentials): TẮT VĨNH VIỄN cho đến restart server
+ *   • Lỗi SOFT (mạng, 5xx, timeout): tạm tắt 5 phút rồi thử lại
+ *
  * @param {Buffer} buffer    - Nội dung file
  * @param {string} mime      - MIME type, vd: 'image/jpeg', 'audio/webm', 'video/mp4'
  * @param {string} folder    - Thư mục trên Cloudinary, vd: 'youth-memories/anon'
  * @returns {Promise<string|null>} URL public nếu thành công, null nếu thất bại
  */
-function uploadToCloudinary(buffer, mime, folder = 'youth-memories') {
+function _cldRequestOnce(buffer, mime, folder) {
     return new Promise((resolve) => {
-        if (!CLOUDINARY_ENABLED) {
-            resolve(null);
-            return;
-        }
-
         try {
-            // Xác định resource_type: Cloudinary chia 3 loại: image | video | raw
-            // audio (mp3/ogg/webm) phải dùng resource_type=video (Cloudinary xử lý audio qua video pipeline)
             let resourceType = 'image';
             if (mime.startsWith('video/') || mime.startsWith('audio/')) resourceType = 'video';
 
-            // Tạo chữ ký SHA1 cho Cloudinary Signed Upload
-            // Cloudinary dùng SHA1(params_string + api_secret), không phải HMAC
             const timestamp = Math.floor(Date.now() / 1000).toString();
             const paramsToSign = `folder=${folder}&timestamp=${timestamp}`;
             const signature = crypto
@@ -89,15 +124,12 @@ function uploadToCloudinary(buffer, mime, folder = 'youth-memories') {
                 .update(paramsToSign + CLOUDINARY_API_SECRET)
                 .digest('hex');
 
-            // Build multipart/form-data thủ công (không dùng thư viện ngoài)
             const boundary = `----CloudinaryBoundary${crypto.randomBytes(8).toString('hex')}`;
             const CRLF = '\r\n';
-
             function part(name, value) {
                 return `--${boundary}${CRLF}Content-Disposition: form-data; name="${name}"${CRLF}${CRLF}${value}${CRLF}`;
             }
 
-            // Xác định extension từ mime để đặt tên file
             const extMap = {
                 'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif', 'image/webp': 'webp',
                 'audio/mpeg': 'mp3', 'audio/ogg': 'ogg', 'audio/wav': 'wav',
@@ -108,19 +140,17 @@ function uploadToCloudinary(buffer, mime, folder = 'youth-memories') {
             const publicId = `${folder.replace('/', '_')}_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
 
             const textParts = Buffer.from(
-                part('api_key',    CLOUDINARY_API_KEY) +
-                part('timestamp',  timestamp) +
-                part('folder',     folder) +
-                part('signature',  signature)
+                part('api_key',   CLOUDINARY_API_KEY) +
+                part('timestamp', timestamp) +
+                part('folder',    folder) +
+                part('signature', signature)
             );
-
             const filePartHeader = Buffer.from(
                 `--${boundary}${CRLF}` +
                 `Content-Disposition: form-data; name="file"; filename="${publicId}.${ext}"${CRLF}` +
                 `Content-Type: ${mime}${CRLF}${CRLF}`
             );
             const filePartFooter = Buffer.from(`${CRLF}--${boundary}--${CRLF}`);
-
             const body = Buffer.concat([textParts, filePartHeader, buffer, filePartFooter]);
 
             const uploadUrl = url.parse(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`);
@@ -132,46 +162,87 @@ function uploadToCloudinary(buffer, mime, folder = 'youth-memories') {
                     'Content-Type':   `multipart/form-data; boundary=${boundary}`,
                     'Content-Length': body.length,
                 },
+                timeout: 25000,
             };
 
             const req = https.request(options, (res) => {
                 let data = '';
                 res.on('data', chunk => { data += chunk; });
                 res.on('end', () => {
+                    // HARD ERROR: 401 = sai key / secret; 404 = cloud_name không tồn tại
+                    if (res.statusCode === 401 || res.statusCode === 403 || res.statusCode === 404) {
+                        let reason = `Server trả về ${res.statusCode}`;
+                        try {
+                            const json = JSON.parse(data);
+                            if (json?.error?.message) reason += `: ${json.error.message}`;
+                        } catch {}
+                        if (res.statusCode === 401) reason += ' → CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET SAI';
+                        if (res.statusCode === 403) reason += ' → Tài khoản Cloudinary bị khóa / hết hạn / vượt quota';
+                        if (res.statusCode === 404) reason += ' → CLOUDINARY_CLOUD_NAME không tồn tại, kiểm tra lại ID';
+                        resolve({ ok: false, hard: true, reason });
+                        return;
+                    }
                     try {
                         const json = JSON.parse(data);
                         if (json.secure_url) {
-                            console.log(`  ☁️  [Cloudinary] Upload thành công: ${json.secure_url}`);
-                            resolve(json.secure_url);
+                            resolve({ ok: true, url: json.secure_url });
                         } else {
-                            console.error('  ⚠️  [Cloudinary] Upload lỗi:', json.error?.message || data.slice(0, 200));
-                            resolve(null);
+                            // 400 Bad Request = file không hợp lệ (lỗi hard) / còn lại xem là soft
+                            const isHard = res.statusCode >= 400 && res.statusCode < 500 && res.statusCode !== 429;
+                            resolve({
+                                ok: false,
+                                hard: isHard,
+                                reason: `HTTP ${res.statusCode} — ${json?.error?.message || data.slice(0, 160)}`,
+                            });
                         }
                     } catch (e) {
-                        console.error('  ⚠️  [Cloudinary] Parse response lỗi:', e.message);
-                        resolve(null);
+                        resolve({ ok: false, hard: false, reason: `Parse response lỗi: ${e.message} — raw: ${data.slice(0,80)}` });
                     }
                 });
             });
 
             req.on('error', (err) => {
-                console.error('  ⚠️  [Cloudinary] Request lỗi:', err.message);
-                resolve(null);
+                // ECONNRESET, ENOTFOUND, ETIMEDOUT = soft errors
+                resolve({ ok: false, hard: false, reason: `Network error: ${err.message}` });
             });
-
-            req.setTimeout(30000, () => {
-                req.destroy();
-                console.error('  ⚠️  [Cloudinary] Upload timeout (30s)');
-                resolve(null);
+            req.setTimeout(25000, () => {
+                req.destroy(new Error('Timeout 25s'));
             });
-
             req.write(body);
             req.end();
         } catch (e) {
-            console.error('  ⚠️  [Cloudinary] Exception:', e.message);
-            resolve(null);
+            resolve({ ok: false, hard: false, reason: `Exception: ${e.message}` });
         }
     });
+}
+
+async function uploadToCloudinary(buffer, mime, folder = 'youth-memories') {
+    if (!CLOUDINARY_ENABLED) return null;
+    if (!_isAvailable(cldState, 'Cloudinary')) return null;
+
+    const MAX_ATTEMPTS = 3;
+    let lastResult = null;
+
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        if (attempt > 1) {
+            const waitMs = _cldCooldownMs(attempt - 2);
+            console.log(`  🔁 [Cloudinary] Thử lại lần ${attempt}/${MAX_ATTEMPTS} — chờ ${waitMs}ms (exponential backoff)...`);
+            await _sleep(waitMs);
+        }
+        lastResult = await _cldRequestOnce(buffer, mime, folder);
+        if (lastResult.ok) {
+            console.log(`  ☁️  [Cloudinary] ✅ Upload thành công (lần ${attempt}): ${lastResult.url}`);
+            return lastResult.url;
+        }
+        console.error(`  ⚠️  [Cloudinary] Lần ${attempt}/${MAX_ATTEMPTS} thất bại: ${lastResult.reason}`);
+        if (lastResult.hard) {
+            _disableHard(cldState, 'Cloudinary', lastResult.reason);
+            return null;
+        }
+    }
+
+    _softFailCooldown(cldState, 'Cloudinary', `Thất bại ${MAX_ATTEMPTS} lần liên tiếp: ${lastResult.reason}`);
+    return null;
 }
 
 /**
@@ -576,93 +647,148 @@ function validateBase64File(base64DataUrl) {
 const JSONBIN_BIN_ID = process.env.JSONBIN_BIN_ID || '';
 const JSONBIN_API_KEY = process.env.JSONBIN_API_KEY || process.env.JSONBIN_SECRET || '';
 
+if (JSONBIN_BIN_ID && JSONBIN_API_KEY) {
+    console.log('  🗃️  [JSONBin] Đã cấu hình — DB sẽ được backup lên Cloud sau mỗi lần ghi.');
+} else {
+    console.log('  ⚠️  [JSONBin] Chưa cấu hình — DB chỉ lưu local (sao lưu /data/db.json thủ công thường xuyên nhé).');
+}
+
+function _jbnRequestOnce(method, extraPath = '', payloadBuffer = null) {
+    return new Promise((resolve) => {
+        try {
+            const reqUrl = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}${extraPath}`;
+            const parsed = url.parse(reqUrl);
+            const headers = {
+                'X-Master-Key': JSONBIN_API_KEY,
+                'Accept':        'application/json',
+            };
+            if (payloadBuffer) {
+                headers['Content-Type']   = 'application/json';
+                headers['Content-Length'] = payloadBuffer.length;
+            }
+            const req = https.request({
+                hostname: parsed.hostname,
+                path:     parsed.path,
+                method,
+                headers,
+                timeout: 10000,
+            }, (res) => {
+                let body = '';
+                res.on('data', c => body += c);
+                res.on('end', () => {
+                    const isHard = (res.statusCode === 401) || (res.statusCode === 403) ||
+                                   (res.statusCode === 404);
+                    const isOk = res.statusCode >= 200 && res.statusCode < 300;
+                    let parsedJson = null;
+                    try { parsedJson = JSON.parse(body); } catch {}
+                    resolve({
+                        ok: isOk,
+                        status: res.statusCode,
+                        hard: isHard,
+                        body,
+                        data: parsedJson,
+                    });
+                });
+            });
+            req.on('error', (err) => resolve({ ok: false, hard: false, status: 0, body: '', error: err.message }));
+            req.setTimeout(10000, () => req.destroy(new Error('Timeout 10s')));
+            if (payloadBuffer) req.write(payloadBuffer);
+            req.end();
+        } catch (e) {
+            resolve({ ok: false, hard: false, status: 0, body: '', error: e.message });
+        }
+    });
+}
+
 async function syncFromCloudDB() {
     if (!JSONBIN_BIN_ID || !JSONBIN_API_KEY) {
         console.log('  ⚠️  [Cloud DB] Không tìm thấy JSONBIN_BIN_ID hoặc JSONBIN_API_KEY. Sử dụng db.json cục bộ.');
         return false;
     }
-    return new Promise((resolve) => {
-        console.log('  ☁️  [Cloud DB] Đang đồng bộ dữ liệu mới nhất từ JSONBin.io trước khi mở Server...');
-        const reqUrl = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`;
-        const parsed = url.parse(reqUrl);
-        const options = {
-            hostname: parsed.hostname,
-            path: parsed.path,
-            method: 'GET',
-            headers: {
-                'X-Master-Key': JSONBIN_API_KEY
-            }
-        };
-        const req = https.request(options, (res) => {
-            let body = '';
-            res.on('data', chunk => body += chunk);
-            res.on('end', () => {
-                try {
-                    const json = JSON.parse(body);
-                    if (json && json.record && typeof json.record === 'object' && Object.keys(json.record).length > 0) {
-                        fs.writeFileSync(DB_FILE, JSON.stringify(json.record, null, 2), 'utf8');
-                        const legacyDB = path.join(__dirname, 'db.json');
-                        try { fs.writeFileSync(legacyDB, JSON.stringify(json.record, null, 2), 'utf8'); } catch (e) {}
-                        // Invalidate cache sau khi ghi từ cloud
-                        _dbCache = null;
-                        console.log('  ✅ [Cloud DB] Khôi phục 100% dữ liệu Cloud về đĩa cục bộ thành công!');
-                        resolve(true);
-                    } else {
-                        if (res.statusCode === 401) {
-                            console.error('  ⚠️  [Cloud DB] JSONBin BÁO LỖI 401: API Key hoặc Bin ID trên Render không chính xác/không thuộc tài khoản!');
-                        } else {
-                            console.error('  ⚠️  [Cloud DB] Dữ liệu từ JSONBin rỗng hoặc sai cấu trúc:', body.slice(0, 100));
-                        }
-                        resolve(false);
-                    }
-                } catch (e) {
-                    console.error('  ⚠️  [Cloud DB] Lỗi parse dữ liệu JSONBin:', e.message);
-                    resolve(false);
+    if (!_isAvailable(jbnState, 'JSONBin')) return false;
+
+    const MAX_ATTEMPTS = 2;
+    let lastRes = null;
+
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        if (attempt > 1) {
+            const waitMs = _jbnCooldownMs(attempt - 2);
+            console.log(`  🔁 [Cloud DB] Tải lại từ Cloud lần ${attempt}/${MAX_ATTEMPTS} — chờ ${waitMs}ms...`);
+            await _sleep(waitMs);
+        }
+        lastRes = await _jbnRequestOnce('GET', '/latest');
+
+        if (lastRes.ok) {
+            try {
+                if (lastRes.data && lastRes.data.record && typeof lastRes.data.record === 'object' && Object.keys(lastRes.data.record).length > 0) {
+                    fs.writeFileSync(DB_FILE, JSON.stringify(lastRes.data.record, null, 2), 'utf8');
+                    const legacyDB = path.join(__dirname, 'db.json');
+                    try { fs.writeFileSync(legacyDB, JSON.stringify(lastRes.data.record, null, 2), 'utf8'); } catch (e) {}
+                    _dbCache = null;
+                    console.log('  ✅ [Cloud DB] Khôi phục 100% dữ liệu Cloud về đĩa cục bộ thành công!');
+                    return true;
                 }
-            });
-        });
-        req.on('error', (err) => {
-            console.error('  ⚠️  [Cloud DB] Lỗi kết nối tải từ JSONBin:', err.message);
-            resolve(false);
-        });
-        req.setTimeout(8000, () => {
-            req.destroy();
-            console.error('  ⚠️  [Cloud DB] Kết nối JSONBin quá 8 giây (Timeout)');
-            resolve(false);
-        });
-        req.end();
-    });
+                console.warn('  ⚠️  [Cloud DB] Dữ liệu từ JSONBin rỗng hoặc sai cấu trúc (bin mới tạo?). Bỏ qua & giữ db cục bộ.');
+                return false;
+            } catch (e) {
+                console.error('  ⚠️  [Cloud DB] Lỗi ghi dữ liệu Cloud xuống đĩa:', e.message);
+                return false;
+            }
+        }
+
+        // Phân loại lỗi chi tiết
+        if (lastRes.hard) {
+            let reason = `GET /latest trả về HTTP ${lastRes.status}`;
+            if (lastRes.status === 401) reason += ' → JSONBIN_API_KEY (X-Master-Key) SAI — không có quyền truy cập bin này';
+            if (lastRes.status === 403) reason += ' → Bin bị khóa riêng tư / API key không thuộc tài khoản sở hữu bin (Lỗi phổ biến khi xóa bin cũ mà chưa đổi ID mới)';
+            if (lastRes.status === 404) reason += ' → JSONBIN_BIN_ID không tồn tại (bạn đã xóa bin trên dashboard JSONBin nhưng chưa cập nhật lại trong file .env!)';
+            if (lastRes.data?.message) reason += ` — ${lastRes.data.message}`;
+            _disableHard(jbnState, 'JSONBin', reason);
+            return false;
+        }
+        console.warn(`  ⚠️  [Cloud DB] Lần ${attempt}/${MAX_ATTEMPTS} tải Cloud thất bại: ${lastRes.error || lastRes.body?.slice(0,120) || `HTTP ${lastRes.status}`}`);
+    }
+
+    _softFailCooldown(jbnState, 'JSONBin', `syncFromCloudDB thất bại ${MAX_ATTEMPTS} lần liên tiếp: ${lastRes.error || 'Lỗi không xác định'}`);
+    return false;
 }
 
-function saveToCloudDB(data) {
+async function saveToCloudDB(data) {
     if (!JSONBIN_BIN_ID || !JSONBIN_API_KEY) return;
+    if (!_isAvailable(jbnState, 'JSONBin')) return;
+
     try {
         const payload = JSON.stringify(data);
-        const reqUrl = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
-        const parsed = url.parse(reqUrl);
-        const req = https.request({
-            hostname: parsed.hostname,
-            path: parsed.path,
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Master-Key': JSONBIN_API_KEY,
-                'Content-Length': Buffer.byteLength(payload)
+        const payloadBuffer = Buffer.from(payload, 'utf8');
+        const MAX_ATTEMPTS = 3;
+        let lastRes = null;
+
+        for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+            if (attempt > 1) {
+                const waitMs = _jbnCooldownMs(attempt - 2);
+                console.log(`  🔁 [Cloud DB] Upload lên Cloud lần ${attempt}/${MAX_ATTEMPTS} — chờ ${waitMs}ms...`);
+                await _sleep(waitMs);
             }
-        }, (res) => {
-            if (res.statusCode >= 200 && res.statusCode < 300) {
-                console.log('  ☁️  [Cloud DB] Đã sao lưu dữ liệu mới lên JSONBin.io!');
-            } else if (res.statusCode === 401) {
-                console.error('  ⚠️  [Cloud DB LỖI 401] JSONBIN_API_KEY hoặc JSONBIN_BIN_ID bị từ chối truy cập.');
-            } else {
-                console.error('  ⚠️  [Cloud DB] JSONBin báo status:', res.statusCode);
+            lastRes = await _jbnRequestOnce('PUT', '', payloadBuffer);
+
+            if (lastRes.ok) {
+                console.log('  ☁️  [Cloud DB] ✅ Đã sao lưu dữ liệu mới lên JSONBin.io!');
+                return;
             }
-        });
-        req.on('error', (err) => {
-            console.error('  ⚠️  [Cloud DB] Lỗi lưu lên JSONBin:', err.message);
-        });
-        req.write(payload);
-        req.end();
+
+            if (lastRes.hard) {
+                let reason = `PUT /b/${JSONBIN_BIN_ID} trả về HTTP ${lastRes.status}`;
+                if (lastRes.status === 401) reason += ' → JSONBIN_API_KEY (X-Master-Key) SAI — kiểm tra file .env';
+                if (lastRes.status === 403) reason += ' → ⚠️ Rất hay gặp: BIN TRÊN DASHBOARD ĐÃ BỊ XÓA nhưng JSONBIN_BIN_ID trong .env vẫn là CŨ — hãy tạo bin mới và dán ID vào .env! Hoặc API key không thuộc tài khoản sở hữu bin.';
+                if (lastRes.status === 404) reason += ' → JSONBIN_BIN_ID không tồn tại (bạn đã xóa bin cũ rồi).';
+                if (lastRes.data?.message) reason += ` — JSONBin message: ${lastRes.data.message}`;
+                _disableHard(jbnState, 'JSONBin', reason);
+                return;
+            }
+            console.warn(`  ⚠️  [Cloud DB] Lần ${attempt}/${MAX_ATTEMPTS} upload thất bại: ${lastRes.error || `HTTP ${lastRes.status}` || lastRes.body?.slice(0,120)}`);
+        }
+
+        _softFailCooldown(jbnState, 'JSONBin', `saveToCloudDB thất bại ${MAX_ATTEMPTS} lần liên tiếp: ${lastRes.error || `HTTP ${lastRes.status}` || 'Lỗi không xác định'}`);
     } catch (e) {
         console.error('  ⚠️  [Cloud DB] Exception saveToCloudDB:', e.message);
     }
@@ -734,7 +860,8 @@ function saveDB(data) {
             fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
             const legacyDB = path.join(__dirname, 'db.json');
             fs.writeFileSync(legacyDB, JSON.stringify(data, null, 2), 'utf8');
-            saveToCloudDB(data);
+            // Fire & forget (không await, không block UI ghi vào disk)
+            (async () => { try { await saveToCloudDB(data); } catch (e) { /* logged inside */ } })();
         } catch (e) {
             console.error('Lỗi ghi db.json:', e);
         }
@@ -1776,6 +1903,18 @@ const server = http.createServer(async (req, res) => {
     // 1. Tải và khôi phục 100% dữ liệu từ Cloud DB trước khi mở Cổng Server
     await syncFromCloudDB();
 
+    function _statusLine(name, iconOK, state, enabledFlag) {
+        if (!enabledFlag) return `  🔘 ${name}: ❌ Chưa cấu hình (local-only)`;
+        if (state.mode === 'hard-off') {
+            return `  🔘 ${name}: 🛑 BỊ TẮT VĨNH VIỄN (${(state.reason || '').slice(0, 90)})`;
+        }
+        if (state.mode === 'cooldown') {
+            const remainSec = Math.max(0, Math.ceil((state.disabledUntil - Date.now()) / 1000));
+            return `  🔘 ${name}: ⏸️ Tạm tắt (đang cooldown, còn ${remainSec}s)`;
+        }
+        return `  🔘 ${name}: ${iconOK} Đã bật & sẵn sàng`;
+    }
+
     // 2. Mở cổng Server sau khi đĩa local đã có dữ liệu hoàn chỉnh
     server.listen(PORT, '0.0.0.0', () => {
         console.log('===================================================');
@@ -1784,7 +1923,14 @@ const server = http.createServer(async (req, res) => {
         console.log(`  👉 Admin:     http://localhost:${PORT}/?admin=true`);
         console.log('  🔐 Đặt password qua biến môi trường ADMIN_PASSWORD');
         console.log(`  🔐 Password hiện tại: ${ADMIN_PASSWORD === 'youth2026!@#secure' ? 'MẶC ĐỊNH (nên đổi!)' : 'Đã tùy chỉnh ✓'}`);
-        console.log('  🛡️  [Cloud Restore] Bảo vệ dữ liệu 100% khi khởi động / redeploy');
+        console.log('');
+        console.log('  ⚙️  TRẠNG THÁI TÍCH HỢP:');
+        console.log(_statusLine('Cloudinary (ảnh/audio/video) ', '🟢', cldState, CLOUDINARY_ENABLED));
+        console.log(_statusLine('JSONBin    (backup DB cloud)', '🟢', jbnState, !!(JSONBIN_BIN_ID && JSONBIN_API_KEY)));
+        console.log('');
+        console.log('  🛡️  Smart Circuit Breaker:');
+        console.log('     HARD-lỗi 401/403/404 → TẮT VĨNH VIỄN cho đến restart');
+        console.log('     SOFT-lỗi mạng 5xx/timeout → Retry 2-3 lần → tạm tắt 5 phút');
         console.log('===================================================');
     });
 })();

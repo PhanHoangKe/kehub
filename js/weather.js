@@ -55,8 +55,8 @@ export function initWeatherEngine(onMoodChange) {
                 const isRaining = [51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96, 99].includes(code);
                 window.liveWeatherIsRaining = isRaining;
 
-                let weatherDesc = isDay ? "Nắng Ấm ☀️" : "Trời Quang 🌙";
-                if (isRaining) weatherDesc = "Có Mưa 🌧️";
+                let weatherDesc = isDay ? `Nắng Ấm <i class="fa-solid fa-sun" style="color:#fbbf24"></i>` : `Trời Quang <i class="fa-solid fa-moon" style="color:#cbd5e1"></i>`;
+                if (isRaining) weatherDesc = `Có Mưa <i class="fa-solid fa-cloud-rain" style="color:#38bdf8"></i>`;
 
                 if (weatherText) {
                     weatherText.textContent = `Việt Nam • ${temp}°C • ${weatherDesc}`;
@@ -68,7 +68,7 @@ export function initWeatherEngine(onMoodChange) {
             }
         } catch (e) {
             const hour = new Date().getHours();
-            let desc = (hour >= 6 && hour < 17) ? "Ban Ngày ☀️" : (hour >= 17 && hour < 19 ? "Hoàng Hôn 🌇" : "Ban Đêm 🌙");
+            let desc = (hour >= 6 && hour < 17) ? `Ban Ngày <i class="fa-solid fa-sun" style="color:#fbbf24"></i>` : (hour >= 17 && hour < 19 ? `Hoàng Hôn <i class="fa-solid fa-city" style="color:#f59e0b"></i>` : `Ban Đêm <i class="fa-solid fa-moon" style="color:#cbd5e1"></i>`);
             if (weatherText) weatherText.textContent = `Việt Nam • ${desc}`;
             if (currentActiveMood === 'auto') {
                 applyMoodTheme('auto');

@@ -303,8 +303,8 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                 const lastSeenMs = new Date(v.lastSeen).getTime();
                 const isOnline = (nowMs - lastSeenMs) <= 5 * 60 * 1000;
                 const statusBadge = isOnline
-                    ? `<span style="background:rgba(34,197,94,0.2);color:#4ade80;border:1px solid rgba(34,197,94,0.4);padding:2px 8px;border-radius:12px;font-size:0.75rem;font-weight:bold;">🟢 ĐANG ONLINE</span>`
-                    : `<span style="background:rgba(148,163,184,0.15);color:#94a3b8;padding:2px 8px;border-radius:12px;font-size:0.75rem;">⚪ Đã rời đi</span>`;
+                    ? `<span style="background:rgba(34,197,94,0.2);color:#4ade80;border:1px solid rgba(34,197,94,0.4);padding:2px 8px;border-radius:12px;font-size:0.75rem;font-weight:bold;"><i class="fa-solid fa-circle" style="color:#22c55e"></i> ĐANG ONLINE</span>`
+                    : `<span style="background:rgba(148,163,184,0.15);color:#94a3b8;padding:2px 8px;border-radius:12px;font-size:0.75rem;"><i class="fa-regular fa-circle" style="color:#94a3b8"></i> Đã rời đi</span>`;
 
                 const timeStr = new Date(v.lastSeen).toLocaleString('vi-VN');
                 const durationMin = Math.floor((v.durationSeconds || 0) / 60);
@@ -312,7 +312,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                 const durationText = durationMin > 0 ? `${durationMin} phút ${durationSec}s` : `${durationSec}s`;
 
                 const batteryStr = v.battery ? ` • 🔋 Pin: ${escapeHTML(v.battery)}` : '';
-                const networkStr = v.connection ? ` • 📶 Mạng: ${escapeHTML(v.connection.toUpperCase())}` : '';
+                const networkStr = v.connection ? ` • <i class="fa-solid fa-signal"></i> Mạng: ${escapeHTML(v.connection.toUpperCase())}` : '';
                 const screenStr = v.screen && v.screen !== '-' ? ` • 📐 Màn hình: ${escapeHTML(v.screen)} (x${v.dpr || 1})` : '';
 
                 const timelineHtml = (v.timelineLogs || []).map(log =>
@@ -324,27 +324,27 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                 ).join('');
 
                 const gmapBtn = (v.lat && v.lng)
-                    ? `<a href="https://www.google.com/maps?q=${v.lat},${v.lng}" target="_blank" style="background:#0284c7;color:#ffffff;padding:3px 10px;border-radius:6px;font-size:0.75rem;font-weight:bold;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-left:6px;box-shadow:0 0 10px rgba(2,132,199,0.5);"><i class="fa-solid fa-map-location-dot"></i> 🗺️ Mở Google Maps</a>`
+                    ? `<a href="https://www.google.com/maps?q=${v.lat},${v.lng}" target="_blank" style="background:#0284c7;color:#ffffff;padding:3px 10px;border-radius:6px;font-size:0.75rem;font-weight:bold;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-left:6px;box-shadow:0 0 10px rgba(2,132,199,0.5);"><i class="fa-solid fa-map-location-dot"></i> <i class="fa-solid fa-map"></i> Mở Google Maps</a>`
                     : '';
 
                 const isGpsExact = v.isGps || (v.accuracy && v.accuracy <= 500);
                 const geoBadge = isGpsExact
-                    ? `<span style="background:rgba(34,197,94,0.2);color:#4ade80;border:1px solid rgba(34,197,94,0.4);padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:bold;">🎯 GPS Chuẩn Xóm/Xã (Khách đã cấp quyền)</span>`
+                    ? `<span style="background:rgba(34,197,94,0.2);color:#4ade80;border:1px solid rgba(34,197,94,0.4);padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:bold;"><i class="fa-solid fa-bullseye"></i> GPS Chuẩn Xóm/Xã (Khách đã cấp quyền)</span>`
                     : (v.lat && v.lng
-                        ? `<span style="background:rgba(234,179,8,0.2);color:#facc15;border:1px solid rgba(234,179,8,0.4);padding:2px 8px;border-radius:10px;font-size:0.72rem;">📶 Ước Tính IP Mạng (Chưa có GPS)</span>`
-                        : `<span style="background:rgba(148,163,184,0.15);color:#94a3b8;padding:2px 8px;border-radius:10px;font-size:0.72rem;">❓ Vị Trí Chưa Rõ</span>`);
+                        ? `<span style="background:rgba(234,179,8,0.2);color:#facc15;border:1px solid rgba(234,179,8,0.4);padding:2px 8px;border-radius:10px;font-size:0.72rem;"><i class="fa-solid fa-signal"></i> Ước Tính IP Mạng (Chưa có GPS)</span>`
+                        : `<span style="background:rgba(148,163,184,0.15);color:#94a3b8;padding:2px 8px;border-radius:10px;font-size:0.72rem;"><i class="fa-solid fa-circle-question"></i> Vị Trí Chưa Rõ</span>`);
 
                 const locationTitle = isGpsExact
-                    ? `<span style="color:#4ade80;font-weight:bold;">${escapeHTML(v.city || 'Xã / Tỉnh')} (🎯 GPS Chính Xác)</span>`
+                    ? `<span style="color:#4ade80;font-weight:bold;">${escapeHTML(v.city || 'Xã / Tỉnh')} (<i class="fa-solid fa-bullseye"></i> GPS Chính Xác)</span>`
                     : `<span style="color:#facc15;font-weight:bold;">${escapeHTML(v.city || 'Ước tính IP')} (Chưa có GPS)</span>`;
 
                 const accuracyStr = v.accuracy ? `<span style="color:#4ade80;"> • Sai số: ~${v.accuracy}m</span>` : '';
 
                 const deleteBtnHtml = `<button type="button" class="btn-delete-visitor" style="background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.4);padding:3px 10px;border-radius:6px;font-size:0.75rem;font-weight:bold;cursor:pointer;margin-left:8px;" title="Xóa nhật ký khách này"><i class="fa-solid fa-trash-can"></i> Xóa</button>`;
 
-                const gpuStr = v.gpu ? ` • 🎮 GPU: ${escapeHTML(v.gpu)}` : '';
-                const cpuStr = v.cpuCores ? ` • ⚡ Chip: ${v.cpuCores} Nhân CPU` : '';
-                const ramStr = v.ramGB ? ` • 💾 RAM: ${v.ramGB}GB` : '';
+                const gpuStr = v.gpu ? ` • <i class="fa-solid fa-gamepad"></i> GPU: ${escapeHTML(v.gpu)}` : '';
+                const cpuStr = v.cpuCores ? ` • <i class="fa-solid fa-bolt"></i> Chip: ${v.cpuCores} Nhân CPU` : '';
+                const ramStr = v.ramGB ? ` • <i class="fa-solid fa-floppy-disk"></i> RAM: ${v.ramGB}GB` : '';
 
                 card.innerHTML = `
                     <div class="admin-item-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:4px;">
@@ -352,19 +352,19 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                         <span style="font-size:0.78rem;color:#94a3b8;"><i class="fa-solid fa-clock"></i> ${timeStr}</span>
                     </div>
                     <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:6px;font-size:0.82rem;color:#cbd5e1;background:rgba(0,0,0,0.25);padding:10px;border-radius:8px;margin-bottom:8px;">
-                        <div>🌐 <strong>IP Thật:</strong> <span style="font-family:monospace;color:#facc15;">${escapeHTML(v.ip)}</span></div>
-                        <div>📍 <strong>🏡 Vị trí chi tiết:</strong> ${locationTitle} ${v.lat && v.lng ? `<br><small style="color:#38bdf8;">Tọa độ: ${v.lat.toFixed(5)}, ${v.lng.toFixed(5)}${accuracyStr}</small>` : ''}</div>
-                        <div>📱 <strong>Tên Thiết bị:</strong> <span style="color:#38bdf8;font-weight:bold;">${escapeHTML(v.device)}</span> • ${escapeHTML(v.os)}</div>
-                        <div>💻 <strong>Trình duyệt:</strong> ${escapeHTML(v.browser)}</div>
-                        <div>🔗 <strong>Nguồn đến (Referrer):</strong> <span style="color:#38bdf8;word-break:break-all;">${escapeHTML(v.referrer)}</span></div>
-                        <div>⏱️ <strong>Thời gian ở lại:</strong> <span style="color:#4ade80;font-weight:bold;">${durationText}</span> (${v.clicks || 1} lượt click)</div>
+                        <div><i class="fa-solid fa-globe"></i> <strong>IP Thật:</strong> <span style="font-family:monospace;color:#facc15;">${escapeHTML(v.ip)}</span></div>
+                        <div><i class="fa-solid fa-location-dot"></i> <strong><i class="fa-solid fa-house"></i> Vị trí chi tiết:</strong> ${locationTitle} ${v.lat && v.lng ? `<br><small style="color:#38bdf8;">Tọa độ: ${v.lat.toFixed(5)}, ${v.lng.toFixed(5)}${accuracyStr}</small>` : ''}</div>
+                        <div><i class="fa-solid fa-mobile-screen-button"></i> <strong>Tên Thiết bị:</strong> <span style="color:#38bdf8;font-weight:bold;">${escapeHTML(v.device)}</span> • ${escapeHTML(v.os)}</div>
+                        <div><i class="fa-solid fa-laptop"></i> <strong>Trình duyệt:</strong> ${escapeHTML(v.browser)}</div>
+                        <div><i class="fa-solid fa-link"></i> <strong>Nguồn đến (Referrer):</strong> <span style="color:#38bdf8;word-break:break-all;">${escapeHTML(v.referrer)}</span></div>
+                        <div><i class="fa-solid fa-stopwatch"></i> <strong>Thời gian ở lại:</strong> <span style="color:#4ade80;font-weight:bold;">${durationText}</span> (${v.clicks || 1} lượt click)</div>
                         <div style="grid-column:1 / -1;font-size:0.78rem;color:#94a3b8;border-top:1px solid rgba(255,255,255,0.06);padding-top:4px;">
-                            ⚙️ <strong>Phần cứng chuyên sâu:</strong> ${screenStr}${networkStr}${batteryStr}${gpuStr}${cpuStr}${ramStr}
+                            <i class="fa-solid fa-gear"></i> <strong>Phần cứng chuyên sâu:</strong> ${screenStr}${networkStr}${batteryStr}${gpuStr}${cpuStr}${ramStr}
                         </div>
                     </div>
                     <details style="font-size:0.8rem;color:#94a3b8;cursor:pointer;">
                         <summary style="font-weight:bold;color:#a855f7;outline:none;margin-bottom:4px;">
-                            📜 Xem Nhật Ký Thao Tác Chi Tiết (${(v.timelineLogs || []).length} bước)
+                            <i class="fa-solid fa-scroll"></i> Xem Nhật Ký Thao Tác Chi Tiết (${(v.timelineLogs || []).length} bước)
                         </summary>
                         <div style="background:rgba(15,23,42,0.6);padding:8px;border-radius:6px;margin-top:4px;max-height:160px;overflow-y:auto;">
                             ${timelineHtml || '<div style="font-size:0.75rem;color:#64748b;">Chưa có thao tác thêm</div>'}
@@ -376,7 +376,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                 if (btnDelete) {
                     btnDelete.addEventListener('click', async (evt) => {
                         evt.stopPropagation();
-                        if (confirm(`🗑️ Bạn có chắc muốn xóa nhật ký của Khách (IP: ${v.ip})?`)) {
+                        if (confirm(`Bạn có chắc muốn xóa nhật ký của Khách (IP: ${v.ip})?`)) {
                             try {
                                 const token = localStorage.getItem('admin_token');
                                 const headers = { 'Content-Type': 'application/json' };
@@ -390,7 +390,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                                 });
                                 const resData = await res.json();
                                 if (resData.success) {
-                                    showToast("Đã xóa nhật ký khách thành công! 🗑️", "info");
+                                    showToast(`Đã xóa nhật ký khách thành công! <i class="fa-solid fa-trash-can"></i>`, "info");
                                     loadAdminVisitorsList();
                                 } else {
                                     alert(resData.message || "Không thể xóa nhật ký.");
@@ -781,7 +781,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                     mediaHTML = `
                         <div class="anon-media-attach lost">
                             <i class="fa-solid fa-circle-exclamation"></i>
-                            <div><strong>⚠️ File ${escapeHTML(type)} đã bị MẤT</strong><br>
+                            <div><strong><i class="fa-solid fa-triangle-exclamation" style="color:#eab308"></i> File ${escapeHTML(type)} đã bị MẤT</strong><br>
                             <small style="opacity:.6;">URL lưu file không còn tồn tại và DB cũng không có bản dự phòng.</small></div>
                         </div>`;
                 }
@@ -834,7 +834,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                                     adminAnonymousList.innerHTML = '<div style="text-align:center;color:var(--adm-text-3);padding:40px;font-size:0.85rem;"><i class="fa-solid fa-inbox" style="font-size:2rem;display:block;margin-bottom:10px;opacity:0.3;"></i>Chưa có tin nhắn ẩn danh nào.</div>';
                                 }
                                 _updateAnonBadge(result.remaining ?? 0);
-                                showToast('Đã xóa tin nhắn ẩn danh! 🗑️');
+                                showToast('Đã xóa tin nhắn ẩn danh! <i class="fa-solid fa-trash-can"></i>');
                             }, 220);
                         } else {
                             div.style.opacity = '1';
@@ -1138,7 +1138,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                     const inputName = card.querySelector('.adm-map-name');
                     const nameVal = inputName ? inputName.value.trim() : '';
                     if (!nameVal) {
-                        showToast("⚠️ Vui lòng nhập tên địa điểm trước khi tìm tọa độ!");
+                        showToast(`<i class="fa-solid fa-triangle-exclamation" style="color:#eab308"></i> Vui lòng nhập tên địa điểm trước khi tìm tọa độ!`);
                         return;
                     }
                     btnGeocode.disabled = true;
@@ -1154,9 +1154,9 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                             const inputLng = card.querySelector('.adm-map-lng');
                             if (inputLat) inputLat.value = lat;
                             if (inputLng) inputLng.value = lon;
-                            showToast(`📍 Đã tự động tìm thấy tọa độ: ${lat}, ${lon}`);
+                            showToast(`<i class="fa-solid fa-location-dot"></i> Đã tự động tìm thấy tọa độ: ${lat}, ${lon}`);
                         } else {
-                            showToast("⚠️ Không tìm thấy tọa độ tự động. Bạn có thể tự nhập Lat/Lng thủ công!");
+                            showToast(`<i class="fa-solid fa-triangle-exclamation" style="color:#eab308"></i> Không tìm thấy tọa độ tự động. Bạn có thể tự nhập Lat/Lng thủ công!`);
                         }
                     } catch (e) {
                         showToast("Lỗi kết nối dịch vụ tìm tọa độ.");
@@ -1546,7 +1546,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                         }
                     }
                     state.playlist = newPlaylist;
-                    showToast("Đã lưu Playlist Âm Nhạc! 🎵✨");
+                    showToast(`Đã lưu Playlist Âm Nhạc! <i class="fa-solid fa-music"></i>✨`);
                 }
                 else if (action === 'favorites') {
                     const inputFavMusic = document.getElementById('inputFavMusic');
@@ -1591,7 +1591,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                         }
                     }
                     state.journey = newJourney;
-                    showToast("Đã lưu Dấu Chân Thanh Xuân! 📍✨");
+                    showToast(`Đã lưu Dấu Chân Thanh Xuân! <i class="fa-solid fa-location-dot"></i>✨`);
                 }
                 else if (action === 'memoryMap') {
                     const mapNames = document.querySelectorAll('.adm-map-name');
@@ -1613,7 +1613,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                         }
                     }
                     state.mapLocations = newMapLocations;
-                    showToast("Đã lưu Bản Đồ Kỷ Niệm! 🗺️✨");
+                    showToast(`Đã lưu Bản Đồ Kỷ Niệm! <i class="fa-solid fa-map"></i>✨`);
                 }
                 else if (action === 'gallery') {
                     const galFiles = document.querySelectorAll('.adm-gal-file');

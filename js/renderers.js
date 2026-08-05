@@ -226,7 +226,7 @@ function _renderLightboxSlide(idx) {
         img.onerror = () => { img.src = fallback; };
         img.onload = () => { img.style.opacity = '1'; };
     }
-    const fullCaption = `${item.caption || 'Khoảnh khắc'}${item.date ? ` • ${item.date}` : ''}${item.location ? ` • 📍 ${item.location}` : ''}`;
+    const fullCaption = `${item.caption || 'Khoảnh khắc'}${item.date ? ` • ${item.date}` : ''}${item.location ? ` • <i class="fa-solid fa-location-dot"></i> ${item.location}` : ''}`;
     if (capElem) capElem.textContent = fullCaption;
     if (counter) counter.textContent = `${idx + 1} / ${_galleryAllItems.length}`;
 }

@@ -1,0 +1,16 @@
+# AI Coding Guidelines for TikTok/Youth Memories Project
+
+## Icons & Graphics
+- **STRICT RULE**: Do NOT use 2D OS default emojis (e.g., 🏡, 🗑️, 🌐, 📍, 📱) anywhere in the UI or codebase strings.
+- **Use FontAwesome Instead**: All icons must be rendered using FontAwesome (e.g., `<i class="fa-solid fa-house"></i>`).
+- **Styling**: When an icon needs color or a 3D-like effect, apply CSS directly to the FontAwesome tag (e.g., `style="color: #22c55e;"` or through CSS classes).
+- **Why**: Native emojis render inconsistently across devices, look pixelated, and break the professional design aesthetic. FontAwesome icons are sharp (vector/3D code based) and customizable.
+
+## String Wrapping
+- Always be careful when passing HTML strings containing double quotes `"` into JavaScript functions (e.g., `showToast("<i class="fa-solid fa-check"></i>")`).
+- Use **backticks** (`` ` ``) for wrapping strings that contain HTML to avoid syntax errors:
+  - Correct: `` showToast(`<i class="fa-solid fa-check"></i> Thành công!`) ``
+  - Incorrect: `showToast("<i class="fa-solid fa-check"></i> Lỗi cú pháp")`
+
+## General UI
+- Use modern, sharp, and dynamic 3D-like elements. Do not fallback to plain static 2D emojis.

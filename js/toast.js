@@ -6,7 +6,7 @@ export function showToast(msg) {
     const toastMessage = document.getElementById('toastMessage');
     if (!toastNotification || !toastMessage) return;
     
-    toastMessage.textContent = msg;
+    toastMessage.innerHTML = msg;
     toastNotification.classList.add('show');
     
     setTimeout(() => {

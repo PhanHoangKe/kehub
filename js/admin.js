@@ -676,29 +676,19 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
     window.openAdminModal = openAdminModal;
     window.showAdminLoginModal = promptAdminLogin;
 
-    // Verify token với server thay vì chỉ check localStorage
-    // → nút cài đặt chỉ hiện khi session còn hợp lệ
-    (async () => {
-        const hasAdminToken = Boolean(localStorage.getItem('admin_token'));
-        if (!hasAdminToken && !isParamAdmin) {
-            if (btnCustomization) btnCustomization.style.display = 'none';
-            return;
-        }
-        // Ping server kiểm tra session còn sống không
-        const isValid = await checkAdminSession();
-        if (!isValid) {
-            // Token cũ/hết hạn → xóa localStorage, ẩn nút
-            localStorage.removeItem('admin_token');
-            if (btnCustomization) btnCustomization.style.display = 'none';
-            if (window.initAdminVisibility) window.initAdminVisibility();
-            return;
-        }
-        if (btnCustomization) {
+    // Hiện nút cài đặt khi có token HOẶC ?admin=true
+    // Việc verify session thực sự xảy ra bên trong openAdminModal()
+    // → không cần async verify ở đây, tránh race condition khi server restart
+    const hasAdminToken = Boolean(localStorage.getItem('admin_token'));
+    if (btnCustomization) {
+        if (hasAdminToken || isParamAdmin) {
             btnCustomization.style.display = 'inline-flex';
-            btnCustomization.addEventListener('click', openAdminModal);
+        } else {
+            btnCustomization.style.display = 'none';
         }
+        btnCustomization.addEventListener('click', openAdminModal);
         if (isParamAdmin) setTimeout(() => openAdminModal(), 300);
-    })();
+    }
 
     async function fetchAndRenderAnonymousMessages() {
         const adminAnonymousList = document.getElementById('adminAnonymousList');

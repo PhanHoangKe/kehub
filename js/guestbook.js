@@ -635,7 +635,7 @@ export function initGuestbookEngine() {
             anonPreviewInner.appendChild(video);
         }
 
-        anonMediaPreview.style.display = 'flex';
+        anonMediaPreview.classList.add('is-visible');
         currentMediaData = dataUrl;
         currentMediaType = type;
         updateSubmitState();
@@ -644,7 +644,7 @@ export function initGuestbookEngine() {
     function clearMedia() {
         currentMediaData = null;
         currentMediaType = null;
-        if (anonMediaPreview)  anonMediaPreview.style.display  = 'none';
+        if (anonMediaPreview)  anonMediaPreview.classList.remove('is-visible');
         if (anonPreviewInner)  anonPreviewInner.innerHTML = '';
         if (anonFileInput)     anonFileInput.value = '';
         updateSubmitState();

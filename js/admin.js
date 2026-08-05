@@ -412,18 +412,18 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
     // Admin Tabs Switching & Smart Tab-Scoped Polling
     let _visitorPollTimer = null;
 
-    // Mapping tabId → header title + icon
+    // Mapping tabId → header title + icon + action buttons HTML
     const TAB_META = {
-        tabOverview:   { icon: 'fa-chart-line',         label: 'Tổng Quan — Bảng Giám Sát' },
-        tabVisitors:   { icon: 'fa-user-secret',        label: 'Khách Viếng Thăm — Realtime' },
-        tabAnonymous:  { icon: 'fa-envelope-open-text', label: 'Hộp Thư Ẩn Danh' },
-        tabProfile:    { icon: 'fa-user-pen',           label: 'Hồ Sơ & Thông Tin Cá Nhân' },
-        tabGallery:    { icon: 'fa-images',             label: 'Thư Viện Ảnh Kỷ Niệm' },
-        tabMusic:      { icon: 'fa-music',              label: 'Playlist Âm Nhạc' },
-        tabFavorites:  { icon: 'fa-heart',              label: 'Gu & Sở Thích Cá Nhân' },
-        tabMilestones: { icon: 'fa-map-pin',            label: 'Dấu Chân Thanh Xuân' },
-        tabMemoryMap:  { icon: 'fa-map-location-dot',   label: 'Bản Đồ Kỷ Niệm' },
-        tabReactions:  { icon: 'fa-icons',              label: 'Icon Meme Reactions' },
+        tabOverview:   { icon: 'fa-chart-line',         label: 'Tổng Quan',          actions: '' },
+        tabVisitors:   { icon: 'fa-user-secret',        label: 'Khách Viếng Thăm',   actions: '<button id="btnRefreshVisitors2" class="btn-backup-export"><i class="fa-solid fa-rotate"></i> Làm Mới</button>' },
+        tabAnonymous:  { icon: 'fa-envelope-open-text', label: 'Hộp Thư Ẩn Danh',   actions: '' },
+        tabProfile:    { icon: 'fa-user-pen',           label: 'Hồ Sơ',             actions: '<button class="btn-tab-save adm-header-save-btn" data-tab-action="profile"><i class="fa-solid fa-floppy-disk"></i> Lưu Hồ Sơ</button>' },
+        tabGallery:    { icon: 'fa-images',             label: 'Thư Viện Ảnh',       actions: '<button class="btn-add-item2" onclick="document.getElementById(\'btnAddGalleryPhoto\').click()"><i class="fa-solid fa-plus"></i> Thêm</button><button class="btn-tab-save adm-header-save-btn" data-tab-action="gallery"><i class="fa-solid fa-floppy-disk"></i> Lưu</button>' },
+        tabMusic:      { icon: 'fa-music',              label: 'Playlist',            actions: '<button class="btn-add-item2" onclick="document.getElementById(\'btnAddPlaylistTrack\').click()"><i class="fa-solid fa-plus"></i> Thêm</button><button class="btn-tab-save adm-header-save-btn" data-tab-action="music"><i class="fa-solid fa-floppy-disk"></i> Lưu</button>' },
+        tabFavorites:  { icon: 'fa-heart',              label: 'Sở Thích',            actions: '<button class="btn-tab-save adm-header-save-btn" data-tab-action="favorites"><i class="fa-solid fa-floppy-disk"></i> Lưu</button>' },
+        tabMilestones: { icon: 'fa-map-pin',            label: 'Dấu Chân',            actions: '<button class="btn-add-item2" onclick="document.getElementById(\'btnAddJourneyCard\').click()"><i class="fa-solid fa-plus"></i> Thêm</button><button class="btn-tab-save adm-header-save-btn" data-tab-action="milestones"><i class="fa-solid fa-floppy-disk"></i> Lưu</button>' },
+        tabMemoryMap:  { icon: 'fa-map-location-dot',   label: 'Bản Đồ',             actions: '<button class="btn-add-item2" onclick="document.getElementById(\'btnAddMapLocation\').click()"><i class="fa-solid fa-plus"></i> Thêm</button><button class="btn-tab-save adm-header-save-btn" data-tab-action="memoryMap"><i class="fa-solid fa-floppy-disk"></i> Lưu</button>' },
+        tabReactions:  { icon: 'fa-icons',              label: 'Icon Meme',           actions: '<button class="btn-tab-save adm-header-save-btn" data-tab-action="reactions"><i class="fa-solid fa-floppy-disk"></i> Lưu</button>' },
     };
 
     function switchTab(targetTab) {
@@ -440,30 +440,34 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
         const targetContent = document.getElementById(targetTab);
         if (targetContent) targetContent.classList.add('active');
 
-        // Update header title
+        // Update header: title + action buttons
         const meta = TAB_META[targetTab];
         const headerTitle = document.getElementById('admHeaderTitle');
+        const admHeaderActions = document.getElementById('admHeaderActions');
         if (headerTitle && meta) {
             headerTitle.innerHTML = `<i class="fa-solid ${meta.icon}"></i> ${meta.label}`;
+        }
+        if (admHeaderActions && meta) {
+            admHeaderActions.innerHTML = meta.actions || '';
         }
 
         // Stop old visitor poll
         if (_visitorPollTimer) { clearInterval(_visitorPollTimer); _visitorPollTimer = null; }
 
-        // Start visitor realtime poll when on visitor tab
         if (targetTab === 'tabVisitors') {
             try { loadAdminVisitorsList(); } catch (err) {}
             _visitorPollTimer = setInterval(() => {
                 try { loadAdminVisitorsList(); } catch (err) {}
             }, 2000);
+            // Wire up refresh button injected into header
+            const btn2 = document.getElementById('btnRefreshVisitors2');
+            if (btn2) btn2.addEventListener('click', loadAdminVisitorsList, { once: true });
         }
 
-        // Load anonymous on enter
         if (targetTab === 'tabAnonymous') {
             try { fetchAndRenderAnonymousMessages(); } catch (err) {}
         }
 
-        // Update live clock on overview
         if (targetTab === 'tabOverview') {
             startLiveClock();
         } else {

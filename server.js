@@ -957,6 +957,52 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
+    // ── DELETE /api/anonymous/:id — Xóa tin nhắn ẩn danh (Admin only) ───────
+    if (pathname.startsWith('/api/anonymous/') && req.method === 'DELETE') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) {
+            jsonResponse(res, 401, { success: false, message: 'Yêu cầu đăng nhập Admin' });
+            return;
+        }
+        try {
+            const msgId = pathname.replace('/api/anonymous/', '').trim();
+            if (!msgId) {
+                jsonResponse(res, 400, { success: false, message: 'Thiếu ID tin nhắn' });
+                return;
+            }
+            const db = getDB();
+            if (!db.anonymousMessages) db.anonymousMessages = [];
+            const before = db.anonymousMessages.length;
+            // ID có thể là số (Date.now()) hoặc string
+            db.anonymousMessages = db.anonymousMessages.filter(
+                m => String(m.id) !== String(msgId)
+            );
+            if (db.anonymousMessages.length === before) {
+                jsonResponse(res, 404, { success: false, message: 'Không tìm thấy tin nhắn' });
+                return;
+            }
+            await saveDB(db);
+            jsonResponse(res, 200, { success: true, remaining: db.anonymousMessages.length });
+        } catch (e) {
+            console.error('Lỗi DELETE /api/anonymous:', e.message);
+            jsonResponse(res, 500, { success: false, message: 'Lỗi server' });
+        }
+        return;
+    }
+
+    // ── GET /api/anonymous/count — Số tin nhắn ẩn danh (Admin only) ──────────
+    if (pathname === '/api/anonymous/count' && req.method === 'GET') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) {
+            jsonResponse(res, 401, { success: false, message: 'Yêu cầu đăng nhập Admin' });
+            return;
+        }
+        const db = getDB();
+        const count = (db.anonymousMessages || []).length;
+        jsonResponse(res, 200, { success: true, count });
+        return;
+    }
+
     // ── POST /api/wishes — Gửi lời chúc (public, rate-limited) ──────────────
     if (pathname === '/api/wishes' && req.method === 'POST') {
         try {

@@ -699,18 +699,21 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
 
             adminAnonymousList.innerHTML = '';
             if (msgs.length === 0) {
-                adminAnonymousList.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;font-size:0.88rem;">Chưa có tin nhắn ẩn danh nào.</div>';
+                adminAnonymousList.innerHTML = '<div style="text-align:center;color:var(--adm-text-3);padding:40px;font-size:0.85rem;"><i class="fa-solid fa-inbox" style="font-size:2rem;display:block;margin-bottom:10px;opacity:0.3;"></i>Chưa có tin nhắn ẩn danh nào.</div>';
+                _updateAnonBadge(0);
                 return;
             }
+
+            _updateAnonBadge(msgs.length);
 
             msgs.slice().reverse().forEach(msg => {
                 const div = document.createElement('div');
                 div.className = 'anon-message-item';
+                div.dataset.msgId = msg.id;
                 const timeStr = new Date(msg.createdAt).toLocaleString('vi-VN');
 
                 // Render media attachment nếu có
                 let mediaHTML = '';
-                // Ưu tiên mediaUrl (file đã upload), fallback sang mediaData (base64) nếu chưa có URL
                 const mediaSrc = msg.mediaUrl || msg.mediaData || null;
                 if (mediaSrc) {
                     const type = msg.mediaType || '';
@@ -738,10 +741,54 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                 }
 
                 div.innerHTML = `
-                    <div class="anon-message-time"><i class="fa-solid fa-clock"></i> ${timeStr}</div>
+                    <div class="anon-msg-header">
+                        <span class="anon-message-time"><i class="fa-solid fa-clock"></i> ${timeStr}</span>
+                        <button class="btn-anon-delete" data-id="${escapeHTML(String(msg.id))}" title="Xóa tin nhắn này">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
                     ${msg.message ? `<div class="anon-message-text">${escapeHTML(msg.message)}</div>` : ''}
                     ${mediaHTML}
                 `;
+
+                // Xử lý nút xóa
+                div.querySelector('.btn-anon-delete').addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const id = e.currentTarget.dataset.id;
+                    const t = localStorage.getItem('admin_token');
+                    const h = { 'Content-Type': 'application/json' };
+                    if (t) h['Authorization'] = `Bearer ${t}`;
+
+                    // Animate out
+                    div.style.transition = 'opacity 0.22s ease, transform 0.22s ease';
+                    div.style.opacity = '0';
+                    div.style.transform = 'translateX(16px)';
+
+                    try {
+                        const r = await fetch(`/api/anonymous/${id}`, { method: 'DELETE', headers: h, credentials: 'include' });
+                        const result = await r.json();
+                        if (result.success) {
+                            setTimeout(() => {
+                                div.remove();
+                                // Nếu hết tin thì hiện placeholder
+                                if (adminAnonymousList.children.length === 0) {
+                                    adminAnonymousList.innerHTML = '<div style="text-align:center;color:var(--adm-text-3);padding:40px;font-size:0.85rem;"><i class="fa-solid fa-inbox" style="font-size:2rem;display:block;margin-bottom:10px;opacity:0.3;"></i>Chưa có tin nhắn ẩn danh nào.</div>';
+                                }
+                                _updateAnonBadge(result.remaining ?? 0);
+                                showToast('Đã xóa tin nhắn ẩn danh! 🗑️');
+                            }, 220);
+                        } else {
+                            div.style.opacity = '1';
+                            div.style.transform = '';
+                            showToast('Không thể xóa: ' + (result.message || 'Lỗi'));
+                        }
+                    } catch {
+                        div.style.opacity = '1';
+                        div.style.transform = '';
+                        showToast('Lỗi kết nối khi xóa!');
+                    }
+                });
+
                 adminAnonymousList.appendChild(div);
             });
         } catch (e) {
@@ -1682,6 +1729,114 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             }
         });
     }
+
+    // ── Badge + Realtime Notification cho Hộp Thư Ẩn ─────────────────────────
+
+    function _updateAnonBadge(count) {
+        const badge = document.getElementById('anonNavBadge');
+        if (!badge) return;
+        if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.style.display = 'inline-block';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    // Xin quyền notification ngay khi admin đăng nhập
+    function requestNotificationPermission() {
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    }
+
+    function sendAnonNotification(count) {
+        if (!('Notification' in window)) return;
+        if (Notification.permission !== 'granted') return;
+        const n = new Notification('📬 Tin nhắn ẩn danh mới!', {
+            body: `Bạn có ${count} tin nhắn ẩn danh chưa đọc.`,
+            icon: '/assets/announcer.jpg',
+            tag:  'anon-msg',       // tag giống nhau → replace thay vì stack
+            renotify: true,
+        });
+        // Click vào notification → mở tab Hộp Thư Ẩn
+        n.onclick = () => {
+            window.focus();
+            if (window.openAdminModal) {
+                window.openAdminModal().then(() => switchTab('tabAnonymous'));
+            }
+            n.close();
+        };
+    }
+
+    // Polling mỗi 30s để kiểm tra tin mới — chỉ chạy khi admin đang login
+    let _anonPollTimer = null;
+    let _lastKnownAnonCount = null;   // null = chưa biết (lần đầu)
+
+    function startAnonPolling() {
+        if (_anonPollTimer) return;   // đã chạy
+        _anonPollTimer = setInterval(async () => {
+            const token = localStorage.getItem('admin_token');
+            if (!token) { stopAnonPolling(); return; }
+            try {
+                const res = await fetch('/api/anonymous/count', {
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    credentials: 'include',
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                const count = data.count ?? 0;
+                _updateAnonBadge(count);
+
+                // Chỉ thông báo khi count tăng lên so với lần trước
+                if (_lastKnownAnonCount !== null && count > _lastKnownAnonCount) {
+                    sendAnonNotification(count);
+                    // Đẩy vào activity feed
+                    if (window._admPushFeed) {
+                        window._admPushFeed(
+                            `Tin nhắn ẩn danh mới (tổng: ${count})`,
+                            'var(--adm-pink)'
+                        );
+                    }
+                    // Nếu đang ở tab Anonymous thì reload luôn
+                    const anonTab = document.getElementById('tabAnonymous');
+                    if (anonTab && anonTab.classList.contains('active')) {
+                        try { fetchAndRenderAnonymousMessages(); } catch {}
+                    }
+                }
+                _lastKnownAnonCount = count;
+            } catch { /* offline */ }
+        }, 30_000);   // 30 giây
+    }
+
+    function stopAnonPolling() {
+        if (_anonPollTimer) { clearInterval(_anonPollTimer); _anonPollTimer = null; }
+    }
+
+    // Bắt đầu polling + xin quyền notification ngay sau khi modal mở
+    // (openAdminModal() gọi switchTab → cần chạy sau khi user đã auth)
+    const _origOpenAdminModal = window.openAdminModal;
+    window.openAdminModal = async function(...args) {
+        const result = await _origOpenAdminModal(...args);
+        requestNotificationPermission();
+        startAnonPolling();
+        // Lần đầu: lấy count ngay để hiện badge
+        try {
+            const token = localStorage.getItem('admin_token');
+            if (token) {
+                const res = await fetch('/api/anonymous/count', {
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    credentials: 'include',
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    _lastKnownAnonCount = data.count ?? 0;
+                    _updateAnonBadge(_lastKnownAnonCount);
+                }
+            }
+        } catch {}
+        return result;
+    };
 }
 
 function updateCapsuleStatusDOM(state, elem) {

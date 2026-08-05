@@ -1,10 +1,10 @@
-/**
- * admin.js - Trung Tâm Quản Lý Admin Kế (Quản lý không giới hạn Ảnh, Dấu Chân Thanh Xuân & Playlist)
+﻿/**
+ * admin.js - Trung TĂ¢m Quáº£n LĂ½ Admin Káº¿ (Quáº£n lĂ½ khĂ´ng giá»›i háº¡n áº¢nh, Dáº¥u ChĂ¢n Thanh XuĂ¢n & Playlist)
  */
 import { escapeHTML, KE_CONFIG } from './config.js';
 import { showToast } from './toast.js';
 
-// ── Session cache trong memory ─────────────────────────────────────────────
+// â”€â”€ Session cache trong memory â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let _adminAuthenticated = false;
 
 async function checkAdminSession() {
@@ -23,10 +23,10 @@ async function checkAdminSession() {
     return _adminAuthenticated;
 }
 
-// Hiển thị modal đăng nhập và trả về Promise<boolean>
+// Hiá»ƒn thá»‹ modal Ä‘Äƒng nháº­p vĂ  tráº£ vá» Promise<boolean>
 function promptAdminLogin() {
     return new Promise((resolve) => {
-        // Tạo modal login nếu chưa có
+        // Táº¡o modal login náº¿u chÆ°a cĂ³
         let loginModal = document.getElementById('adminLoginModal');
         if (!loginModal) {
             loginModal = document.createElement('div');
@@ -43,8 +43,8 @@ function promptAdminLogin() {
                             <i class="fa-solid fa-shield-halved"></i>
                         </div>
                         <div>
-                            <h3 class="admin-login-title">Khu Vực Admin</h3>
-                            <p class="admin-login-sub">Chỉ dành cho chủ sở hữu</p>
+                            <h3 class="admin-login-title">Khu Vá»±c Admin</h3>
+                            <p class="admin-login-sub">Chá»‰ dĂ nh cho chá»§ sá»Ÿ há»¯u</p>
                         </div>
                     </div>
 
@@ -54,12 +54,12 @@ function promptAdminLogin() {
                     <!-- Body -->
                     <div class="admin-login-body">
                         <label class="admin-login-label">
-                            <i class="fa-solid fa-lock"></i> Mật khẩu Admin
+                            <i class="fa-solid fa-lock"></i> Máº­t kháº©u Admin
                         </label>
                         <div class="admin-password-wrap">
                             <input type="password" id="adminPasswordInput"
                                    class="admin-login-input"
-                                   placeholder="Nhập mật khẩu của bạn..."
+                                   placeholder="Nháº­p máº­t kháº©u cá»§a báº¡n..."
                                    autocomplete="current-password" />
                             <button type="button" id="adminTogglePassword" class="admin-toggle-eye" tabindex="-1">
                                 <i class="fa-solid fa-eye"></i>
@@ -71,11 +71,11 @@ function promptAdminLogin() {
                     <!-- Footer -->
                     <div class="admin-login-footer">
                         <button id="adminLoginCancel" class="admin-btn-cancel">
-                            Hủy
+                            Há»§y
                         </button>
                         <button id="adminLoginSubmit" class="admin-btn-submit">
                             <i class="fa-solid fa-arrow-right-to-bracket"></i>
-                            <span>Đăng Nhập</span>
+                            <span>ÄÄƒng Nháº­p</span>
                         </button>
                     </div>
                 </div>
@@ -112,7 +112,7 @@ function promptAdminLogin() {
             if (!password) return;
 
             btnOk.disabled = true;
-            btnOk.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang kiểm tra...';
+            btnOk.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Äang kiá»ƒm tra...';
 
             try {
                 const res = await fetch('/api/login', {
@@ -131,20 +131,20 @@ function promptAdminLogin() {
                     loginModal.classList.remove('active');
                     resolve(true);
                 } else {
-                    if (errorEl) { errorEl.textContent = data.message || 'Mật khẩu không đúng'; errorEl.style.display = 'block'; }
+                    if (errorEl) { errorEl.textContent = data.message || 'Máº­t kháº©u khĂ´ng Ä‘Ăºng'; errorEl.style.display = 'block'; }
                     btnOk.disabled = false;
-                    btnOk.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i><span>Đăng Nhập</span>';
+                    btnOk.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i><span>ÄÄƒng Nháº­p</span>';
                     if (input) input.value = '';
                 }
             } catch (e) {
                 if (errorEl) {
                     errorEl.textContent = e.message && e.message.includes('fetch')
-                        ? 'Không kết nối được server. Hãy chắc chắn server đang chạy tại http://localhost:3000'
-                        : 'Lỗi kết nối server';
+                        ? 'KhĂ´ng káº¿t ná»‘i Ä‘Æ°á»£c server. HĂ£y cháº¯c cháº¯n server Ä‘ang cháº¡y táº¡i http://localhost:3000'
+                        : 'Lá»—i káº¿t ná»‘i server';
                     errorEl.style.display = 'block';
                 }
                 btnOk.disabled = false;
-                btnOk.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i><span>Đăng Nhập</span>';
+                btnOk.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i><span>ÄÄƒng Nháº­p</span>';
             }
         }
 
@@ -166,7 +166,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
     const btnCloseModal = document.getElementById('btnCloseModal');
     const btnSaveSettings = document.getElementById('btnSaveSettings');
 
-    // Helper đọc file Base64
+    // Helper Ä‘á»c file Base64
     function readFileAsDataURL(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -215,13 +215,10 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
         });
     }
 
-    // Helper upload file lên Backend Node.js Server (Tối ưu giữ ảnh 100% không mất khi redeploy)
+    // Helper upload file lĂªn Backend â†’ Cloudinary (áº£nh/video/audio lÆ°u vÄ©nh viá»…n, khĂ´ng máº¥t khi redeploy)
     async function uploadFileToBackend(filename, base64Data) {
-        // Dành cho ảnh: Trả về trực tiếp Base64 Data URL để lưu thẳng vào db.json
-        // Giúp ảnh tồn tại vĩnh viễn 100% ngay cả khi Render xoá thư mục /uploads/
-        if (base64Data && base64Data.startsWith('data:image/')) {
-            return base64Data;
-        }
+        if (!base64Data) return base64Data;
+        // Gá»­i táº¥t cáº£ loáº¡i file (áº£nh, audio, video) lĂªn /api/upload â†’ server tá»± upload Cloudinary
         try {
             const token = localStorage.getItem('admin_token');
             const headers = { 'Content-Type': 'application/json' };
@@ -238,8 +235,9 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                 if (data.success && data.fileUrl) return data.fileUrl;
             }
         } catch (e) {
-            console.log('Upload server offline, sử dụng base64 local fallback.');
+            console.log('Upload server offline, sá»­ dá»¥ng base64 local fallback.');
         }
+        // Fallback: tráº£ vá» base64 náº¿u server lá»—i (dá»¯ liá»‡u váº«n Ä‘Æ°á»£c lÆ°u trong JSON)
         return base64Data;
     }
 
@@ -259,7 +257,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
 
             const res = await fetch('/api/admin/visitors', { headers, credentials: 'include' });
             if (!res.ok) {
-                adminVisitorsList.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;">Chưa xác thực Admin hoặc lỗi kết nối.</div>';
+                adminVisitorsList.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;">ChÆ°a xĂ¡c thá»±c Admin hoáº·c lá»—i káº¿t ná»‘i.</div>';
                 return;
             }
             const data = await res.json();
@@ -272,7 +270,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
 
             const visitors = data.visitors || [];
             if (visitors.length === 0) {
-                adminVisitorsList.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;">Chưa có khách viếng thăm nào.</div>';
+                adminVisitorsList.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;">ChÆ°a cĂ³ khĂ¡ch viáº¿ng thÄƒm nĂ o.</div>';
                 return;
             }
 
@@ -304,17 +302,17 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                 const lastSeenMs = new Date(v.lastSeen).getTime();
                 const isOnline = (nowMs - lastSeenMs) <= 5 * 60 * 1000;
                 const statusBadge = isOnline
-                    ? `<span style="background:rgba(34,197,94,0.2);color:#4ade80;border:1px solid rgba(34,197,94,0.4);padding:2px 8px;border-radius:12px;font-size:0.75rem;font-weight:bold;">🟢 ĐANG ONLINE</span>`
-                    : `<span style="background:rgba(148,163,184,0.15);color:#94a3b8;padding:2px 8px;border-radius:12px;font-size:0.75rem;">⚪ Đã rời đi</span>`;
+                    ? `<span style="background:rgba(34,197,94,0.2);color:#4ade80;border:1px solid rgba(34,197,94,0.4);padding:2px 8px;border-radius:12px;font-size:0.75rem;font-weight:bold;">đŸŸ¢ ÄANG ONLINE</span>`
+                    : `<span style="background:rgba(148,163,184,0.15);color:#94a3b8;padding:2px 8px;border-radius:12px;font-size:0.75rem;">âª ÄĂ£ rá»i Ä‘i</span>`;
 
                 const timeStr = new Date(v.lastSeen).toLocaleString('vi-VN');
                 const durationMin = Math.floor((v.durationSeconds || 0) / 60);
                 const durationSec = (v.durationSeconds || 0) % 60;
-                const durationText = durationMin > 0 ? `${durationMin} phút ${durationSec}s` : `${durationSec}s`;
+                const durationText = durationMin > 0 ? `${durationMin} phĂºt ${durationSec}s` : `${durationSec}s`;
 
-                const batteryStr = v.battery ? ` • 🔋 Pin: ${escapeHTML(v.battery)}` : '';
-                const networkStr = v.connection ? ` • 📶 Mạng: ${escapeHTML(v.connection.toUpperCase())}` : '';
-                const screenStr = v.screen && v.screen !== '-' ? ` • 📐 Màn hình: ${escapeHTML(v.screen)} (x${v.dpr || 1})` : '';
+                const batteryStr = v.battery ? ` â€¢ đŸ”‹ Pin: ${escapeHTML(v.battery)}` : '';
+                const networkStr = v.connection ? ` â€¢ đŸ“¶ Máº¡ng: ${escapeHTML(v.connection.toUpperCase())}` : '';
+                const screenStr = v.screen && v.screen !== '-' ? ` â€¢ đŸ“ MĂ n hĂ¬nh: ${escapeHTML(v.screen)} (x${v.dpr || 1})` : '';
 
                 const timelineHtml = (v.timelineLogs || []).map(log =>
                     `<div style="font-size:0.75rem;color:#cbd5e1;padding:2px 0;border-bottom:1px dashed rgba(255,255,255,0.05);display:flex;gap:6px;">
@@ -325,50 +323,50 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                 ).join('');
 
                 const gmapBtn = (v.lat && v.lng)
-                    ? `<a href="https://www.google.com/maps?q=${v.lat},${v.lng}" target="_blank" style="background:#0284c7;color:#ffffff;padding:3px 10px;border-radius:6px;font-size:0.75rem;font-weight:bold;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-left:6px;box-shadow:0 0 10px rgba(2,132,199,0.5);"><i class="fa-solid fa-map-location-dot"></i> 🗺️ Mở Google Maps</a>`
+                    ? `<a href="https://www.google.com/maps?q=${v.lat},${v.lng}" target="_blank" style="background:#0284c7;color:#ffffff;padding:3px 10px;border-radius:6px;font-size:0.75rem;font-weight:bold;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-left:6px;box-shadow:0 0 10px rgba(2,132,199,0.5);"><i class="fa-solid fa-map-location-dot"></i> đŸ—ºï¸ Má»Ÿ Google Maps</a>`
                     : '';
 
                 const isGpsExact = v.isGps || (v.accuracy && v.accuracy <= 500);
                 const geoBadge = isGpsExact
-                    ? `<span style="background:rgba(34,197,94,0.2);color:#4ade80;border:1px solid rgba(34,197,94,0.4);padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:bold;">🎯 GPS Chuẩn Xóm/Xã (Khách đã cấp quyền)</span>`
+                    ? `<span style="background:rgba(34,197,94,0.2);color:#4ade80;border:1px solid rgba(34,197,94,0.4);padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:bold;">đŸ¯ GPS Chuáº©n XĂ³m/XĂ£ (KhĂ¡ch Ä‘Ă£ cáº¥p quyá»n)</span>`
                     : (v.lat && v.lng
-                        ? `<span style="background:rgba(234,179,8,0.2);color:#facc15;border:1px solid rgba(234,179,8,0.4);padding:2px 8px;border-radius:10px;font-size:0.72rem;">📶 Ước Tính IP Mạng (Chưa có GPS)</span>`
-                        : `<span style="background:rgba(148,163,184,0.15);color:#94a3b8;padding:2px 8px;border-radius:10px;font-size:0.72rem;">❓ Vị Trí Chưa Rõ</span>`);
+                        ? `<span style="background:rgba(234,179,8,0.2);color:#facc15;border:1px solid rgba(234,179,8,0.4);padding:2px 8px;border-radius:10px;font-size:0.72rem;">đŸ“¶ Æ¯á»›c TĂ­nh IP Máº¡ng (ChÆ°a cĂ³ GPS)</span>`
+                        : `<span style="background:rgba(148,163,184,0.15);color:#94a3b8;padding:2px 8px;border-radius:10px;font-size:0.72rem;">â“ Vá»‹ TrĂ­ ChÆ°a RĂµ</span>`);
 
                 const locationTitle = isGpsExact
-                    ? `<span style="color:#4ade80;font-weight:bold;">${escapeHTML(v.city || 'Xã / Tỉnh')} (🎯 GPS Chính Xác)</span>`
-                    : `<span style="color:#facc15;font-weight:bold;">${escapeHTML(v.city || 'Ước tính IP')} (Chưa có GPS)</span>`;
+                    ? `<span style="color:#4ade80;font-weight:bold;">${escapeHTML(v.city || 'XĂ£ / Tá»‰nh')} (đŸ¯ GPS ChĂ­nh XĂ¡c)</span>`
+                    : `<span style="color:#facc15;font-weight:bold;">${escapeHTML(v.city || 'Æ¯á»›c tĂ­nh IP')} (ChÆ°a cĂ³ GPS)</span>`;
 
-                const accuracyStr = v.accuracy ? `<span style="color:#4ade80;"> • Sai số: ~${v.accuracy}m</span>` : '';
+                const accuracyStr = v.accuracy ? `<span style="color:#4ade80;"> â€¢ Sai sá»‘: ~${v.accuracy}m</span>` : '';
 
-                const deleteBtnHtml = `<button type="button" class="btn-delete-visitor" style="background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.4);padding:3px 10px;border-radius:6px;font-size:0.75rem;font-weight:bold;cursor:pointer;margin-left:8px;" title="Xóa nhật ký khách này"><i class="fa-solid fa-trash-can"></i> Xóa</button>`;
+                const deleteBtnHtml = `<button type="button" class="btn-delete-visitor" style="background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.4);padding:3px 10px;border-radius:6px;font-size:0.75rem;font-weight:bold;cursor:pointer;margin-left:8px;" title="XĂ³a nháº­t kĂ½ khĂ¡ch nĂ y"><i class="fa-solid fa-trash-can"></i> XĂ³a</button>`;
 
-                const gpuStr = v.gpu ? ` • 🎮 GPU: ${escapeHTML(v.gpu)}` : '';
-                const cpuStr = v.cpuCores ? ` • ⚡ Chip: ${v.cpuCores} Nhân CPU` : '';
-                const ramStr = v.ramGB ? ` • 💾 RAM: ${v.ramGB}GB` : '';
+                const gpuStr = v.gpu ? ` â€¢ đŸ® GPU: ${escapeHTML(v.gpu)}` : '';
+                const cpuStr = v.cpuCores ? ` â€¢ â¡ Chip: ${v.cpuCores} NhĂ¢n CPU` : '';
+                const ramStr = v.ramGB ? ` â€¢ đŸ’¾ RAM: ${v.ramGB}GB` : '';
 
                 card.innerHTML = `
                     <div class="admin-item-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:4px;">
-                        <span><i class="fa-solid fa-user-ninja" style="color:#a855f7;"></i> Khách #${index + 1} — <strong style="color:#f472b6;">${escapeHTML(v.city || 'Việt Nam')}</strong> (${escapeHTML(v.isp || 'Nhà mạng')}) ${statusBadge} ${geoBadge} ${gmapBtn} ${deleteBtnHtml}</span>
+                        <span><i class="fa-solid fa-user-ninja" style="color:#a855f7;"></i> KhĂ¡ch #${index + 1} â€” <strong style="color:#f472b6;">${escapeHTML(v.city || 'Viá»‡t Nam')}</strong> (${escapeHTML(v.isp || 'NhĂ  máº¡ng')}) ${statusBadge} ${geoBadge} ${gmapBtn} ${deleteBtnHtml}</span>
                         <span style="font-size:0.78rem;color:#94a3b8;"><i class="fa-solid fa-clock"></i> ${timeStr}</span>
                     </div>
                     <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:6px;font-size:0.82rem;color:#cbd5e1;background:rgba(0,0,0,0.25);padding:10px;border-radius:8px;margin-bottom:8px;">
-                        <div>🌐 <strong>IP Thật:</strong> <span style="font-family:monospace;color:#facc15;">${escapeHTML(v.ip)}</span></div>
-                        <div>📍 <strong>🏡 Vị trí chi tiết:</strong> ${locationTitle} ${v.lat && v.lng ? `<br><small style="color:#38bdf8;">Tọa độ: ${v.lat.toFixed(5)}, ${v.lng.toFixed(5)}${accuracyStr}</small>` : ''}</div>
-                        <div>📱 <strong>Tên Thiết bị:</strong> <span style="color:#38bdf8;font-weight:bold;">${escapeHTML(v.device)}</span> • ${escapeHTML(v.os)}</div>
-                        <div>💻 <strong>Trình duyệt:</strong> ${escapeHTML(v.browser)}</div>
-                        <div>🔗 <strong>Nguồn đến (Referrer):</strong> <span style="color:#38bdf8;word-break:break-all;">${escapeHTML(v.referrer)}</span></div>
-                        <div>⏱️ <strong>Thời gian ở lại:</strong> <span style="color:#4ade80;font-weight:bold;">${durationText}</span> (${v.clicks || 1} lượt click)</div>
+                        <div>đŸŒ <strong>IP Tháº­t:</strong> <span style="font-family:monospace;color:#facc15;">${escapeHTML(v.ip)}</span></div>
+                        <div>đŸ“ <strong>đŸ¡ Vá»‹ trĂ­ chi tiáº¿t:</strong> ${locationTitle} ${v.lat && v.lng ? `<br><small style="color:#38bdf8;">Tá»a Ä‘á»™: ${v.lat.toFixed(5)}, ${v.lng.toFixed(5)}${accuracyStr}</small>` : ''}</div>
+                        <div>đŸ“± <strong>TĂªn Thiáº¿t bá»‹:</strong> <span style="color:#38bdf8;font-weight:bold;">${escapeHTML(v.device)}</span> â€¢ ${escapeHTML(v.os)}</div>
+                        <div>đŸ’» <strong>TrĂ¬nh duyá»‡t:</strong> ${escapeHTML(v.browser)}</div>
+                        <div>đŸ”— <strong>Nguá»“n Ä‘áº¿n (Referrer):</strong> <span style="color:#38bdf8;word-break:break-all;">${escapeHTML(v.referrer)}</span></div>
+                        <div>â±ï¸ <strong>Thá»i gian á»Ÿ láº¡i:</strong> <span style="color:#4ade80;font-weight:bold;">${durationText}</span> (${v.clicks || 1} lÆ°á»£t click)</div>
                         <div style="grid-column:1 / -1;font-size:0.78rem;color:#94a3b8;border-top:1px solid rgba(255,255,255,0.06);padding-top:4px;">
-                            ⚙️ <strong>Phần cứng chuyên sâu:</strong> ${screenStr}${networkStr}${batteryStr}${gpuStr}${cpuStr}${ramStr}
+                            â™ï¸ <strong>Pháº§n cá»©ng chuyĂªn sĂ¢u:</strong> ${screenStr}${networkStr}${batteryStr}${gpuStr}${cpuStr}${ramStr}
                         </div>
                     </div>
                     <details style="font-size:0.8rem;color:#94a3b8;cursor:pointer;">
                         <summary style="font-weight:bold;color:#a855f7;outline:none;margin-bottom:4px;">
-                            📜 Xem Nhật Ký Thao Tác Chi Tiết (${(v.timelineLogs || []).length} bước)
+                            đŸ“œ Xem Nháº­t KĂ½ Thao TĂ¡c Chi Tiáº¿t (${(v.timelineLogs || []).length} bÆ°á»›c)
                         </summary>
                         <div style="background:rgba(15,23,42,0.6);padding:8px;border-radius:6px;margin-top:4px;max-height:160px;overflow-y:auto;">
-                            ${timelineHtml || '<div style="font-size:0.75rem;color:#64748b;">Chưa có thao tác thêm</div>'}
+                            ${timelineHtml || '<div style="font-size:0.75rem;color:#64748b;">ChÆ°a cĂ³ thao tĂ¡c thĂªm</div>'}
                         </div>
                     </details>
                 `;
@@ -377,7 +375,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                 if (btnDelete) {
                     btnDelete.addEventListener('click', async (evt) => {
                         evt.stopPropagation();
-                        if (confirm(`🗑️ Bạn có chắc muốn xóa nhật ký của Khách (IP: ${v.ip})?`)) {
+                        if (confirm(`đŸ—‘ï¸ Báº¡n cĂ³ cháº¯c muá»‘n xĂ³a nháº­t kĂ½ cá»§a KhĂ¡ch (IP: ${v.ip})?`)) {
                             try {
                                 const token = localStorage.getItem('admin_token');
                                 const headers = { 'Content-Type': 'application/json' };
@@ -391,13 +389,13 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                                 });
                                 const resData = await res.json();
                                 if (resData.success) {
-                                    showToast("Đã xóa nhật ký khách thành công! 🗑️", "info");
+                                    showToast("ÄĂ£ xĂ³a nháº­t kĂ½ khĂ¡ch thĂ nh cĂ´ng! đŸ—‘ï¸", "info");
                                     loadAdminVisitorsList();
                                 } else {
-                                    alert(resData.message || "Không thể xóa nhật ký.");
+                                    alert(resData.message || "KhĂ´ng thá»ƒ xĂ³a nháº­t kĂ½.");
                                 }
                             } catch (e) {
-                                alert("Lỗi kết nối khi xóa.");
+                                alert("Lá»—i káº¿t ná»‘i khi xĂ³a.");
                             }
                         }
                     });
@@ -406,7 +404,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                 adminVisitorsList.appendChild(card);
             });
         } catch (e) {
-            adminVisitorsList.innerHTML = '<div style="text-align:center;color:#dc2626;padding:24px;">Lỗi kết nối server tracking.</div>';
+            adminVisitorsList.innerHTML = '<div style="text-align:center;color:#dc2626;padding:24px;">Lá»—i káº¿t ná»‘i server tracking.</div>';
         }
     }
 
@@ -540,7 +538,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
         if (inputGraduationDate) inputGraduationDate.value = state.graduationDate || '2026-06-30';
         updateCapsuleStatusDOM(state, capsuleStatusInfo);
 
-        // Cập nhật chỉ số thống kê System Admin
+        // Cáº­p nháº­t chá»‰ sá»‘ thá»‘ng kĂª System Admin
         const admStatWishes = document.getElementById('admStatWishes');
         const admStatHearts = document.getElementById('admStatHearts');
         const admStatTracks = document.getElementById('admStatTracks');
@@ -548,7 +546,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
 
         const guestbookWall = document.getElementById('guestbookWall');
         const wishCount = guestbookWall ? guestbookWall.children.length : 0;
-        // Đọc tổng reactions từ element reactionTotalCount
+        // Äá»c tá»•ng reactions tá»« element reactionTotalCount
         const reactionTotalEl = document.getElementById('reactionTotalCount');
         const hearts = reactionTotalEl ? reactionTotalEl.textContent : '0';
 
@@ -593,7 +591,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
 
             adminAnonymousList.innerHTML = '';
             if (msgs.length === 0) {
-                adminAnonymousList.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;font-size:0.88rem;">Chưa có tin nhắn ẩn danh nào.</div>';
+                adminAnonymousList.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;font-size:0.88rem;">ChÆ°a cĂ³ tin nháº¯n áº©n danh nĂ o.</div>';
                 return;
             }
 
@@ -602,24 +600,24 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                 div.className = 'anon-message-item';
                 const timeStr = new Date(msg.createdAt).toLocaleString('vi-VN');
 
-                // Render media attachment nếu có
+                // Render media attachment náº¿u cĂ³
                 let mediaHTML = '';
-                // Ưu tiên mediaUrl (file đã upload), fallback sang mediaData (base64) nếu chưa có URL
+                // Æ¯u tiĂªn mediaUrl (file Ä‘Ă£ upload), fallback sang mediaData (base64) náº¿u chÆ°a cĂ³ URL
                 const mediaSrc = msg.mediaUrl || msg.mediaData || null;
                 if (mediaSrc) {
                     const type = msg.mediaType || '';
                     if (type === 'audio') {
                         mediaHTML = `
                             <div class="anon-media-attach">
-                                <span class="anon-media-tag"><i class="fa-solid fa-microphone"></i> Ghi âm</span>
+                                <span class="anon-media-tag"><i class="fa-solid fa-microphone"></i> Ghi Ă¢m</span>
                                 <audio controls class="anon-admin-audio" src="${escapeHTML(mediaSrc)}"></audio>
                             </div>`;
                     } else if (type === 'image') {
                         mediaHTML = `
                             <div class="anon-media-attach">
-                                <span class="anon-media-tag"><i class="fa-solid fa-image"></i> Ảnh</span>
+                                <span class="anon-media-tag"><i class="fa-solid fa-image"></i> áº¢nh</span>
                                 <img class="anon-admin-img" src="${escapeHTML(mediaSrc)}"
-                                     alt="Ảnh ẩn danh"
+                                     alt="áº¢nh áº©n danh"
                                      onclick="window.open('${escapeHTML(msg.mediaUrl || '#')}','_blank')">
                             </div>`;
                     } else if (type === 'video') {
@@ -639,11 +637,11 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                 adminAnonymousList.appendChild(div);
             });
         } catch (e) {
-            adminAnonymousList.innerHTML = '<div style="text-align:center;color:#dc2626;padding:24px;font-size:0.88rem;"><i class="fa-solid fa-triangle-exclamation"></i> Lỗi tải dữ liệu — bạn đang chạy offline?</div>';
+            adminAnonymousList.innerHTML = '<div style="text-align:center;color:#dc2626;padding:24px;font-size:0.88rem;"><i class="fa-solid fa-triangle-exclamation"></i> Lá»—i táº£i dá»¯ liá»‡u â€” báº¡n Ä‘ang cháº¡y offline?</div>';
         }
     }
 
-    // Sự kiện nút Niêm Phong / Mở Niêm Phong Viên Nang Tốt Nghiệp
+    // Sá»± kiá»‡n nĂºt NiĂªm Phong / Má»Ÿ NiĂªm Phong ViĂªn Nang Tá»‘t Nghiá»‡p
     const btnSealCapsule = document.getElementById('btnSealCapsule');
     if (btnSealCapsule) {
         btnSealCapsule.addEventListener('click', async () => {
@@ -656,23 +654,23 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             }
 
             if (!state.isCapsuleLocked) {
-                const confirmLock = confirm(`🎓 XÁC NHẬN LỄ NIÊM PHONG THANH XUÂN?\n\nKhi bạn đồng ý, toàn bộ kỷ niệm thời học sinh (Nhật ký, Ảnh lớp, Thành tích, Lưu bút) sẽ được khóa lại trong 'Viên Nang Thời Gian Tốt Nghiệp'.\n\nBạn có chắc chắn muốn niêm phong viên nang không?`);
+                const confirmLock = confirm(`đŸ“ XĂC NHáº¬N Lá»„ NIĂM PHONG THANH XUĂ‚N?\n\nKhi báº¡n Ä‘á»“ng Ă½, toĂ n bá»™ ká»· niá»‡m thá»i há»c sinh (Nháº­t kĂ½, áº¢nh lá»›p, ThĂ nh tĂ­ch, LÆ°u bĂºt) sáº½ Ä‘Æ°á»£c khĂ³a láº¡i trong 'ViĂªn Nang Thá»i Gian Tá»‘t Nghiá»‡p'.\n\nBáº¡n cĂ³ cháº¯c cháº¯n muá»‘n niĂªm phong viĂªn nang khĂ´ng?`);
                 if (confirmLock) {
                     state.isCapsuleLocked = true;
                     state.sealedAt = new Date().toISOString();
                     updateCapsuleStatusDOM(state, capsuleStatusInfo);
                     await saveBackendConfig(state);
                     refreshDOM();
-                    alert("✨ ĐÃ NIÊM PHONG THÀNH CÔNG VIÊN NANG THỜI GIAN TỐT NGHIỆP! 🎓\n\nKý ức thời học sinh của bạn đã được bảo tồn vĩnh viễn.");
+                    alert("âœ¨ ÄĂƒ NIĂM PHONG THĂ€NH CĂ”NG VIĂN NANG THá»œI GIAN Tá»T NGHIá»†P! đŸ“\n\nKĂ½ á»©c thá»i há»c sinh cá»§a báº¡n Ä‘Ă£ Ä‘Æ°á»£c báº£o tá»“n vÄ©nh viá»…n.");
                 }
             } else {
-                const confirmUnlock = confirm(`Mở khóa lại Viên Nang Thời Gian Tốt Nghiệp để bổ sung ký ức?`);
+                const confirmUnlock = confirm(`Má»Ÿ khĂ³a láº¡i ViĂªn Nang Thá»i Gian Tá»‘t Nghiá»‡p Ä‘á»ƒ bá»• sung kĂ½ á»©c?`);
                 if (confirmUnlock) {
                     state.isCapsuleLocked = false;
                     updateCapsuleStatusDOM(state, capsuleStatusInfo);
                     await saveBackendConfig(state);
                     refreshDOM();
-                    alert("🔓 Đã mở khóa chỉnh sửa viên nang!");
+                    alert("đŸ”“ ÄĂ£ má»Ÿ khĂ³a chá»‰nh sá»­a viĂªn nang!");
                 }
             }
         });
@@ -718,24 +716,24 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             card.className = 'admin-item-card';
             card.innerHTML = `
                 <div class="admin-item-header">
-                    <span><i class="fa-solid fa-compact-disc"></i> Bài Hát #${index + 1}</span>
-                    <button class="btn-remove-item" data-index="${index}"><i class="fa-solid fa-trash"></i> Xóa</button>
+                    <span><i class="fa-solid fa-compact-disc"></i> BĂ i HĂ¡t #${index + 1}</span>
+                    <button class="btn-remove-item" data-index="${index}"><i class="fa-solid fa-trash"></i> XĂ³a</button>
                 </div>
                 <div class="admin-item-grid">
                     <div class="input-group">
-                        <label>Tải File MP3 từ máy:</label>
+                        <label>Táº£i File MP3 tá»« mĂ¡y:</label>
                         <input type="file" class="adm-trk-file" data-index="${index}" accept="audio/*">
                     </div>
                     <div class="input-group">
-                        <label>Hoặc Dán Link MP3 URL:</label>
+                        <label>Hoáº·c DĂ¡n Link MP3 URL:</label>
                         <input type="text" class="adm-trk-url" data-index="${index}" value="${escapeHTML(item.url || '')}" placeholder="https://.../music.mp3">
                     </div>
                     <div class="input-group">
-                        <label>Tên bài hát:</label>
-                        <input type="text" class="adm-trk-title" data-index="${index}" value="${escapeHTML(item.title || '')}" placeholder="VD: Giai Điệu Thanh Xuân">
+                        <label>TĂªn bĂ i hĂ¡t:</label>
+                        <input type="text" class="adm-trk-title" data-index="${index}" value="${escapeHTML(item.title || '')}" placeholder="VD: Giai Äiá»‡u Thanh XuĂ¢n">
                     </div>
                     <div class="input-group">
-                        <label>Ca sĩ / Nghệ sĩ:</label>
+                        <label>Ca sÄ© / Nghá»‡ sÄ©:</label>
                         <input type="text" class="adm-trk-artist" data-index="${index}" value="${escapeHTML(item.artist || '')}" placeholder="VD: Acoustic Cover">
                     </div>
                 </div>
@@ -762,29 +760,29 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             card.className = 'admin-item-card';
             card.innerHTML = `
                 <div class="admin-item-header">
-                    <span><i class="fa-solid fa-camera"></i> Bức Ảnh #${index + 1}</span>
-                    <button class="btn-remove-item" data-index="${index}"><i class="fa-solid fa-trash"></i> Xóa</button>
+                    <span><i class="fa-solid fa-camera"></i> Bá»©c áº¢nh #${index + 1}</span>
+                    <button class="btn-remove-item" data-index="${index}"><i class="fa-solid fa-trash"></i> XĂ³a</button>
                 </div>
                 <div class="admin-item-grid">
                     <div class="input-group">
-                        <label>Tải File Ảnh từ máy:</label>
+                        <label>Táº£i File áº¢nh tá»« mĂ¡y:</label>
                         <input type="file" class="adm-gal-file" data-index="${index}" accept="image/*">
                     </div>
                     <div class="input-group">
-                        <label>Hoặc Dán Link URL Ảnh:</label>
+                        <label>Hoáº·c DĂ¡n Link URL áº¢nh:</label>
                         <input type="text" class="adm-gal-url" data-index="${index}" value="${escapeHTML(item.url || '')}" placeholder="https://...">
                     </div>
                     <div class="input-group">
-                        <label>Chú thích ảnh:</label>
-                        <input type="text" class="adm-gal-caption" data-index="${index}" value="${escapeHTML(item.caption || '')}" placeholder="VD: Hoàng Hôn Chiều Biển...">
+                        <label>ChĂº thĂ­ch áº£nh:</label>
+                        <input type="text" class="adm-gal-caption" data-index="${index}" value="${escapeHTML(item.caption || '')}" placeholder="VD: HoĂ ng HĂ´n Chiá»u Biá»ƒn...">
                     </div>
                     <div class="input-group">
-                        <label>Thời gian đã chụp:</label>
-                        <input type="text" class="adm-gal-date" data-index="${index}" value="${escapeHTML(item.date || '')}" placeholder="VD: 15/10/2024 hoặc Hè 2024">
+                        <label>Thá»i gian Ä‘Ă£ chá»¥p:</label>
+                        <input type="text" class="adm-gal-date" data-index="${index}" value="${escapeHTML(item.date || '')}" placeholder="VD: 15/10/2024 hoáº·c HĂ¨ 2024">
                     </div>
                     <div class="input-group" style="grid-column: 1 / -1;">
-                        <label>Địa điểm / Ghi chú:</label>
-                        <input type="text" class="adm-gal-location" data-index="${index}" value="${escapeHTML(item.location || '')}" placeholder="VD: Đà Nẵng, Hà Nội...">
+                        <label>Äá»‹a Ä‘iá»ƒm / Ghi chĂº:</label>
+                        <input type="text" class="adm-gal-location" data-index="${index}" value="${escapeHTML(item.location || '')}" placeholder="VD: ÄĂ  Náºµng, HĂ  Ná»™i...">
                     </div>
                 </div>
             `;
@@ -810,29 +808,29 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             card.className = 'admin-item-card';
             card.innerHTML = `
                 <div class="admin-item-header">
-                    <span><i class="fa-solid fa-compass"></i> Dấu Chân Thanh Xuân #${index + 1}</span>
-                    <button class="btn-remove-item" data-index="${index}"><i class="fa-solid fa-trash"></i> Xóa</button>
+                    <span><i class="fa-solid fa-compass"></i> Dáº¥u ChĂ¢n Thanh XuĂ¢n #${index + 1}</span>
+                    <button class="btn-remove-item" data-index="${index}"><i class="fa-solid fa-trash"></i> XĂ³a</button>
                 </div>
                 <div class="admin-item-grid">
                     <div class="input-group">
-                        <label>Tiêu đề hành trình:</label>
-                        <input type="text" class="adm-jou-title" data-index="${index}" value="${escapeHTML(item.title || '')}" placeholder="VD: Chuyến Đi Xa Đầu Tiên">
+                        <label>TiĂªu Ä‘á» hĂ nh trĂ¬nh:</label>
+                        <input type="text" class="adm-jou-title" data-index="${index}" value="${escapeHTML(item.title || '')}" placeholder="VD: Chuyáº¿n Äi Xa Äáº§u TiĂªn">
                     </div>
                     <div class="input-group">
-                        <label>Thẻ phân loại / Nhãn:</label>
-                        <input type="text" class="adm-jou-tag" data-index="${index}" value="${escapeHTML(item.tag || '')}" placeholder="VD: Hành Trình Trải Nghiệm">
+                        <label>Tháº» phĂ¢n loáº¡i / NhĂ£n:</label>
+                        <input type="text" class="adm-jou-tag" data-index="${index}" value="${escapeHTML(item.tag || '')}" placeholder="VD: HĂ nh TrĂ¬nh Tráº£i Nghiá»‡m">
                     </div>
                     <div class="input-group">
-                        <label>Thời gian (Tháng/Năm):</label>
+                        <label>Thá»i gian (ThĂ¡ng/NÄƒm):</label>
                         <input type="text" class="adm-jou-date" data-index="${index}" value="${escapeHTML(item.date || '')}" placeholder="VD: 10/2023">
                     </div>
                     <div class="input-group">
-                        <label>Dán URL Link Ảnh:</label>
+                        <label>DĂ¡n URL Link áº¢nh:</label>
                         <input type="text" class="adm-jou-url" data-index="${index}" value="${escapeHTML(item.url || '')}" placeholder="https://...">
                     </div>
                     <div class="input-group" style="grid-column: 1 / -1;">
-                        <label>Mô tả ngắn câu chuyện:</label>
-                        <input type="text" class="adm-jou-desc" data-index="${index}" value="${escapeHTML(item.desc || '')}" placeholder="Mô tả lại cảm xúc, kỷ niệm của Kế...">
+                        <label>MĂ´ táº£ ngáº¯n cĂ¢u chuyá»‡n:</label>
+                        <input type="text" class="adm-jou-desc" data-index="${index}" value="${escapeHTML(item.desc || '')}" placeholder="MĂ´ táº£ láº¡i cáº£m xĂºc, ká»· niá»‡m cá»§a Káº¿...">
                     </div>
                 </div>
             `;
@@ -852,7 +850,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
         btnAddPlaylistTrack.addEventListener('click', () => {
             const state = getState();
             state.playlist = state.playlist || [];
-            state.playlist.push({ title: 'Bài Hát Mới', artist: 'Kế', url: '' });
+            state.playlist.push({ title: 'BĂ i HĂ¡t Má»›i', artist: 'Káº¿', url: '' });
             renderAdminPlaylistList();
         });
     }
@@ -861,7 +859,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
         btnAddGalleryPhoto.addEventListener('click', () => {
             const state = getState();
             state.gallery = state.gallery || [];
-            state.gallery.push({ url: '', caption: 'Khoảnh khắc mới', date: 'Vừa xong', location: '' });
+            state.gallery.push({ url: '', caption: 'Khoáº£nh kháº¯c má»›i', date: 'Vá»«a xong', location: '' });
             renderAdminGalleryList();
         });
     }
@@ -870,7 +868,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
         btnAddJourneyCard.addEventListener('click', () => {
             const state = getState();
             state.journey = state.journey || [];
-            state.journey.push({ title: 'Kỷ Niệm Mới', desc: 'Mô tả kỷ niệm thanh xuân mới...', tag: 'Hành Trình', date: '2025', url: '' });
+            state.journey.push({ title: 'Ká»· Niá»‡m Má»›i', desc: 'MĂ´ táº£ ká»· niá»‡m thanh xuĂ¢n má»›i...', tag: 'HĂ nh TrĂ¬nh', date: '2025', url: '' });
             renderAdminJourneyList();
         });
     }
@@ -888,29 +886,29 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             card.className = 'admin-item-card';
             card.innerHTML = `
                 <div class="admin-item-header">
-                    <span><i class="fa-solid fa-location-dot"></i> Địa Điểm #${index + 1}</span>
-                    <button class="btn-remove-item" data-index="${index}"><i class="fa-solid fa-trash"></i> Xóa</button>
+                    <span><i class="fa-solid fa-location-dot"></i> Äá»‹a Äiá»ƒm #${index + 1}</span>
+                    <button class="btn-remove-item" data-index="${index}"><i class="fa-solid fa-trash"></i> XĂ³a</button>
                 </div>
                 <div class="admin-item-grid">
                     <div class="input-group">
-                        <label>Tên địa điểm (để tìm kiếm trên bản đồ):</label>
-                        <input type="text" class="adm-map-name" data-index="${index}" value="${escapeHTML(item.name || '')}" placeholder="VD: Trường THPT Chu Văn An, Hà Nội">
+                        <label>TĂªn Ä‘á»‹a Ä‘iá»ƒm (Ä‘á»ƒ tĂ¬m kiáº¿m trĂªn báº£n Ä‘á»“):</label>
+                        <input type="text" class="adm-map-name" data-index="${index}" value="${escapeHTML(item.name || '')}" placeholder="VD: TrÆ°á»ng THPT Chu VÄƒn An, HĂ  Ná»™i">
                     </div>
                     <div class="input-group">
-                        <label>Nhãn hiển thị (tuỳ chọn):</label>
-                        <input type="text" class="adm-map-label" data-index="${index}" value="${escapeHTML(item.label || '')}" placeholder="VD: Mái trường 3 năm ❤️">
+                        <label>NhĂ£n hiá»ƒn thá»‹ (tuá»³ chá»n):</label>
+                        <input type="text" class="adm-map-label" data-index="${index}" value="${escapeHTML(item.label || '')}" placeholder="VD: MĂ¡i trÆ°á»ng 3 nÄƒm â¤ï¸">
                     </div>
                     <div class="input-group">
-                        <label>Vĩ độ / Latitude (tự tìm hoặc nhập):</label>
+                        <label>VÄ© Ä‘á»™ / Latitude (tá»± tĂ¬m hoáº·c nháº­p):</label>
                         <input type="text" class="adm-map-lat" data-index="${index}" value="${escapeHTML(String(item.lat || ''))}" placeholder="VD: 21.0285">
                     </div>
                     <div class="input-group">
-                        <label>Kinh độ / Longitude (tự tìm hoặc nhập):</label>
+                        <label>Kinh Ä‘á»™ / Longitude (tá»± tĂ¬m hoáº·c nháº­p):</label>
                         <input type="text" class="adm-map-lng" data-index="${index}" value="${escapeHTML(String(item.lng || ''))}" placeholder="VD: 105.8542">
                     </div>
                     <div class="input-group" style="grid-column: 1 / -1;">
                         <button type="button" class="btn-geocode-map" data-index="${index}">
-                            <i class="fa-solid fa-magnifying-glass-location"></i> Tìm Tọa Độ Tự Động Qua Tên Địa Điểm
+                            <i class="fa-solid fa-magnifying-glass-location"></i> TĂ¬m Tá»a Äá»™ Tá»± Äá»™ng Qua TĂªn Äá»‹a Äiá»ƒm
                         </button>
                     </div>
                 </div>
@@ -930,11 +928,11 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                     const inputName = card.querySelector('.adm-map-name');
                     const nameVal = inputName ? inputName.value.trim() : '';
                     if (!nameVal) {
-                        showToast("⚠️ Vui lòng nhập tên địa điểm trước khi tìm tọa độ!");
+                        showToast("â ï¸ Vui lĂ²ng nháº­p tĂªn Ä‘á»‹a Ä‘iá»ƒm trÆ°á»›c khi tĂ¬m tá»a Ä‘á»™!");
                         return;
                     }
                     btnGeocode.disabled = true;
-                    btnGeocode.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tìm...';
+                    btnGeocode.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Äang tĂ¬m...';
                     try {
                         const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(nameVal)}`;
                         const res = await fetch(url);
@@ -946,15 +944,15 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                             const inputLng = card.querySelector('.adm-map-lng');
                             if (inputLat) inputLat.value = lat;
                             if (inputLng) inputLng.value = lon;
-                            showToast(`📍 Đã tự động tìm thấy tọa độ: ${lat}, ${lon}`);
+                            showToast(`đŸ“ ÄĂ£ tá»± Ä‘á»™ng tĂ¬m tháº¥y tá»a Ä‘á»™: ${lat}, ${lon}`);
                         } else {
-                            showToast("⚠️ Không tìm thấy tọa độ tự động. Bạn có thể tự nhập Lat/Lng thủ công!");
+                            showToast("â ï¸ KhĂ´ng tĂ¬m tháº¥y tá»a Ä‘á»™ tá»± Ä‘á»™ng. Báº¡n cĂ³ thá»ƒ tá»± nháº­p Lat/Lng thá»§ cĂ´ng!");
                         }
                     } catch (e) {
-                        showToast("Lỗi kết nối dịch vụ tìm tọa độ.");
+                        showToast("Lá»—i káº¿t ná»‘i dá»‹ch vá»¥ tĂ¬m tá»a Ä‘á»™.");
                     } finally {
                         btnGeocode.disabled = false;
-                        btnGeocode.innerHTML = '<i class="fa-solid fa-magnifying-glass-location"></i> Tìm Tọa Độ Tự Động Qua Tên Địa Điểm';
+                        btnGeocode.innerHTML = '<i class="fa-solid fa-magnifying-glass-location"></i> TĂ¬m Tá»a Äá»™ Tá»± Äá»™ng Qua TĂªn Äá»‹a Äiá»ƒm';
                     }
                 });
             }
@@ -988,12 +986,12 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                 </div>
                 <div class="admin-item-grid" style="grid-template-columns: 80px 1fr 1fr;">
                     <div class="input-group" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
-                        <label>Xem trước:</label>
+                        <label>Xem trÆ°á»›c:</label>
                         <img src="${escapeHTML(item.imgUrl || '')}" class="adm-react-preview" style="width:48px;height:48px;object-fit:cover;border-radius:50%;border:2px solid #f59e0b;margin-top:4px;" alt="preview">
                     </div>
                     <div class="input-group">
-                        <label>Tên / Tiêu đề (Tooltip):</label>
-                        <input type="text" class="adm-react-title" data-index="${index}" value="${escapeHTML(item.title || '')}" placeholder="VD: Thả Tim Hạ Nhân">
+                        <label>TĂªn / TiĂªu Ä‘á» (Tooltip):</label>
+                        <input type="text" class="adm-react-title" data-index="${index}" value="${escapeHTML(item.title || '')}" placeholder="VD: Tháº£ Tim Háº¡ NhĂ¢n">
                     </div>
                     <div class="input-group">
                         <label>Symbol Emoji ID:</label>
@@ -1001,12 +999,12 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                     </div>
                     <div class="input-group" style="grid-column: 1 / -1; display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
                         <div class="input-group">
-                            <label>Tải File Ảnh từ máy:</label>
+                            <label>Táº£i File áº¢nh tá»« mĂ¡y:</label>
                             <input type="file" class="adm-react-file" data-index="${index}" accept="image/*">
                         </div>
                         <div class="input-group">
-                            <label>Hoặc Dán Link URL Ảnh:</label>
-                            <input type="text" class="adm-react-url" data-index="${index}" value="${escapeHTML(item.imgUrl || '')}" placeholder="https://... hoặc assets/memes/...">
+                            <label>Hoáº·c DĂ¡n Link URL áº¢nh:</label>
+                            <input type="text" class="adm-react-url" data-index="${index}" value="${escapeHTML(item.imgUrl || '')}" placeholder="https://... hoáº·c assets/memes/...">
                         </div>
                     </div>
                 </div>
@@ -1034,11 +1032,11 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
         });
     }
 
-    // Save logic với hỗ trợ Upload File từ máy
+    // Save logic vá»›i há»— trá»£ Upload File tá»« mĂ¡y
     if (btnSaveSettings) {
         btnSaveSettings.addEventListener('click', async () => {
             btnSaveSettings.disabled = true;
-            btnSaveSettings.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
+            btnSaveSettings.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Äang lÆ°u...';
 
             const state = getState();
 
@@ -1103,7 +1101,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             } else if (inputPhotoUrl && inputPhotoUrl.value.trim() !== '') {
                 state.photoUrl = inputPhotoUrl.value.trim();
             }
-            // (Nếu không chọn file mới và ô URL trống, giữ nguyên state.photoUrl hiện tại)
+            // (Náº¿u khĂ´ng chá»n file má»›i vĂ  Ă´ URL trá»‘ng, giá»¯ nguyĂªn state.photoUrl hiá»‡n táº¡i)
 
             // Read & Upload Playlist
             const trkFiles = document.querySelectorAll('.adm-trk-file');
@@ -1126,13 +1124,13 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                 const title = trkTitles[i] ? trkTitles[i].value.trim() : '';
                 if (url || title) {
                     newPlaylist.push({
-                        title: title || 'Bài Hát Thanh Xuân',
-                        artist: trkArtists[i] ? trkArtists[i].value.trim() : 'Kế',
+                        title: title || 'BĂ i HĂ¡t Thanh XuĂ¢n',
+                        artist: trkArtists[i] ? trkArtists[i].value.trim() : 'Káº¿',
                         url
                     });
                 }
             }
-            if (newPlaylist.length > 0) state.playlist = newPlaylist;
+            state.playlist = newPlaylist;
 
             // Read & Upload Gallery Photos
             const galFiles = document.querySelectorAll('.adm-gal-file');
@@ -1162,7 +1160,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                     });
                 }
             }
-            if (newGallery.length > 0) state.gallery = newGallery;
+            state.gallery = newGallery;
 
             // Read Journey Cards
             const jouTitles = document.querySelectorAll('.adm-jou-title'); const jouTags = document.querySelectorAll('.adm-jou-tag');
@@ -1176,15 +1174,15 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                 const url = jouUrls[i] ? jouUrls[i].value.trim() : '';
                 if (title || url) {
                     newJourney.push({
-                        title: title || 'Kỷ Niệm',
-                        tag: jouTags[i] ? jouTags[i].value.trim() : 'Hành Trình',
+                        title: title || 'Ká»· Niá»‡m',
+                        tag: jouTags[i] ? jouTags[i].value.trim() : 'HĂ nh TrĂ¬nh',
                         date: jouDates[i] ? jouDates[i].value.trim() : '',
                         url,
                         desc: jouDescs[i] ? jouDescs[i].value.trim() : ''
                     });
                 }
             }
-            if (newJourney.length > 0) state.journey = newJourney;
+            state.journey = newJourney;
 
             // Read Map Locations
             const mapNames = document.querySelectorAll('.adm-map-name');
@@ -1215,7 +1213,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                 state.homeLocation = {
                     lat: inputHomeLat && inputHomeLat.value ? parseFloat(inputHomeLat.value) : 18.98686,
                     lng: inputHomeLng && inputHomeLng.value ? parseFloat(inputHomeLng.value) : 105.46820,
-                    address: inputHomeAddress ? inputHomeAddress.value.trim() : 'Xã Quan Thành, Tỉnh Nghệ An'
+                    address: inputHomeAddress ? inputHomeAddress.value.trim() : 'XĂ£ Quan ThĂ nh, Tá»‰nh Nghá»‡ An'
                 };
             }
 
@@ -1224,20 +1222,20 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             refreshDOM();
 
             btnSaveSettings.disabled = false;
-            btnSaveSettings.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Lưu Thay Đổi';
+            btnSaveSettings.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> LÆ°u Thay Äá»•i';
             if (customModal) customModal.classList.remove('active');
-            showToast("Đã cập nhật toàn bộ thay đổi & vị trí Nhà Kế thành công! ✨");
+            showToast("ÄĂ£ cáº­p nháº­t toĂ n bá»™ thay Ä‘á»•i & vá»‹ trĂ­ NhĂ  Káº¿ thĂ nh cĂ´ng! âœ¨");
         });
     }
 
-    // ── XỬ LÝ NÚT LƯU ĐỘC LẬP TỪNG TAB (Tab-Scoped Save Buttons) ──────────────
+    // â”€â”€ Xá»¬ LĂ NĂT LÆ¯U Äá»˜C Láº¬P Tá»ªNG TAB (Tab-Scoped Save Buttons) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     document.querySelectorAll('.btn-tab-save').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             e.preventDefault();
             const action = btn.getAttribute('data-tab-action');
             const originalHTML = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...`;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Äang lÆ°u...`;
 
             try {
                 const state = getState();
@@ -1296,7 +1294,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                     const inputSpotlightActive = document.getElementById('inputSpotlightActive');
                     state.spotlightConfig = {
                         target: inputSpotlightTarget ? inputSpotlightTarget.value : 'none',
-                        badgeText: inputSpotlightBadgeText ? inputSpotlightBadgeText.value.trim() : 'HOT NEW! 🔥',
+                        badgeText: inputSpotlightBadgeText ? inputSpotlightBadgeText.value.trim() : 'HOT NEW! đŸ”¥',
                         active: inputSpotlightActive ? inputSpotlightActive.checked : false
                     };
 
@@ -1308,7 +1306,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                         window.triggerAnnouncerShout(state.announcementText, state.announcementActive);
                     }
 
-                    showToast("Đã lưu thông tin Hồ Sơ cá nhân & Tiêu điểm nổi bật! 👤✨");
+                    showToast("ÄĂ£ lÆ°u thĂ´ng tin Há»“ SÆ¡ cĂ¡ nhĂ¢n & TiĂªu Ä‘iá»ƒm ná»•i báº­t! đŸ‘¤âœ¨");
                 }
                 else if (action === 'music') {
                     const trkFiles = document.querySelectorAll('.adm-trk-file');
@@ -1331,14 +1329,14 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                         const title = trkTitles[i] ? trkTitles[i].value.trim() : '';
                         if (url || title) {
                             newPlaylist.push({
-                                title: title || 'Bài Hát Thanh Xuân',
-                                artist: trkArtists[i] ? trkArtists[i].value.trim() : 'Kế',
+                                title: title || 'BĂ i HĂ¡t Thanh XuĂ¢n',
+                                artist: trkArtists[i] ? trkArtists[i].value.trim() : 'Káº¿',
                                 url
                             });
                         }
                     }
-                    if (newPlaylist.length > 0) state.playlist = newPlaylist;
-                    showToast("Đã lưu Playlist Âm Nhạc! 🎵✨");
+                    state.playlist = newPlaylist;
+                    showToast("ÄĂ£ lÆ°u Playlist Ă‚m Nháº¡c! đŸµâœ¨");
                 }
                 else if (action === 'favorites') {
                     const inputFavMusic = document.getElementById('inputFavMusic');
@@ -1359,7 +1357,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                     if (inputFavLifestyle) state.favLifestyle = inputFavLifestyle.value.trim();
                     if (inputFavColor) state.favColor = inputFavColor.value.trim();
 
-                    showToast("Đã lưu Gu & Sở Thích cá nhân! 💖✨");
+                    showToast("ÄĂ£ lÆ°u Gu & Sá»Ÿ ThĂ­ch cĂ¡ nhĂ¢n! đŸ’–âœ¨");
                 }
                 else if (action === 'milestones') {
                     const jouTitles = document.querySelectorAll('.adm-jou-title');
@@ -1374,16 +1372,16 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                         const url = jouUrls[i] ? jouUrls[i].value.trim() : '';
                         if (title || url) {
                             newJourney.push({
-                                title: title || 'Kỷ Niệm',
-                                tag: jouTags[i] ? jouTags[i].value.trim() : 'Hành Trình',
+                                title: title || 'Ká»· Niá»‡m',
+                                tag: jouTags[i] ? jouTags[i].value.trim() : 'HĂ nh TrĂ¬nh',
                                 date: jouDates[i] ? jouDates[i].value.trim() : '',
                                 url,
                                 desc: jouDescs[i] ? jouDescs[i].value.trim() : ''
                             });
                         }
                     }
-                    if (newJourney.length > 0) state.journey = newJourney;
-                    showToast("Đã lưu Dấu Chân Thanh Xuân! 📍✨");
+                    state.journey = newJourney;
+                    showToast("ÄĂ£ lÆ°u Dáº¥u ChĂ¢n Thanh XuĂ¢n! đŸ“âœ¨");
                 }
                 else if (action === 'memoryMap') {
                     const mapNames = document.querySelectorAll('.adm-map-name');
@@ -1405,7 +1403,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                         }
                     }
                     state.mapLocations = newMapLocations;
-                    showToast("Đã lưu Bản Đồ Kỷ Niệm! 🗺️✨");
+                    showToast("ÄĂ£ lÆ°u Báº£n Äá»“ Ká»· Niá»‡m! đŸ—ºï¸âœ¨");
                 }
                 else if (action === 'gallery') {
                     const galFiles = document.querySelectorAll('.adm-gal-file');
@@ -1435,8 +1433,8 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                             });
                         }
                     }
-                    if (newGallery.length > 0) state.gallery = newGallery;
-                    showToast("Đã lưu Thư Viện Ảnh Kỷ Niệm! 🖼️✨");
+                    state.gallery = newGallery;
+                    showToast("ÄĂ£ lÆ°u ThÆ° Viá»‡n áº¢nh Ká»· Niá»‡m! đŸ–¼ï¸âœ¨");
                 }
                 else if (action === 'reactions') {
                     const reactFiles = document.querySelectorAll('.adm-react-file');
@@ -1472,7 +1470,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                         });
                     }
                     state.reactionsConfig = newReactions;
-                    showToast("Đã lưu Cấu Hình Icon Meme! 😂✨");
+                    showToast("ÄĂ£ lÆ°u Cáº¥u HĂ¬nh Icon Meme! đŸ˜‚âœ¨");
                 }
 
                 setState(state);
@@ -1480,7 +1478,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                 refreshDOM();
             } catch (err) {
                 console.error("Tab save error:", err);
-                showToast("❌ Có lỗi khi lưu dữ liệu tab!");
+                showToast("âŒ CĂ³ lá»—i khi lÆ°u dá»¯ liá»‡u tab!");
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalHTML;
@@ -1488,12 +1486,12 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
         });
     });
 
-    // Xử lý nút "Lấy Vị Trí Hiện Tại Làm Vị Trí Nhà" trong trang Admin
+    // Xá»­ lĂ½ nĂºt "Láº¥y Vá»‹ TrĂ­ Hiá»‡n Táº¡i LĂ m Vá»‹ TrĂ­ NhĂ " trong trang Admin
     const btnGetMyCurrentHomeLocation = document.getElementById('btnGetMyCurrentHomeLocation');
     if (btnGetMyCurrentHomeLocation) {
         btnGetMyCurrentHomeLocation.addEventListener('click', () => {
             if ('geolocation' in navigator) {
-                btnGetMyCurrentHomeLocation.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang lấy tọa độ GPS...`;
+                btnGetMyCurrentHomeLocation.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Äang láº¥y tá»a Ä‘á»™ GPS...`;
                 navigator.geolocation.getCurrentPosition(async (pos) => {
                     const lat = pos.coords.latitude;
                     const lng = pos.coords.longitude;
@@ -1519,13 +1517,13 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                         }
                     } catch (e) { }
 
-                    btnGetMyCurrentHomeLocation.innerHTML = `<i class="fa-solid fa-circle-check"></i> Đã Lấy Tọa Độ Thành Công!`;
+                    btnGetMyCurrentHomeLocation.innerHTML = `<i class="fa-solid fa-circle-check"></i> ÄĂ£ Láº¥y Tá»a Äá»™ ThĂ nh CĂ´ng!`;
                     setTimeout(() => {
-                        btnGetMyCurrentHomeLocation.innerHTML = `<i class="fa-solid fa-location-arrow"></i> Lấy Vị Trí Hiện Tại Làm Vị Trí Nhà`;
+                        btnGetMyCurrentHomeLocation.innerHTML = `<i class="fa-solid fa-location-arrow"></i> Láº¥y Vá»‹ TrĂ­ Hiá»‡n Táº¡i LĂ m Vá»‹ TrĂ­ NhĂ `;
                     }, 3000);
                 }, () => {
-                    alert('Không thể lấy GPS. Vui lòng bật quyền định vị cho trình duyệt.');
-                    btnGetMyCurrentHomeLocation.innerHTML = `<i class="fa-solid fa-location-arrow"></i> Lấy Vị Trí Hiện Tại Làm Vị Trí Nhà`;
+                    alert('KhĂ´ng thá»ƒ láº¥y GPS. Vui lĂ²ng báº­t quyá»n Ä‘á»‹nh vá»‹ cho trĂ¬nh duyá»‡t.');
+                    btnGetMyCurrentHomeLocation.innerHTML = `<i class="fa-solid fa-location-arrow"></i> Láº¥y Vá»‹ TrĂ­ Hiá»‡n Táº¡i LĂ m Vá»‹ TrĂ­ NhĂ `;
                 }, { enableHighAccuracy: true, timeout: 10000 });
             }
         });
@@ -1550,7 +1548,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            showToast("📦 Đã xuất thành công file Backup JSON!");
+            showToast("đŸ“¦ ÄĂ£ xuáº¥t thĂ nh cĂ´ng file Backup JSON!");
         });
     }
 
@@ -1567,13 +1565,13 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                             setState(data);
                             await saveBackendConfig(data);
                             refreshDOM();
-                            showToast("✨ Đã phục hồi dữ liệu thành công từ file Backup!");
+                            showToast("âœ¨ ÄĂ£ phá»¥c há»“i dá»¯ liá»‡u thĂ nh cĂ´ng tá»« file Backup!");
                             if (customModal) customModal.classList.remove('active');
                         } else {
-                            alert("File backup không hợp lệ!");
+                            alert("File backup khĂ´ng há»£p lá»‡!");
                         }
                     } catch (err) {
-                        alert("Lỗi đọc file JSON: " + err.message);
+                        alert("Lá»—i Ä‘á»c file JSON: " + err.message);
                     }
                 };
                 reader.readAsText(file);
@@ -1586,15 +1584,15 @@ function updateCapsuleStatusDOM(state, elem) {
     if (!elem) return;
     const btnSealCapsule = document.getElementById('btnSealCapsule');
     if (state.isCapsuleLocked) {
-        elem.innerHTML = `Trạng thái: <span class="status-locked"><i class="fa-solid fa-lock"></i> ĐÃ NIÊM PHONG VĨNH VIỄN (${state.graduationDate || "2026-06-30"})</span>`;
+        elem.innerHTML = `Tráº¡ng thĂ¡i: <span class="status-locked"><i class="fa-solid fa-lock"></i> ÄĂƒ NIĂM PHONG VÄ¨NH VIá»„N (${state.graduationDate || "2026-06-30"})</span>`;
         if (btnSealCapsule) {
-            btnSealCapsule.innerHTML = '<i class="fa-solid fa-lock-open"></i> MỞ KHÓA LẠI VIÊN NANG THANH XUÂN';
+            btnSealCapsule.innerHTML = '<i class="fa-solid fa-lock-open"></i> Má» KHĂ“A Láº I VIĂN NANG THANH XUĂ‚N';
             btnSealCapsule.style.background = 'linear-gradient(135deg, #10b981, #0284c7)';
         }
     } else {
-        elem.innerHTML = `Trạng thái: <span class="status-unlocked"><i class="fa-solid fa-lock-open"></i> Đang mở chỉnh sửa</span>`;
+        elem.innerHTML = `Tráº¡ng thĂ¡i: <span class="status-unlocked"><i class="fa-solid fa-lock-open"></i> Äang má»Ÿ chá»‰nh sá»­a</span>`;
         if (btnSealCapsule) {
-            btnSealCapsule.innerHTML = '<i class="fa-solid fa-stamp"></i> THỰC HIỆN LỄ NIÊM PHONG THANH XUÂN';
+            btnSealCapsule.innerHTML = '<i class="fa-solid fa-stamp"></i> THá»°C HIá»†N Lá»„ NIĂM PHONG THANH XUĂ‚N';
             btnSealCapsule.style.background = 'linear-gradient(135deg, #f59e0b, #e11d48)';
         }
     }

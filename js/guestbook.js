@@ -253,9 +253,7 @@ export function initGuestbookEngine() {
 
     // ── Khởi tạo reaction buttons (Hold-to-Zoom & Glass Shatter) ────────────
     document.querySelectorAll('.reaction-btn').forEach(btn => {
-        const emoji = btn.dataset.emoji;
         const imgEl = btn.querySelector('.reaction-emoji-img');
-        if (!emoji) return;
 
         let animFrame = null;
         let holdStartTime = 0;
@@ -264,6 +262,8 @@ export function initGuestbookEngine() {
         const HOLD_DURATION = 1300; // 1.3 giây đè nút để vỡ kính
 
         async function triggerReactionSubmit(clientX, clientY, customMsg = null) {
+            const emoji = btn.dataset.emoji;
+            if (!emoji) return;
             const countId = EMOJI_MAP[emoji];
             const countEl = countId ? document.getElementById(countId) : null;
             if (countEl) {
@@ -319,7 +319,7 @@ export function initGuestbookEngine() {
 
                 const rect = imgEl ? imgEl.getBoundingClientRect() : btn.getBoundingClientRect();
                 triggerGlassShatterFX(btn, imgEl);
-                triggerReactionSubmit(rect.left + rect.width / 2, rect.top + rect.height / 2, `💥 BỘT PHÁT CẢM XÚC CỰC MẠNH: ${emoji}!`);
+                triggerReactionSubmit(rect.left + rect.width / 2, rect.top + rect.height / 2, `💥 BỘT PHÁT CẢM XÚC CỰC MẠNH: ${btn.dataset.emoji}!`);
                 return;
             }
 

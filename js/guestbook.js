@@ -89,13 +89,178 @@ export function initGuestbookEngine() {
         setTimeout(() => el.remove(), 1400);
     }
 
-    // Khởi tạo reaction buttons
-    document.querySelectorAll('.reaction-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            const emoji = btn.dataset.emoji;
-            if (!emoji) return;
+    // ── Web Audio Synth for Glass Shatter Sound Effect ──────────────────────
+    function playGlassShatterSound() {
+        try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return;
+            const ctx = new AudioCtx();
 
-            // Optimistic UI: tăng count ngay
+            // 1. Noise burst (shatter crunch)
+            const bufferSize = ctx.sampleRate * 0.18;
+            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.25));
+            }
+            const noise = ctx.createBufferSource();
+            noise.buffer = buffer;
+
+            const highpass = ctx.createBiquadFilter();
+            highpass.type = 'highpass';
+            highpass.frequency.value = 2400;
+
+            const gain = ctx.createGain();
+            gain.gain.setValueAtTime(0.6, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.18);
+
+            noise.connect(highpass);
+            highpass.connect(gain);
+            gain.connect(ctx.destination);
+            noise.start();
+
+            // 2. High tinkling pitch shards (glass ping)
+            [1200, 1800, 2400, 3200].forEach((freq, idx) => {
+                const osc = ctx.createOscillator();
+                const oscGain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.02);
+                osc.frequency.exponentialRampToValueAtTime(freq * 0.4, ctx.currentTime + idx * 0.02 + 0.12);
+
+                oscGain.gain.setValueAtTime(0.3, ctx.currentTime + idx * 0.02);
+                oscGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.02 + 0.12);
+
+                osc.connect(oscGain);
+                oscGain.connect(ctx.destination);
+                osc.start(ctx.currentTime + idx * 0.02);
+                osc.stop(ctx.currentTime + idx * 0.02 + 0.13);
+            });
+        } catch { /* AudioContext muted or blocked */ }
+    }
+
+    // ── Glass Shatter FX Visual Engine ────────────────────────────────────────
+    function triggerGlassShatterFX(btn, imgEl) {
+        const rect = imgEl ? imgEl.getBoundingClientRect() : btn.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+
+        playGlassShatterSound();
+
+        // 1. Shake animation
+        const bar = document.getElementById('reactionBar') || btn;
+        bar.classList.remove('shatter-shake');
+        void bar.offsetWidth;
+        bar.classList.add('shatter-shake');
+        setTimeout(() => bar.classList.remove('shatter-shake'), 350);
+
+        // 2. Container
+        const container = document.createElement('div');
+        container.className = 'glass-shatter-container';
+        container.style.left = `${centerX}px`;
+        container.style.top = `${centerY}px`;
+        document.body.appendChild(container);
+
+        // 3. Crack Flash
+        const flash = document.createElement('div');
+        flash.style.cssText = `
+            position: absolute;
+            width: ${rect.width * 1.6}px;
+            height: ${rect.height * 1.6}px;
+            left: -${rect.width * 0.8}px;
+            top: -${rect.height * 0.8}px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(251,191,36,0.8) 40%, transparent 75%);
+            box-shadow: 0 0 40px #fff, 0 0 80px #fbbf24;
+            pointer-events: none;
+            animation: glassCrackFlash 0.35s ease-out forwards;
+        `;
+        container.appendChild(flash);
+
+        // SVG lines
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('width', rect.width * 2);
+        svg.setAttribute('height', rect.height * 2);
+        svg.style.cssText = `
+            position: absolute;
+            left: -${rect.width}px;
+            top: -${rect.height}px;
+            pointer-events: none;
+        `;
+        let svgContent = '';
+        for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
+            const x2 = rect.width + Math.cos(angle) * rect.width * 0.9;
+            const y2 = rect.height + Math.sin(angle) * rect.height * 0.9;
+            svgContent += `<line x1="${rect.width}" y1="${rect.height}" x2="${x2}" y2="${y2}" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-dasharray="4,2" />`;
+        }
+        svg.innerHTML = svgContent;
+        container.appendChild(svg);
+
+        // 4. Shard Particles
+        const shardCount = 18;
+        const shards = [];
+
+        for (let i = 0; i < shardCount; i++) {
+            const shard = document.createElement('div');
+            shard.className = 'glass-shard';
+
+            const size = Math.random() * 14 + 8;
+            const angle = (i / shardCount) * Math.PI * 2 + (Math.random() * 0.4 - 0.2);
+            const dist = Math.random() * 90 + 70;
+            const vx = Math.cos(angle) * dist;
+            const vy = Math.sin(angle) * dist;
+            const rot = (Math.random() - 0.5) * 720;
+
+            shard.style.width = `${size}px`;
+            shard.style.height = `${size * (Math.random() * 0.8 + 0.6)}px`;
+            shard.style.left = '0px';
+            shard.style.top = '0px';
+            shard.style.transform = `translate(-50%, -50%) rotate(${Math.random() * 360}deg)`;
+
+            container.appendChild(shard);
+            shards.push({ el: shard, vx, vy, rot });
+        }
+
+        const startTime = performance.now();
+        const duration = 500;
+
+        function animateShards(now) {
+            const elapsed = now - startTime;
+            const progress = Math.min(1, elapsed / duration);
+            const easeOut = 1 - Math.pow(1 - progress, 3);
+
+            shards.forEach(s => {
+                const curX = s.vx * easeOut;
+                const curY = s.vy * easeOut + (progress * progress * 40);
+                const curRot = s.rot * progress;
+                const opacity = 1 - progress;
+                const scale = 1 - progress * 0.4;
+                s.el.style.transform = `translate(calc(-50% + ${curX}px), calc(-50% + ${curY}px)) rotate(${curRot}deg) scale(${scale})`;
+                s.el.style.opacity = opacity;
+            });
+
+            if (progress < 1) {
+                requestAnimationFrame(animateShards);
+            } else {
+                container.remove();
+            }
+        }
+        requestAnimationFrame(animateShards);
+    }
+
+    // ── Khởi tạo reaction buttons (Hold-to-Zoom & Glass Shatter) ────────────
+    document.querySelectorAll('.reaction-btn').forEach(btn => {
+        const emoji = btn.dataset.emoji;
+        const imgEl = btn.querySelector('.reaction-emoji-img');
+        if (!emoji) return;
+
+        let animFrame = null;
+        let holdStartTime = 0;
+        let isHolding = false;
+        let isShattered = false;
+        const HOLD_DURATION = 1300; // 1.3 giây đè nút để vỡ kính
+
+        async function triggerReactionSubmit(clientX, clientY, customMsg = null) {
             const countId = EMOJI_MAP[emoji];
             const countEl = countId ? document.getElementById(countId) : null;
             if (countEl) {
@@ -103,18 +268,14 @@ export function initGuestbookEngine() {
                 countEl.textContent = String(cur + 1);
             }
 
-            // Hiệu ứng nổi
-            createFloatingEmoji(emoji, e.clientX, e.clientY);
+            createFloatingEmoji(emoji, clientX, clientY);
 
-            // Pulse animation
             btn.classList.add('reaction-pulse');
             setTimeout(() => btn.classList.remove('reaction-pulse'), 500);
 
-            // Lưu local
             saveMyReaction(emoji);
             applyActiveStates();
 
-            // Gửi lên server
             try {
                 const res = await fetch('/api/reactions', {
                     method: 'POST',
@@ -125,10 +286,89 @@ export function initGuestbookEngine() {
                 if (data.success && data.reactions) {
                     applyReactionCounts(data.reactions);
                 }
-            } catch { /* offline: giữ optimistic count */ }
+            } catch { /* offline */ }
 
-            showToast(`Bạn đã gửi ${emoji} đến Kế!`);
-        });
+            showToast(customMsg || `Bạn đã gửi ${emoji} đến Kế!`);
+        }
+
+        function updateZoomLevel(timestamp) {
+            if (!isHolding || isShattered) return;
+            const elapsed = timestamp - holdStartTime;
+            const progress = Math.min(1, elapsed / HOLD_DURATION);
+
+            // Phóng to dần từ 1.0 đến 2.8x
+            const scale = 1 + progress * 1.8;
+            const rotate = Math.sin(progress * Math.PI * 4) * 5;
+
+            if (imgEl) {
+                imgEl.style.transform = `scale(${scale}) rotate(${rotate}deg)`;
+                imgEl.style.zIndex = '1000';
+            }
+            btn.classList.add('is-holding');
+
+            if (progress >= 1 && !isShattered) {
+                isShattered = true;
+                if (imgEl) {
+                    imgEl.style.transform = 'scale(1) rotate(0deg)';
+                    imgEl.style.zIndex = '';
+                }
+                btn.classList.remove('is-holding');
+
+                const rect = imgEl ? imgEl.getBoundingClientRect() : btn.getBoundingClientRect();
+                triggerGlassShatterFX(btn, imgEl);
+                triggerReactionSubmit(rect.left + rect.width / 2, rect.top + rect.height / 2, `💥 BỘT PHÁT CẢM XÚC CỰC MẠNH: ${emoji}!`);
+                return;
+            }
+
+            animFrame = requestAnimationFrame(updateZoomLevel);
+        }
+
+        function startHold(e) {
+            if (e.type === 'mousedown' && e.button !== 0) return;
+            isHolding = true;
+            isShattered = false;
+            holdStartTime = performance.now();
+
+            if (imgEl) {
+                imgEl.style.transition = 'none';
+            }
+            animFrame = requestAnimationFrame(updateZoomLevel);
+        }
+
+        function endHold(e) {
+            if (!isHolding) return;
+            isHolding = false;
+            cancelAnimationFrame(animFrame);
+
+            const elapsed = performance.now() - holdStartTime;
+
+            if (imgEl) {
+                imgEl.style.transition = 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                imgEl.style.transform = '';
+                imgEl.style.zIndex = '';
+            }
+            btn.classList.remove('is-holding');
+
+            if (!isShattered) {
+                if (elapsed < 220) {
+                    const clientX = e.clientX || (e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientX : window.innerWidth / 2);
+                    const clientY = e.clientY || (e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientY : window.innerHeight / 2);
+                    triggerReactionSubmit(clientX, clientY);
+                }
+            }
+        }
+
+        btn.addEventListener('mousedown', startHold);
+        btn.addEventListener('mouseup', endHold);
+        btn.addEventListener('mouseleave', endHold);
+
+        btn.addEventListener('touchstart', (e) => { startHold(e); }, { passive: true });
+        btn.addEventListener('touchend', endHold);
+        btn.addEventListener('touchcancel', endHold);
+
+        if (imgEl) {
+            imgEl.addEventListener('dragstart', (e) => e.preventDefault());
+        }
     });
 
     // Load reactions từ server khi init

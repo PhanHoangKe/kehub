@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    YOUTH MEMORIES - STYLESHEET
    Aesthetic: Bright Student Notebook / Youth Landscape / Light Glassmorphism
    ========================================================================== */
@@ -280,7 +280,7 @@ body {
    SPEED DIAL MOOD FAB
    ========================================================================== */
 
-/* Wrapper cố định góc phải giữa màn hình */
+/* Wrapper cá»‘ Ä‘á»‹nh gĂ³c pháº£i giá»¯a mĂ n hĂ¬nh */
 .mood-fab-wrap {
     position: fixed;
     right: 24px;
@@ -293,7 +293,7 @@ body {
     z-index: 998;
 }
 
-/* ── Nút Chatbox riêng ─────────────────────────────────────────────────── */
+/* â”€â”€ NĂºt Chatbox riĂªng â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .mood-fab-chatbox {
     position: relative;
     width: 42px;
@@ -326,14 +326,14 @@ body {
     pointer-events: none;
 }
 
-/* ── Speed Dial shell ──────────────────────────────────────────────────── */
+/* â”€â”€ Speed Dial shell â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .mood-speed-dial {
     position: relative;
     width: 48px;
     height: 48px;
 }
 
-/* ── Nút chính (trigger) ───────────────────────────────────────────────── */
+/* â”€â”€ NĂºt chĂ­nh (trigger) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .mood-dial-main {
     position: relative;
     z-index: 2;
@@ -352,10 +352,10 @@ body {
     transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1),
                 box-shadow 0.22s ease !important;
     /* Tooltip */
-    --tooltip-content: 'CHỦ ĐỀ';
+    --tooltip-content: 'CHá»¦ Äá»€';
 }
 .mood-dial-main::before {
-    content: 'CHỦ ĐỀ';
+    content: 'CHá»¦ Äá»€';
     position: absolute;
     right: 58px;
     top: 50%;
@@ -377,19 +377,19 @@ body {
 }
 .mood-speed-dial:not(.open) .mood-dial-main:hover::before { opacity: 1; transform: translateY(-50%) scale(1); }
 
-/* Khi mở: xoay nút chính 45° */
+/* Khi má»Ÿ: xoay nĂºt chĂ­nh 45Â° */
 .mood-speed-dial.open .mood-dial-main {
     transform: rotate(45deg) scale(1.08) !important;
     box-shadow: 0 6px 24px rgba(37,99,235,0.45), 0 2px 8px rgba(0,0,0,0.15) !important;
 }
 
-/* ── Nút con (vòng cung) ───────────────────────────────────────────────── */
+/* â”€â”€ NĂºt con (vĂ²ng cung) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 /*
-   3 nút bố cục vòng cung sang TRÁI:
-   --i:0  → góc 250° (space)    — dưới-trái
-   --i:1  → góc 200° (rain)     — giữa-trái
-   --i:2  → góc 150° (sunset)   — trên-trái
-   Bán kính cung r = 72px
+   3 nĂºt bá»‘ cá»¥c vĂ²ng cung sang TRĂI:
+   --i:0  â†’ gĂ³c 250Â° (space)    â€” dÆ°á»›i-trĂ¡i
+   --i:1  â†’ gĂ³c 200Â° (rain)     â€” giá»¯a-trĂ¡i
+   --i:2  â†’ gĂ³c 150Â° (sunset)   â€” trĂªn-trĂ¡i
+   BĂ¡n kĂ­nh cung r = 72px
 */
 .mood-dial-item {
     position: absolute;
@@ -408,7 +408,7 @@ body {
     cursor: pointer;
     backdrop-filter: blur(12px);
     box-shadow: 0 3px 14px rgba(0,0,0,0.1);
-    /* Bắt đầu nằm giữa nút chính, ẩn */
+    /* Báº¯t Ä‘áº§u náº±m giá»¯a nĂºt chĂ­nh, áº©n */
     transform: translate(-50%, -50%) scale(0);
     opacity: 0;
     pointer-events: none;
@@ -418,10 +418,10 @@ body {
     transition-delay: calc(var(--i) * 0.055s);
 }
 
-/* Toạ độ vòng cung khi mở — r=76px tính từ tâm nút chính */
-/* --i:0 → 250°  x = cos(250°)*76 ≈ -26,  y = sin(250°)*76 ≈ -71 */
-/* --i:1 → 200°  x = cos(200°)*76 ≈ -71,  y = sin(200°)*76 ≈ -26 */
-/* --i:2 → 155°  x = cos(155°)*76 ≈ -69,  y = sin(155°)*76 ≈  32 */
+/* Toáº¡ Ä‘á»™ vĂ²ng cung khi má»Ÿ â€” r=76px tĂ­nh tá»« tĂ¢m nĂºt chĂ­nh */
+/* --i:0 â†’ 250Â°  x = cos(250Â°)*76 â‰ˆ -26,  y = sin(250Â°)*76 â‰ˆ -71 */
+/* --i:1 â†’ 200Â°  x = cos(200Â°)*76 â‰ˆ -71,  y = sin(200Â°)*76 â‰ˆ -26 */
+/* --i:2 â†’ 155Â°  x = cos(155Â°)*76 â‰ˆ -69,  y = sin(155Â°)*76 â‰ˆ  32 */
 .mood-speed-dial.open .mood-dial-item[style*="--i:0"] {
     transform: translate(calc(-50% - 26px), calc(-50% + 71px)) scale(1);
     opacity: 1;
@@ -438,7 +438,7 @@ body {
     pointer-events: all;
 }
 
-/* Hover nút con */
+/* Hover nĂºt con */
 .mood-dial-item:hover {
     background: #fff;
     border-color: var(--accent-blue);
@@ -453,7 +453,7 @@ body {
     transform: translate(calc(-50% - 62px), calc(-50% - 44px)) scale(1.15) !important;
 }
 
-/* Tooltip nút con */
+/* Tooltip nĂºt con */
 .mood-dial-item::before {
     content: attr(data-tooltip);
     position: absolute;
@@ -476,7 +476,7 @@ body {
 }
 .mood-dial-item:hover::before { opacity: 1; transform: translateY(-50%) scale(1); }
 
-/* Active state nút con */
+/* Active state nĂºt con */
 .mood-dial-item.active {
     background: linear-gradient(135deg, #2563eb, #3b82f6) !important;
     border-color: #2563eb !important;
@@ -484,7 +484,7 @@ body {
     box-shadow: 0 4px 14px rgba(37,99,235,0.35) !important;
 }
 
-/* ── Backdrop mờ khi mở (mobile tap outside để đóng) ──────────────────── */
+/* â”€â”€ Backdrop má» khi má»Ÿ (mobile tap outside Ä‘á»ƒ Ä‘Ă³ng) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .mood-dial-backdrop {
     display: none;
     position: fixed;
@@ -967,7 +967,7 @@ body {
     transform: translateY(-2px);
 }
 
-/* Theme Override 1: Mưa Mát (Rain Mood) */
+/* Theme Override 1: MÆ°a MĂ¡t (Rain Mood) */
 body[data-theme="rain"] {
     --bg-dark: #f0f9ff;
     --accent-gold: #0284c7;
@@ -978,7 +978,7 @@ body[data-theme="rain"] .ambient-backdrop {
 body[data-theme="rain"] .orb-1 { background: radial-gradient(circle, #38bdf8, #bae6fd); }
 body[data-theme="rain"] .orb-2 { background: radial-gradient(circle, #60a5fa, #93c5fd); }
 
-/* Theme Override 2: Vũ Trụ Tri Thức (Space Mood) */
+/* Theme Override 2: VÅ© Trá»¥ Tri Thá»©c (Space Mood) */
 body[data-theme="space"] {
     --bg-dark: #faf5ff;
     --accent-gold: #7c3aed;
@@ -989,7 +989,7 @@ body[data-theme="space"] .ambient-backdrop {
 body[data-theme="space"] .orb-1 { background: radial-gradient(circle, #c084fc, #e9d5ff); }
 body[data-theme="space"] .orb-2 { background: radial-gradient(circle, #f472b6, #fbcfe8); }
 
-/* Theme Override 3: Nắng Ấm Ban Ngày (Sunny Day Mood) */
+/* Theme Override 3: Náº¯ng áº¤m Ban NgĂ y (Sunny Day Mood) */
 body[data-theme="day"] {
     --bg-dark: #fffbebfb;
     --accent-gold: #d97706;
@@ -1000,7 +1000,7 @@ body[data-theme="day"] .ambient-backdrop {
 body[data-theme="day"] .orb-1 { background: radial-gradient(circle, #fde047, #fef08a); }
 body[data-theme="day"] .orb-2 { background: radial-gradient(circle, #38bdf8, #bae6fd); }
 
-/* Theme Override 4: Hoàng Hôn (Sunset Mood) */
+/* Theme Override 4: HoĂ ng HĂ´n (Sunset Mood) */
 body[data-theme="sunset"] {
     --bg-dark: #fff1f2;
     --accent-gold: #e11d48;
@@ -1012,7 +1012,7 @@ body[data-theme="sunset"] .orb-1 { background: radial-gradient(circle, #fda4af, 
 body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, #fdba74); }
 
 /* --------------------------------------------------------------------------
-   Favorites Section (Sở Thích Của Kế)
+   Favorites Section (Sá»Ÿ ThĂ­ch Cá»§a Káº¿)
    -------------------------------------------------------------------------- */
 .favorites-section {
     width: 100%;
@@ -1293,7 +1293,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     color: #fff;
 }
 
-/* Nút Thả Tim Interactive Heart Counter */
+/* NĂºt Tháº£ Tim Interactive Heart Counter */
 .heart-like-box {
     display: flex;
     flex-direction: column;
@@ -1412,7 +1412,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     font-size: 1.1rem;
 }
 /* ==========================================================================
-   Module 6: Hộp Thư Thời Gian & Đồng Hồ Đếm Ngược Cột Mốc
+   Module 6: Há»™p ThÆ° Thá»i Gian & Äá»“ng Há»“ Äáº¿m NgÆ°á»£c Cá»™t Má»‘c
    ========================================================================== */
 .time-capsule-section {
     width: 100%;
@@ -1634,7 +1634,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     line-height: 1.45;
 }
 
-/* Module 7: Fortune Jar (Hũ Thư Cảm Hứng) */
+/* Module 7: Fortune Jar (HÅ© ThÆ° Cáº£m Há»©ng) */
 .fortune-jar-section {
     width: 100%;
     margin-top: 30px;
@@ -3311,7 +3311,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     border: none;
 }
 
-/* ── Pagination ─────────────────────────────────────────────────────────────── */
+/* â”€â”€ Pagination â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pager-container {
     display: flex;
     justify-content: center;
@@ -3358,274 +3358,12 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     cursor: not-allowed;
 }
 
-/* ── Admin Login Modal — styles đã chuyển sang block "Redesign" bên dưới ─── */
-
-/* ── Admin Login Modal — Redesign ───────────────────────────────────────────── */
-.admin-login-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 99999;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.72);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    padding: 20px;
-    animation: adminOverlayIn 0.2s ease;
-}
-
-.admin-login-overlay.active {
-    display: flex;
-}
-
-@keyframes adminOverlayIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-}
-
-.admin-login-card {
-    position: relative;
-    width: 100%;
-    max-width: 400px;
-    background: linear-gradient(145deg, #1a1f2e, #13171f);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow:
-        0 0 0 1px rgba(255, 255, 255, 0.04),
-        0 32px 64px rgba(0, 0, 0, 0.6),
-        0 0 80px rgba(245, 158, 11, 0.06);
-    animation: adminCardIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes adminCardIn {
-    from { opacity: 0; transform: translateY(18px) scale(0.96); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* Glow accent ở trên đầu card */
-.admin-login-glow {
-    position: absolute;
-    top: -60px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 200px;
-    height: 120px;
-    background: radial-gradient(ellipse, rgba(245, 158, 11, 0.35) 0%, transparent 70%);
-    pointer-events: none;
-    border-radius: 50%;
-}
-
-/* Header */
-.admin-login-header {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 28px 28px 20px;
-}
-
-.admin-login-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.08));
-    border: 1px solid rgba(245, 158, 11, 0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    color: #f59e0b;
-    flex-shrink: 0;
-}
-
-.admin-login-title {
-    font-size: 1.05rem;
-    font-weight: 600;
-    color: #f1f5f9;
-    margin: 0 0 2px;
-    font-family: 'Outfit', sans-serif;
-    letter-spacing: 0.3px;
-}
-
-.admin-login-sub {
-    font-size: 0.78rem;
-    color: #64748b;
-    margin: 0;
-}
-
-/* Divider */
-.admin-login-divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent);
-    margin: 0 28px;
-}
-
-/* Body */
-.admin-login-body {
-    padding: 22px 28px 8px;
-}
-
-.admin-login-label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: #94a3b8;
-    margin-bottom: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.admin-login-label i {
-    font-size: 0.72rem;
-    color: #f59e0b;
-}
-
-/* Input wrapper */
-.admin-password-wrap {
-    position: relative;
-}
-
-.admin-login-input {
-    width: 100%;
-    padding: 11px 44px 11px 14px;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.05);
-    color: #f1f5f9;
-    font-size: 0.93rem;
-    font-family: inherit;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-    box-sizing: border-box;
-    caret-color: #f59e0b;
-}
-
-.admin-login-input::placeholder {
-    color: #475569;
-}
-
-.admin-login-input:focus {
-    border-color: rgba(245, 158, 11, 0.5);
-    background: rgba(255, 255, 255, 0.07);
-    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
-}
-
-/* Toggle eye button */
-.admin-toggle-eye {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: #475569;
-    cursor: pointer;
-    padding: 4px;
-    font-size: 0.85rem;
-    transition: color 0.2s;
-    line-height: 1;
-}
-
-.admin-toggle-eye:hover { color: #94a3b8; }
-
-/* Error message */
-.admin-login-error {
-    min-height: 20px;
-    margin: 8px 0 0;
-    font-size: 0.8rem;
-    color: #f43f5e;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    opacity: 0;
-    transition: opacity 0.2s;
-}
-
-.admin-login-error:not(:empty) {
-    opacity: 1;
-}
-
-.admin-login-error::before {
-    content: '\f06a';
-    font-family: 'Font Awesome 6 Free';
-    font-weight: 900;
-    font-size: 0.75rem;
-}
-
-/* Footer */
-.admin-login-footer {
-    display: flex;
-    gap: 10px;
-    padding: 18px 28px 26px;
-    align-items: center;
-}
-
-.admin-btn-cancel {
-    flex: 0 0 auto;
-    padding: 10px 18px;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.05);
-    color: #64748b;
-    font-size: 0.88rem;
-    font-family: inherit;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s, border-color 0.2s;
-    white-space: nowrap;
-}
-
-.admin-btn-cancel:hover {
-    background: rgba(255, 255, 255, 0.09);
-    color: #94a3b8;
-    border-color: rgba(255, 255, 255, 0.18);
-}
-
-.admin-btn-submit {
-    flex: 1;
-    padding: 10px 18px;
-    border-radius: 10px;
-    border: none;
-    background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
-    color: #fff;
-    font-size: 0.9rem;
-    font-weight: 600;
-    font-family: inherit;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
-    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
-    letter-spacing: 0.2px;
-}
-
-.admin-btn-submit:hover:not(:disabled) {
-    opacity: 0.92;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
-}
-
-.admin-btn-submit:active:not(:disabled) {
-    transform: translateY(0);
-}
-
-.admin-btn-submit:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
 /* ==========================================================================
-   Anonymous Button & Modal — Modern Redesign
+   Anonymous Button & Modal â€” Modern Redesign
    ========================================================================== */
 
-/* ── Header Anonymous Button ────────────────────────────────────────────── */
-/* ── Header Anonymous Button (NGL Style) ────────────────────────────────────────── */
+/* â”€â”€ Header Anonymous Button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* â”€â”€ Header Anonymous Button (NGL Style) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .anonymous-btn {
     position: relative;
     background: linear-gradient(135deg, #EC008C 0%, #FC6767 100%);
@@ -3720,7 +3458,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     50%      { opacity: 1;   transform: scale(1.2) rotate(15deg); }
 }
 
-/* ── Anonymous Modal Overrides ───────────────────────────────────────────── */
+/* â”€â”€ Anonymous Modal Overrides â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .anonymous-modal {
     background: radial-gradient(circle at 30% 20%, rgba(168, 85, 247, 0.18) 0%, rgba(5, 6, 14, 0.92) 55%);
     backdrop-filter: blur(20px) saturate(1.3);
@@ -3920,7 +3658,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     transform: rotate(90deg);
 }
 
-/* ── Tip Banner ─────────────────────────────────────────────────────────── */
+/* â”€â”€ Tip Banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .anonymous-tip-banner {
     display: flex;
     align-items: flex-start;
@@ -3942,7 +3680,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     flex-shrink: 0;
 }
 
-/* ── Textarea ───────────────────────────────────────────────────────────── */
+/* â”€â”€ Textarea â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .anonymous-textarea-wrap {
     position: relative;
     margin-bottom: 12px;
@@ -4029,7 +3767,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     font-size: 0.7rem;
 }
 
-/* ── Submit Button ──────────────────────────────────────────────────────── */
+/* â”€â”€ Submit Button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .anonymous-submit-btn {
     position: relative;
     width: 100%;
@@ -4127,7 +3865,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     50%      { transform: rotate(12deg) scale(1.2); opacity: 1; }
 }
 
-/* ── Responsive ─────────────────────────────────────────────────────────── */
+/* â”€â”€ Responsive â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (max-width: 560px) {
     .anonymous-btn {
         padding: 8px 14px;
@@ -4204,10 +3942,10 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
 }
 
 /* ==========================================================================
-   ANONYMOUS MODAL — Media Attachment Bar
+   ANONYMOUS MODAL â€” Media Attachment Bar
    ========================================================================== */
 
-/* ── Container ──────────────────────────────────────────────────────────── */
+/* â”€â”€ Container â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .anon-media-bar {
     display: flex;
     flex-direction: column;
@@ -4232,7 +3970,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     gap: 6px;
 }
 
-/* ── Action buttons row ─────────────────────────────────────────────────── */
+/* â”€â”€ Action buttons row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .anon-media-actions {
     display: flex;
     gap: 8px;
@@ -4263,7 +4001,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     color: #fff;
 }
 
-/* Record button — active/recording state */
+/* Record button â€” active/recording state */
 .anon-media-btn#btnAnonRecord {
     border-color: rgba(244, 63, 94, 0.4);
     color: #fda4af;
@@ -4320,9 +4058,9 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     color: #fff !important;
 }
 
-/* ── Recording status bar ───────────────────────────────────────────────── */
+/* â”€â”€ Recording status bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .anon-record-status {
-    display: none;  /* ẩn mặc định, hiện bằng class .is-visible */
+    display: none;  /* áº©n máº·c Ä‘á»‹nh, hiá»‡n báº±ng class .is-visible */
     align-items: center;
     gap: 10px;
     padding: 8px 12px;
@@ -4364,9 +4102,9 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     flex: 1;
 }
 
-/* ── Media preview area ─────────────────────────────────────────────────── */
+/* â”€â”€ Media preview area â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .anon-media-preview {
-    display: none;  /* mặc định ẩn, hiện bằng class .is-visible */
+    display: none;  /* máº·c Ä‘á»‹nh áº©n, hiá»‡n báº±ng class .is-visible */
     width: 100%;
     box-sizing: border-box;
     padding: 10px 12px 12px 12px;
@@ -4390,21 +4128,21 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     width: 100%;
     box-sizing: border-box;
     min-width: 0;
-    min-height: 44px;   /* tối thiểu để audio 40px + nút X không bị co hẹp */
+    min-height: 44px;   /* tá»‘i thiá»ƒu Ä‘á»ƒ audio 40px + nĂºt X khĂ´ng bá»‹ co háº¹p */
     position: relative;
     display: block;
     padding: 0;
 }
 
-/* LƯU Ý QUAN TRỌNG: Nếu khối preview CHƯA CÓ .is-visible → ẨN HẲN NÚT X
-   → tránh trường hợp nút absolute bị nhảy loạn ra ngoài khối khi cha không visible */
+/* LÆ¯U Ă QUAN TRá»ŒNG: Náº¿u khá»‘i preview CHÆ¯A CĂ“ .is-visible â†’ áº¨N Háº²N NĂT X
+   â†’ trĂ¡nh trÆ°á»ng há»£p nĂºt absolute bá»‹ nháº£y loáº¡n ra ngoĂ i khá»‘i khi cha khĂ´ng visible */
 .anon-media-preview:not(.is-visible) .anon-remove-media {
     display: none !important;
 }
-/* HACK CHROME: audio element controls phải có min-height rõ ràng và margin-top để
-   không bị nút X (absolute top 8) đè mất thanh play/volume. */
+/* HACK CHROME: audio element controls pháº£i cĂ³ min-height rĂµ rĂ ng vĂ  margin-top Ä‘á»ƒ
+   khĂ´ng bá»‹ nĂºt X (absolute top 8) Ä‘Ă¨ máº¥t thanh play/volume. */
 .anon-preview-audio {
-    width: calc(100% - 34px);   /* chừa khoảng trống bên phải 34px cho nút X đỏ 24px + spacing */
+    width: calc(100% - 34px);   /* chá»«a khoáº£ng trá»‘ng bĂªn pháº£i 34px cho nĂºt X Ä‘á» 24px + spacing */
     height: 40px;
     min-height: 40px;
     max-height: 40px;
@@ -4414,8 +4152,8 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     accent-color: #f472b6;
     filter: saturate(1.2) brightness(1.05);
 }
-/* Với audio: nút X vẫn ở góc trên phải, nhưng thanh audio được hẹp lại 1 bên phải để
-   nút play / timeline / volume KHÔNG BỊ NÚT X ĐÈ LÊN. */
+/* Vá»›i audio: nĂºt X váº«n á»Ÿ gĂ³c trĂªn pháº£i, nhÆ°ng thanh audio Ä‘Æ°á»£c háº¹p láº¡i 1 bĂªn pháº£i Ä‘á»ƒ
+   nĂºt play / timeline / volume KHĂ”NG Bá» NĂT X ÄĂˆ LĂN. */
 .ap-fallback {
     width: calc(100% - 34px);
     padding: 8px 12px;
@@ -4453,7 +4191,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     display: block;
 }
 
-/* Remove media button — NÚT X ĐỎ, NHỎ, GÓC PHẢI TRÊN CỦA ẢNH/MEDIA */
+/* Remove media button â€” NĂT X Äá», NHá», GĂ“C PHáº¢I TRĂN Cá»¦A áº¢NH/MEDIA */
 .anon-remove-media {
     position: absolute;
     top: 8px;
@@ -4483,7 +4221,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     transform: scale(0.94) rotate(90deg);
 }
 
-/* ── Mobile adjustments ─────────────────────────────────────────────────── */
+/* â”€â”€ Mobile adjustments â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (max-width: 480px) {
     .anon-media-btn span { display: none; }
     .anon-media-btn { padding: 9px 12px; }
@@ -4491,10 +4229,10 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
 }
 
 /* ==========================================================================
-   REALISTIC 3D TREE — Anonymous Modal (Complete Redesign)
+   REALISTIC 3D TREE â€” Anonymous Modal (Complete Redesign)
    ========================================================================== */
 
-/* ── Wrapper container ──────────────────────────────────────────────────── */
+/* â”€â”€ Wrapper container â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .big-tree-outside {
     position: absolute;
     right: 0;
@@ -4514,7 +4252,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     height: 100%;
 }
 
-/* ── Whole-tree gentle sway ─────────────────────────────────────────────── */
+/* â”€â”€ Whole-tree gentle sway â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .big-tree-sway {
     position: relative;
     width: 400px;
@@ -4531,7 +4269,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     33%     { transform: rotate(0.6deg)  skewX(-0.2deg); }
     66%     { transform: rotate(1.4deg)  skewX(0.4deg); }
 }
-/* ── Roots ──────────────────────────────────────────────────────────────── */
+/* â”€â”€ Roots â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .tree-root {
     position: absolute;
     background: linear-gradient(135deg, #6b3a10 0%, #4a2810 60%, #311a0a 100%);
@@ -4543,7 +4281,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
 .root-r1 { bottom: 96px; right: calc(50% - 46px); width: 60px; height: 14px; transform: rotate(-28deg); transform-origin: left center; }
 .root-r2 { bottom: 88px; right: calc(50% - 68px); width: 46px; height: 10px; transform: rotate(-18deg); transform-origin: left center; opacity: 0.8; }
 
-/* ── 3D Trunk System ────────────────────────────────────────────────────── */
+/* â”€â”€ 3D Trunk System â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 /* Shadow behind trunk for depth */
 .trunk-shadow {
     position: absolute;
@@ -4555,7 +4293,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     filter: blur(8px);
     z-index: 0;
 }
-/* Back face — darkest */
+/* Back face â€” darkest */
 .trunk-back {
     position: absolute;
     bottom: 100px; left: calc(50% - 16px);
@@ -4564,7 +4302,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     border-radius: 12px 12px 4px 4px;
     z-index: 1;
 }
-/* Mid face — main body */
+/* Mid face â€” main body */
 .trunk-mid {
     position: absolute;
     bottom: 100px; left: calc(50% - 14px);
@@ -4582,7 +4320,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
         inset -7px 0 12px rgba(0,0,0,0.45),
         inset 3px 0 8px rgba(255,255,255,0.06);
 }
-/* Front highlight face — thinner, lighter left edge */
+/* Front highlight face â€” thinner, lighter left edge */
 .trunk-front {
     position: absolute;
     bottom: 100px; left: calc(50% - 14px);
@@ -4622,7 +4360,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     filter: blur(1.5px);
 }
 
-/* ── Branches (primary — t3-branch) ────────────────────────────────────── */
+/* â”€â”€ Branches (primary â€” t3-branch) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 /* Shared branch style: tapers from thick base to thin tip via clip-path */
 .t3-branch {
     position: absolute;
@@ -4686,7 +4424,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     transform-origin: right center;
 }
 
-/* ── Twigs (secondary — t3-twig) ────────────────────────────────────────── */
+/* â”€â”€ Twigs (secondary â€” t3-twig) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .t3-twig {
     position: absolute;
     transform-origin: left center;
@@ -4703,7 +4441,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
 .tw-4a { bottom: 510px; left: calc(50% + 38px); width: 34px; height: 3px; background: linear-gradient(90deg,#4e2608,#281206); transform: rotate(-35deg); }
 .tw-4b { bottom: 514px; right: calc(50% + 34px); width: 32px; height: 3px; background: linear-gradient(270deg,#4e2608,#281206); transform: rotate(38deg); transform-origin: right center; }
 
-/* ── Leaf Container ─────────────────────────────────────────────────────── */
+/* â”€â”€ Leaf Container â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .big-tree-leaves {
     position: absolute;
     bottom: 70px; left: 50%;
@@ -4713,12 +4451,12 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     pointer-events: none;
 }
 
-/* ── Hoa Đào — Cherry Blossom ───────────────────────────────────────────── */
+/* â”€â”€ Hoa ÄĂ o â€” Cherry Blossom â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 /*
- * Mỗi .tree-leaf là một bông hoa đào 5 cánh:
- * - Thân bông: hình tròn nền hồng với radial-gradient
- * - ::before: mô phỏng 5 cánh dạng "clover" bằng clip-path
- * - ::after : nhụy vàng trung tâm
+ * Má»—i .tree-leaf lĂ  má»™t bĂ´ng hoa Ä‘Ă o 5 cĂ¡nh:
+ * - ThĂ¢n bĂ´ng: hĂ¬nh trĂ²n ná»n há»“ng vá»›i radial-gradient
+ * - ::before: mĂ´ phá»ng 5 cĂ¡nh dáº¡ng "clover" báº±ng clip-path
+ * - ::after : nhá»¥y vĂ ng trung tĂ¢m
  */
 .tree-leaf {
     position: absolute;
@@ -4726,26 +4464,26 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     border-radius: 50%;
     transform-origin: 50% 50%;
     will-change: transform, opacity, filter;
-    /* Glow hồng nhẹ xung quanh bông */
+    /* Glow há»“ng nháº¹ xung quanh bĂ´ng */
     box-shadow:
         0 0 6px rgba(255,182,193,0.7),
         0 2px 5px rgba(0,0,0,0.18);
 }
 
-/* ── 5 cánh hoa — dùng clip-path polygon ngôi sao 5 cánh tròn ─────────── */
+/* â”€â”€ 5 cĂ¡nh hoa â€” dĂ¹ng clip-path polygon ngĂ´i sao 5 cĂ¡nh trĂ²n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .tree-leaf::before {
     content: '';
     position: absolute;
     inset: -2px;
     border-radius: 50%;
-    /* clip-path tạo hình 5 cánh hoa đào */
+    /* clip-path táº¡o hĂ¬nh 5 cĂ¡nh hoa Ä‘Ă o */
     clip-path: polygon(
         50%  0%,   61%  35%,  98%  35%,
         68%  57%,  79%  91%,  50%  70%,
         21%  91%,  32%  57%,   2%  35%,
         39%  35%
     );
-    /* Gradient từ trắng→hồng nhạt→hồng đậm hướng từ tâm ra */
+    /* Gradient tá»« tráº¯ngâ†’há»“ng nháº¡tâ†’há»“ng Ä‘áº­m hÆ°á»›ng tá»« tĂ¢m ra */
     background: radial-gradient(ellipse at 40% 35%,
         #fff8f9 0%,
         rgba(255,255,255,0.85) 15%,
@@ -4756,7 +4494,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     box-shadow: inset 0 0 4px rgba(255,255,255,0.6);
 }
 
-/* ── Nhụy vàng trung tâm ────────────────────────────────────────────────── */
+/* â”€â”€ Nhá»¥y vĂ ng trung tĂ¢m â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .tree-leaf::after {
     content: '';
     position: absolute;
@@ -4775,43 +4513,43 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     z-index: 2;
 }
 
-/* ── Màu sắc variants — từ hồng nhạt đến đỏ thắm ──────────────────────── */
-/* color-1: trắng hồng ngà — hoa chớm nở */
+/* â”€â”€ MĂ u sáº¯c variants â€” tá»« há»“ng nháº¡t Ä‘áº¿n Ä‘á» tháº¯m â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* color-1: tráº¯ng há»“ng ngĂ  â€” hoa chá»›m ná»Ÿ */
 .tree-leaf.color-1 {
     --petal-light: #fff0f3;
     --petal-main:  #fecdd3;
     --petal-deep:  #fda4af;
     box-shadow: 0 0 7px rgba(254,205,211,0.8), 0 2px 5px rgba(0,0,0,0.15);
 }
-/* color-2: hồng phấn — hoa nở rộ */
+/* color-2: há»“ng pháº¥n â€” hoa ná»Ÿ rá»™ */
 .tree-leaf.color-2 {
     --petal-light: #ffe4e6;
     --petal-main:  #fb7185;
     --petal-deep:  #e11d48;
     box-shadow: 0 0 8px rgba(251,113,133,0.7), 0 2px 5px rgba(0,0,0,0.18);
 }
-/* color-3: hồng đào cổ điển */
+/* color-3: há»“ng Ä‘Ă o cá»• Ä‘iá»ƒn */
 .tree-leaf.color-3 {
     --petal-light: #fce7f3;
     --petal-main:  #f9a8d4;
     --petal-deep:  #ec4899;
     box-shadow: 0 0 8px rgba(249,168,212,0.75), 0 2px 4px rgba(0,0,0,0.16);
 }
-/* color-4: hồng tươi — hoa đang nở */
+/* color-4: há»“ng tÆ°Æ¡i â€” hoa Ä‘ang ná»Ÿ */
 .tree-leaf.color-4 {
     --petal-light: #fdf2f8;
     --petal-main:  #f472b6;
     --petal-deep:  #be185d;
     box-shadow: 0 0 9px rgba(244,114,182,0.7), 0 2px 5px rgba(0,0,0,0.18);
 }
-/* color-5: hồng đậm — hoa già */
+/* color-5: há»“ng Ä‘áº­m â€” hoa giĂ  */
 .tree-leaf.color-5 {
     --petal-light: #fce7f3;
     --petal-main:  #e879f9;
     --petal-deep:  #a21caf;
     box-shadow: 0 0 8px rgba(232,121,249,0.6), 0 2px 4px rgba(0,0,0,0.18);
 }
-/* color-6: trắng tinh khôi — hoa mới nhú */
+/* color-6: tráº¯ng tinh khĂ´i â€” hoa má»›i nhĂº */
 .tree-leaf.color-6 {
     --petal-light: #ffffff;
     --petal-main:  #fecdd3;
@@ -4819,7 +4557,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     box-shadow: 0 0 10px rgba(255,255,255,0.6), 0 0 5px rgba(251,207,232,0.7), 0 2px 4px rgba(0,0,0,0.14);
 }
 
-/* ── Idle sway — hoa rung nhẹ theo gió ─────────────────────────────────── */
+/* â”€â”€ Idle sway â€” hoa rung nháº¹ theo giĂ³ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .tree-leaf:not(.falling):not(.growing) {
     animation: blossom3DSway var(--sway-dur, 3.6s) ease-in-out infinite;
     animation-delay: var(--sway-delay, 0s);
@@ -4839,7 +4577,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     }
 }
 
-/* ── Falling — hoa rụng xoay tròn bay theo gió ─────────────────────────── */
+/* â”€â”€ Falling â€” hoa rá»¥ng xoay trĂ²n bay theo giĂ³ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .tree-leaf.falling {
     animation: blossom3DFall var(--fall-dur, 1.6s) cubic-bezier(0.3, 0.0, 0.6, 1.0) forwards;
     z-index: 20;
@@ -4875,7 +4613,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     }
 }
 
-/* ── Growing — hoa nở từ nụ ────────────────────────────────────────────── */
+/* â”€â”€ Growing â€” hoa ná»Ÿ tá»« ná»¥ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .tree-leaf.growing {
     animation: blossom3DGrow 0.95s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
@@ -4902,7 +4640,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     }
 }
 
-/* ── 3D Terracotta Pot ──────────────────────────────────────────────────── */
+/* â”€â”€ 3D Terracotta Pot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pot3d {
     position: absolute;
     bottom: 0; left: 50%;
@@ -4910,7 +4648,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     width: 170px; height: 100px;
     z-index: 6;
 }
-/* Rim — top band with ellipse top face */
+/* Rim â€” top band with ellipse top face */
 .pot3d-rim {
     position: absolute;
     top: 0; left: -12px;
@@ -4926,7 +4664,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
         inset 0  4px 8px rgba(255,255,255,0.35),
         0 4px 10px rgba(0,0,0,0.25);
 }
-/* Pot body — tapered trapezoid via clip-path */
+/* Pot body â€” tapered trapezoid via clip-path */
 .pot3d-body {
     position: absolute;
     top: 16px; left: 0;
@@ -4963,7 +4701,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     filter: blur(4px);
     border-radius: 0 0 50% 50%;
 }
-/* Base ellipse — ground contact */
+/* Base ellipse â€” ground contact */
 .pot3d-base {
     position: absolute;
     bottom: -5px; left: -6px;
@@ -4982,7 +4720,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     border-radius: 50%;
 }
 
-/* ── Falling leaves overlay ─────────────────────────────────────────────── */
+/* â”€â”€ Falling leaves overlay â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .fallen-leaves-layer-outside {
     position: absolute;
     inset: 0;
@@ -4996,7 +4734,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     border-radius: 50%;
     opacity: 0;
     transform-origin: 50% 50%;
-    /* 5 cánh hoa giống trên */
+    /* 5 cĂ¡nh hoa giá»‘ng trĂªn */
     clip-path: polygon(
         50%  0%,   61%  35%,  98%  35%,
         68%  57%,  79%  91%,  50%  70%,
@@ -5019,7 +4757,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
         opacity: 0.45;
     }
 }
-/* Màu hoa đào cho fallen leaves */
+/* MĂ u hoa Ä‘Ă o cho fallen leaves */
 .fallen-leaf.color-1 { background: radial-gradient(circle at 40% 35%, #fff0f3, #fecdd3, #fda4af); }
 .fallen-leaf.color-2 { background: radial-gradient(circle at 40% 35%, #ffe4e6, #fb7185, #e11d48); }
 .fallen-leaf.color-3 { background: radial-gradient(circle at 40% 35%, #fce7f3, #f9a8d4, #ec4899); }
@@ -5027,7 +4765,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
 .fallen-leaf.color-5 { background: radial-gradient(circle at 40% 35%, #fce7f3, #e879f9, #a21caf); }
 .fallen-leaf.color-6 { background: radial-gradient(circle at 40% 35%, #ffffff, #fecdd3, #f9a8d4); }
 
-/* ── Responsive ─────────────────────────────────────────────────────────── */
+/* â”€â”€ Responsive â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (max-width: 1100px) {
     .big-tree-right { right: -10px; opacity: 0.88; }
 }
@@ -5040,7 +4778,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     .fallen-leaves-layer-outside{ display: none; }
 }
 
-/* ── Empty State Hint ───────────────────────────────────────────────────────── */
+/* â”€â”€ Empty State Hint â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .empty-state-hint {
     grid-column: 1 / -1;
     text-align: center;
@@ -5061,15 +4799,15 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     opacity: 0.7;
 }
 
-/* 🎈 FLOATING TIKTOK BALLOON & VIDEO MODAL STYLES */
-/* 🎈 FLOATING TIKTOK BALLOON & VIDEO MODAL STYLES */
+/* đŸˆ FLOATING TIKTOK BALLOON & VIDEO MODAL STYLES */
+/* đŸˆ FLOATING TIKTOK BALLOON & VIDEO MODAL STYLES */
 .balloon-container {
     position: fixed;
     top: 90px;
     left: 100px;
     width: 60px;
     height: 130px;
-    z-index: 1005; /* Đảm bảo nổi trên tất cả header (z-index 100) và sidebar (z-index 999) */
+    z-index: 1005; /* Äáº£m báº£o ná»•i trĂªn táº¥t cáº£ header (z-index 100) vĂ  sidebar (z-index 999) */
     cursor: pointer;
     user-select: none;
     pointer-events: auto;
@@ -5089,7 +4827,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     }
 }
 
-/* Tooltip gợi ý nhỏ bay cùng bóng bóng */
+/* Tooltip gá»£i Ă½ nhá» bay cĂ¹ng bĂ³ng bĂ³ng */
 .balloon-tip {
     position: absolute;
     top: -28px;
@@ -5176,7 +4914,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
 
 .balloon-string {
     position: absolute;
-    top: 56px; /* Bắt đầu từ đuôi bong bóng */
+    top: 56px; /* Báº¯t Ä‘áº§u tá»« Ä‘uĂ´i bong bĂ³ng */
     left: calc(50% - 1px);
     width: 2px;
     height: 70px;
@@ -5373,7 +5111,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     border: none;
 }
 
-/* 📱 Responsive Mobile Adjustments */
+/* đŸ“± Responsive Mobile Adjustments */
 @media (max-width: 768px) {
     html, body {
         overflow-x: hidden;
@@ -5453,7 +5191,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     }
 }
 
-/* ── Admin Smart V2 Buttons ────────────────────────────────────────────────── */
+/* â”€â”€ Admin Smart V2 Buttons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .btn-backup-export, .btn-backup-import, .btn-geocode-map {
     padding: 8px 14px;
     border-radius: 12px;
@@ -5496,7 +5234,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     color: #fff;
 }
 
-/* ── Header Distance Button (Replaced Weather Badge) ────────────────────────── */
+/* â”€â”€ Header Distance Button (Replaced Weather Badge) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .header-location-btn {
     background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);
     border: 1.5px solid rgba(255, 255, 255, 0.4);
@@ -5616,10 +5354,10 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
 }
 
 /* ==========================================================================
-   OPTIMIZED NATIVE-LIKE MOBILE APP UI & UX (Tối Ưu Giao Diện Điện Thoại)
+   OPTIMIZED NATIVE-LIKE MOBILE APP UI & UX (Tá»‘i Æ¯u Giao Diá»‡n Äiá»‡n Thoáº¡i)
    ========================================================================== */
 @media (max-width: 768px) {
-    /* ── Header Top Bar ── */
+    /* â”€â”€ Header Top Bar â”€â”€ */
     .top-header {
         position: absolute !important;
         padding: 12px 14px !important;
@@ -5665,19 +5403,19 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
         color: #0f172a !important;
     }
 
-    /* ── Header Location Button ── */
+    /* â”€â”€ Header Location Button â”€â”€ */
     .header-location-btn {
         padding: 6px 12px !important;
         font-size: 0.75rem !important;
         gap: 6px !important;
     }
 
-    /* ── Main Container Padding ── */
+    /* â”€â”€ Main Container Padding â”€â”€ */
     .main-container {
         padding: 85px 14px 100px !important;
     }
 
-    /* ── Vinyl & Player Controls ── */
+    /* â”€â”€ Vinyl & Player Controls â”€â”€ */
     .vinyl-wrapper {
         width: 240px !important;
         height: 240px !important;
@@ -5688,7 +5426,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
         height: 340px !important;
     }
 
-    /* ── Touch & Mobile Smoothness ── */
+    /* â”€â”€ Touch & Mobile Smoothness â”€â”€ */
     * {
         -webkit-tap-highlight-color: transparent;
     }
@@ -5697,12 +5435,12 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
         -webkit-text-size-adjust: 100%;
     }
 
-    /* ── Safe Area Insets for iOS Home Indicator ── */
+    /* â”€â”€ Safe Area Insets for iOS Home Indicator â”€â”€ */
     .app-nav-dock {
         bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
     }
 
-    /* ── Mobile Grid System ── */
+    /* â”€â”€ Mobile Grid System â”€â”€ */
     .achievements-grid,
     .clubs-grid,
     .friends-grid,
@@ -5717,7 +5455,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
         gap: 10px !important;
     }
 
-    /* ── Action Cards on Mobile ── */
+    /* â”€â”€ Action Cards on Mobile â”€â”€ */
     .action-card {
         padding: 16px 14px !important;
         border-radius: 20px !important;
@@ -5731,7 +5469,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
         font-size: 0.82rem !important;
     }
 
-    /* ── Time Capsule & Quote Boxes ── */
+    /* â”€â”€ Time Capsule & Quote Boxes â”€â”€ */
     .time-capsule-section,
     .guestbook-section,
     .quote-box {
@@ -5744,7 +5482,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
         line-height: 1.5 !important;
     }
 
-    /* ── Lightbox & Modals Mobile Touch ── */
+    /* â”€â”€ Lightbox & Modals Mobile Touch â”€â”€ */
     .lightbox-content {
         max-width: 95vw !important;
         max-height: 80vh !important;
@@ -5757,7 +5495,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
         font-size: 1.1rem !important;
     }
 
-    /* ── Inputs on Mobile (Prevent iOS Safari Auto Zoom) ── */
+    /* â”€â”€ Inputs on Mobile (Prevent iOS Safari Auto Zoom) â”€â”€ */
     input[type="text"],
     input[type="number"],
     input[type="date"],

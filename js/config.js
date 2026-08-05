@@ -6,8 +6,8 @@
  */
 export const KE_CONFIG = {
     // 👤 Hồ Sơ Cá Nhân
-    name: "Phan Hoàng Kế",
-    schoolName: "Trường THPT",
+    name: "",
+    schoolName: "",
     className: "",
     gradYear: "",
     classSlogan: "",
@@ -62,11 +62,11 @@ export const KE_CONFIG = {
     playlist: [],
     mapLocations: [],  // [{name, label, lat, lng}]
     reactionsConfig: [
-        { emoji: '❤️', title: 'Thả Tim Hạ Nhân', countId: 'reactionCount-heart', imgUrl: 'assets/memes/hanhan_3.png' },
-        { emoji: '🧹', title: 'Hạ Nhân Quét Rác', countId: 'reactionCount-smile', imgUrl: 'assets/memes/hanhan_1.png' },
-        { emoji: '😏', title: 'Hạ Nhân Cười Khẩy', countId: 'reactionCount-tear', imgUrl: 'assets/memes/hanhan_2.png' },
-        { emoji: '🔥', title: 'Hạ Nhân Cực Ngầu', countId: 'reactionCount-party', imgUrl: 'assets/memes/hanhan_4.png' },
-        { emoji: '👑', title: 'Hạ Nhân Bá Đạo', countId: 'reactionCount-clap', imgUrl: 'assets/memes/hanhan_2.png' }
+        { emoji: '❤️', title: 'Reaction 1', countId: 'reactionCount-heart', imgUrl: '' },
+        { emoji: '😂', title: 'Reaction 2', countId: 'reactionCount-smile', imgUrl: '' },
+        { emoji: '�', title: 'Reaction 3', countId: 'reactionCount-tear',  imgUrl: '' },
+        { emoji: '🎉', title: 'Reaction 4', countId: 'reactionCount-party', imgUrl: '' },
+        { emoji: '�', title: 'Reaction 5', countId: 'reactionCount-clap',  imgUrl: '' },
     ],
 };
 

@@ -808,57 +808,148 @@
     <!-- Modal Admin Control Center -->
     <div id="customModal" class="modal-overlay">
         <div class="modal-box">
+
+            <!-- ── SIDEBAR ── -->
+            <aside class="adm-sidebar">
+                <div class="adm-sidebar-brand">
+                    <div class="adm-sidebar-brand-icon">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div class="adm-sidebar-brand-text">
+                        <span class="adm-sidebar-brand-name">Command</span>
+                        <span class="adm-sidebar-brand-sub">Control Center</span>
+                    </div>
+                </div>
+
+                <nav class="adm-nav-group">
+                    <!-- PRIMARY — dùng hàng ngày -->
+                    <div class="adm-nav-label">Giám Sát</div>
+                    <button class="admin-tab-btn active" data-tab="tabOverview">
+                        <span class="adm-nav-icon"><i class="fa-solid fa-chart-line"></i></span>
+                        <span class="adm-nav-text">Tổng Quan</span>
+                    </button>
+                    <button class="admin-tab-btn" data-tab="tabVisitors">
+                        <span class="adm-nav-icon"><i class="fa-solid fa-user-secret"></i></span>
+                        <span class="adm-nav-text">Khách Thăm</span>
+                        <span class="adm-nav-badge" id="tabVisitorsBadge" style="display:none;">0</span>
+                    </button>
+                    <button class="admin-tab-btn" data-tab="tabAnonymous">
+                        <span class="adm-nav-icon"><i class="fa-solid fa-envelope-open-text"></i></span>
+                        <span class="adm-nav-text">Hộp Thư Ẩn</span>
+                    </button>
+
+                    <!-- CONTENT — chỉnh sửa nội dung -->
+                    <div class="adm-nav-label" style="margin-top:12px;">Nội Dung</div>
+                    <button class="admin-tab-btn" data-tab="tabProfile">
+                        <span class="adm-nav-icon"><i class="fa-solid fa-user-pen"></i></span>
+                        <span class="adm-nav-text">Hồ Sơ</span>
+                    </button>
+                    <button class="admin-tab-btn" data-tab="tabGallery">
+                        <span class="adm-nav-icon"><i class="fa-solid fa-images"></i></span>
+                        <span class="adm-nav-text">Thư Viện Ảnh</span>
+                    </button>
+                    <button class="admin-tab-btn" data-tab="tabMusic">
+                        <span class="adm-nav-icon"><i class="fa-solid fa-music"></i></span>
+                        <span class="adm-nav-text">Playlist</span>
+                    </button>
+
+                    <!-- CONFIG — ít dùng hơn -->
+                    <div class="adm-nav-label" style="margin-top:12px;">Cấu Hình</div>
+                    <button class="admin-tab-btn" data-tab="tabFavorites">
+                        <span class="adm-nav-icon"><i class="fa-solid fa-heart"></i></span>
+                        <span class="adm-nav-text">Sở Thích</span>
+                    </button>
+                    <button class="admin-tab-btn" data-tab="tabMilestones">
+                        <span class="adm-nav-icon"><i class="fa-solid fa-map-pin"></i></span>
+                        <span class="adm-nav-text">Dấu Chân</span>
+                    </button>
+                    <button class="admin-tab-btn" data-tab="tabMemoryMap">
+                        <span class="adm-nav-icon"><i class="fa-solid fa-map-location-dot"></i></span>
+                        <span class="adm-nav-text">Bản Đồ</span>
+                    </button>
+                    <button class="admin-tab-btn" data-tab="tabReactions">
+                        <span class="adm-nav-icon"><i class="fa-solid fa-icons"></i></span>
+                        <span class="adm-nav-text">Icon Meme</span>
+                    </button>
+                </nav>
+
+                <div class="adm-sidebar-footer">
+                    <button type="button" id="btnExportBackup" class="adm-sidebar-footer-btn" title="Xuất file JSON sao lưu">
+                        <i class="fa-solid fa-download"></i> <span>Xuất Backup</span>
+                    </button>
+                    <button type="button" id="btnImportBackup" class="adm-sidebar-footer-btn" title="Nhập file JSON">
+                        <i class="fa-solid fa-file-import"></i> <span>Nhập Backup</span>
+                    </button>
+                    <input type="file" id="inputBackupFile" accept=".json" style="display:none;">
+                </div>
+            </aside>
+
+            <!-- ── HEADER (top-right) ── -->
             <div class="modal-header">
-                <h3><i class="fa-solid fa-gauge-high"></i> Trung Tâm Quản Trị</h3>
+                <h3 id="admHeaderTitle"><i class="fa-solid fa-chart-line"></i> Tổng Quan — Bảng Giám Sát</h3>
                 <div class="admin-header-badge">
                     <span class="admin-badge-pill"><i class="fa-solid fa-shield-halved"></i> Admin</span>
                     <button id="btnCloseModal" class="close-btn"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </div>
-            <div class="admin-tab-nav">
-                <button class="admin-tab-btn active" data-tab="tabOverview"><i class="fa-solid fa-chart-line"></i> Tổng Quan</button>
-                <button class="admin-tab-btn" data-tab="tabVisitors"><i class="fa-solid fa-user-secret"></i> Khách Viếng Thăm <span id="tabVisitorsBadge" style="background:#22c55e;color:#fff;padding:2px 6px;border-radius:10px;font-size:0.7rem;margin-left:4px;display:none;">0</span></button>
-                <button class="admin-tab-btn" data-tab="tabAnonymous"><i class="fa-solid fa-envelope"></i> Hộp Thư Ẩn</button>
-                <button class="admin-tab-btn" data-tab="tabProfile"><i class="fa-solid fa-user-pen"></i> Hồ Sơ</button>
-                <button class="admin-tab-btn" data-tab="tabMusic"><i class="fa-solid fa-music"></i> Playlist</button>
-                <button class="admin-tab-btn" data-tab="tabFavorites"><i class="fa-solid fa-heart"></i> Sở Thích</button>
-                <button class="admin-tab-btn" data-tab="tabMilestones"><i class="fa-solid fa-map-pin"></i> Dấu Chân</button>
-                <button class="admin-tab-btn" data-tab="tabMemoryMap"><i class="fa-solid fa-map-location-dot"></i> Bản Đồ</button>
-                <button class="admin-tab-btn" data-tab="tabGallery"><i class="fa-solid fa-images"></i> Thư Viện Ảnh</button>
-                <button class="admin-tab-btn" data-tab="tabReactions"><i class="fa-solid fa-icons"></i> Icon Meme</button>
-            </div>
+
+            <!-- old tab-nav hidden by CSS -->
+            <div class="admin-tab-nav" style="display:none;"></div>
             <div class="modal-body">
                 <!-- TAB 0: TỔNG QUAN -->
                 <div id="tabOverview" class="admin-tab-content active">
-                    <div class="tab-subheading"><i class="fa-solid fa-chart-pie"></i> Bảng Giám Sát Hệ Thống</div>
+                    <div class="adm-tab-topbar">
+                        <div class="adm-tab-title"><i class="fa-solid fa-chart-line"></i> Bảng Giám Sát Hệ Thống</div>
+                        <div class="adm-tab-actions">
+                            <span id="admLiveTime" style="font-size:0.68rem;color:var(--adm-text-3);font-variant-numeric:tabular-nums;"></span>
+                        </div>
+                    </div>
+                    <div class="adm-tab-scroll">
+                        <div class="adm-bento">
+                            <div class="adm-stat-card">
+                                <div class="adm-stat-icon blue"><i class="fa-solid fa-comments"></i></div>
+                                <div class="adm-stat-body">
+                                    <div class="adm-stat-label">Lời Chúc Lưu Bút</div>
+                                    <div id="admStatWishes" class="adm-stat-value">0</div>
+                                </div>
+                            </div>
+                            <div class="adm-stat-card">
+                                <div class="adm-stat-icon red"><i class="fa-solid fa-heart"></i></div>
+                                <div class="adm-stat-body">
+                                    <div class="adm-stat-label">Lượt Reactions</div>
+                                    <div id="admStatHearts" class="adm-stat-value">0</div>
+                                </div>
+                            </div>
+                            <div class="adm-stat-card">
+                                <div class="adm-stat-icon yellow"><i class="fa-solid fa-music"></i></div>
+                                <div class="adm-stat-body">
+                                    <div class="adm-stat-label">Bài Hát Playlist</div>
+                                    <div id="admStatTracks" class="adm-stat-value">0</div>
+                                </div>
+                            </div>
+                            <div class="adm-stat-card">
+                                <div class="adm-stat-icon purple"><i class="fa-solid fa-images"></i></div>
+                                <div class="adm-stat-body">
+                                    <div class="adm-stat-label">Ảnh Kỷ Niệm</div>
+                                    <div id="admStatGallery" class="adm-stat-value">0</div>
+                                </div>
+                            </div>
+                        </div>
 
-                    <div class="admin-stats-grid">
-                        <div class="adm-stat-card">
-                            <div class="adm-stat-icon blue"><i class="fa-solid fa-comments"></i></div>
-                            <div class="adm-stat-body">
-                                <div id="admStatWishes" class="adm-stat-value">0</div>
-                                <div class="adm-stat-label">Lời Chúc Lưu Bút</div>
+                        <!-- Activity feed -->
+                        <div class="adm-feed-widget">
+                            <div class="adm-feed-header">
+                                <div class="adm-feed-title">
+                                    <span class="adm-live-dot"></span>
+                                    <i class="fa-solid fa-bolt"></i> Activity Feed
+                                </div>
+                                <span style="font-size:0.65rem;color:var(--adm-text-3);">Realtime</span>
                             </div>
-                        </div>
-                        <div class="adm-stat-card">
-                            <div class="adm-stat-icon red"><i class="fa-solid fa-heart"></i></div>
-                            <div class="adm-stat-body">
-                                <div id="admStatHearts" class="adm-stat-value">0</div>
-                                <div class="adm-stat-label">Lượt Thả Tim</div>
-                            </div>
-                        </div>
-                        <div class="adm-stat-card">
-                            <div class="adm-stat-icon yellow"><i class="fa-solid fa-music"></i></div>
-                            <div class="adm-stat-body">
-                                <div id="admStatTracks" class="adm-stat-value">0</div>
-                                <div class="adm-stat-label">Bài Hát Playlist</div>
-                            </div>
-                        </div>
-                        <div class="adm-stat-card">
-                            <div class="adm-stat-icon purple"><i class="fa-solid fa-images"></i></div>
-                            <div class="adm-stat-body">
-                                <div id="admStatGallery" class="adm-stat-value">0</div>
-                                <div class="adm-stat-label">Ảnh Kỷ Niệm</div>
+                            <div class="adm-feed-body" id="admFeedBody">
+                                <div class="adm-feed-row">
+                                    <span class="adm-feed-row-dot" style="background:var(--adm-text-3);"></span>
+                                    <span>Chưa có hoạt động gần đây...</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -866,64 +957,73 @@
 
                 <!-- TAB: KHÁCH VIẾNG THĂM (VISITOR TRACKING) -->
                 <div id="tabVisitors" class="admin-tab-content">
-                    <div class="tab-subheading" style="display:flex;justify-content:space-between;align-items:center;">
-                        <span><i class="fa-solid fa-user-secret"></i> Theo Dõi Khách Viếng Thăm (Realtime Tracking)</span>
-                        <button type="button" id="btnRefreshVisitors" class="btn-backup-export" style="font-size:0.75rem;padding:4px 10px;">
-                            <i class="fa-solid fa-rotate"></i> Làm Mới
-                        </button>
-                    </div>
-                    
-                    <div class="admin-stats-grid" style="margin-bottom:18px;">
-                        <div class="adm-stat-card">
-                            <div class="adm-stat-icon green"><i class="fa-solid fa-bolt"></i></div>
-                            <div class="adm-stat-body">
-                                <div id="admStatOnlineNow" class="adm-stat-value">0</div>
-                                <div class="adm-stat-label">🟢 Đang Online (5 phút)</div>
-                            </div>
-                        </div>
-                        <div class="adm-stat-card">
-                            <div class="adm-stat-icon blue"><i class="fa-solid fa-users"></i></div>
-                            <div class="adm-stat-body">
-                                <div id="admStatTotalVisitors" class="adm-stat-value">0</div>
-                                <div class="adm-stat-label">Tổng Khách Ghé Thăm</div>
-                            </div>
-                        </div>
-                        <div class="adm-stat-card">
-                            <div class="adm-stat-icon gold"><i class="fa-solid fa-mobile-screen-button"></i></div>
-                            <div class="adm-stat-body">
-                                <div id="admStatTopDevice" class="adm-stat-value" style="font-size:1.1rem;">-</div>
-                                <div class="adm-stat-label">Thiết Bị Phổ Biến</div>
-                            </div>
-                        </div>
-                        <div class="adm-stat-card">
-                            <div class="adm-stat-icon purple"><i class="fa-solid fa-location-dot"></i></div>
-                            <div class="adm-stat-body">
-                                <div id="admStatTopCity" class="adm-stat-value" style="font-size:1.1rem;">-</div>
-                                <div class="adm-stat-label">Tỉnh / Thành Phố Top</div>
-                            </div>
+                    <div class="adm-tab-topbar">
+                        <div class="adm-tab-title"><i class="fa-solid fa-user-secret"></i> Khách Viếng Thăm — Realtime Tracking</div>
+                        <div class="adm-tab-actions">
+                            <button type="button" id="btnRefreshVisitors" class="btn-backup-export">
+                                <i class="fa-solid fa-rotate"></i> Làm Mới
+                            </button>
                         </div>
                     </div>
-
-                    <div class="tab-subheading" style="font-size:0.88rem;margin-bottom:10px;">
-                        <i class="fa-solid fa-list-check"></i> Danh Sách Khách Vừa Ghé Thăm Web (Ẩn)
-                    </div>
-                    <div id="adminVisitorsList" class="visitor-list-container" style="display:flex;flex-direction:column;gap:10px;max-height:420px;overflow-y:auto;">
-                        <div style="text-align:center;color:#94a3b8;padding:24px;font-size:0.88rem;">Đang nạp dữ liệu khách viếng thăm...</div>
+                    <div class="adm-tab-scroll">
+                        <div class="admin-stats-grid">
+                            <div class="adm-stat-card">
+                                <div class="adm-stat-icon green"><i class="fa-solid fa-bolt"></i></div>
+                                <div class="adm-stat-body">
+                                    <div class="adm-stat-label">🟢 Đang Online</div>
+                                    <div id="admStatOnlineNow" class="adm-stat-value">0</div>
+                                </div>
+                            </div>
+                            <div class="adm-stat-card">
+                                <div class="adm-stat-icon blue"><i class="fa-solid fa-users"></i></div>
+                                <div class="adm-stat-body">
+                                    <div class="adm-stat-label">Tổng Khách</div>
+                                    <div id="admStatTotalVisitors" class="adm-stat-value">0</div>
+                                </div>
+                            </div>
+                            <div class="adm-stat-card">
+                                <div class="adm-stat-icon gold"><i class="fa-solid fa-mobile-screen-button"></i></div>
+                                <div class="adm-stat-body">
+                                    <div class="adm-stat-label">Thiết Bị Phổ Biến</div>
+                                    <div id="admStatTopDevice" class="adm-stat-value" style="font-size:1rem;">-</div>
+                                </div>
+                            </div>
+                            <div class="adm-stat-card">
+                                <div class="adm-stat-icon purple"><i class="fa-solid fa-location-dot"></i></div>
+                                <div class="adm-stat-body">
+                                    <div class="adm-stat-label">Thành Phố Top</div>
+                                    <div id="admStatTopCity" class="adm-stat-value" style="font-size:1rem;">-</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="adminVisitorsList" class="visitor-list-container" style="display:flex;flex-direction:column;gap:10px;">
+                            <div style="text-align:center;color:var(--adm-text-3);padding:32px;font-size:0.82rem;">Đang nạp dữ liệu...</div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- TAB: HỘP THƯ ẨN DANH -->
                 <div id="tabAnonymous" class="admin-tab-content">
-                    <div class="tab-subheading"><i class="fa-solid fa-envelope-open-text"></i> Hộp Thư Ẩn Danh (Chỉ Bạn Đọc Được)</div>
-                    <div id="adminAnonymousList" style="display:flex;flex-direction:column;gap:10px;max-height:420px;overflow-y:auto;">
-                        <div style="text-align:center;color:#94a3b8;padding:24px;font-size:0.88rem;">Đang tải tin nhắn...</div>
+                    <div class="adm-tab-topbar">
+                        <div class="adm-tab-title"><i class="fa-solid fa-envelope-open-text"></i> Hộp Thư Ẩn Danh</div>
+                    </div>
+                    <div class="adm-tab-scroll">
+                        <div id="adminAnonymousList" style="display:flex;flex-direction:column;gap:10px;">
+                            <div style="text-align:center;color:var(--adm-text-3);padding:32px;font-size:0.82rem;">Đang tải tin nhắn...</div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- TAB: HỒ SƠ CÁ NHÂN -->
                 <div id="tabProfile" class="admin-tab-content">
-                    <div class="tab-header-action-bar">
-                        <div class="tab-header-title"><i class="fa-solid fa-user-pen"></i> Quản Lý Hồ Sơ & Thông Tin Cá Nhân</div>
+                    <div class="adm-tab-topbar">
+                        <div class="adm-tab-title"><i class="fa-solid fa-user-pen"></i> Hồ Sơ & Thông Tin Cá Nhân</div>
+                        <div class="adm-tab-actions">
+                            <button type="button" class="btn-tab-save" data-tab-action="profile"><i class="fa-solid fa-floppy-disk"></i> Lưu Hồ Sơ</button>
+                        </div>
+                    </div>
+                    <div class="adm-tab-scroll">
+                    <div class="tab-header-action-bar" style="display:none;"></div>
                         <button type="button" class="btn-tab-save" data-tab-action="profile"><i class="fa-solid fa-floppy-disk"></i> Lưu Hồ Sơ</button>
                     </div>
 
@@ -1103,24 +1203,34 @@
                             <i class="fa-solid fa-stamp"></i> Thực Hiện Lễ Niêm Phong Thanh Xuân
                         </button>
                     </div>
+                    </div><!-- /adm-tab-scroll -->
                 </div>
 
                 <!-- TAB: PLAYLIST ÂM NHẠC -->
                 <div id="tabMusic" class="admin-tab-content">
-                    <div class="tab-header-action-bar">
-                        <div class="tab-header-title"><i class="fa-solid fa-music"></i> Quản Lý Playlist Âm Nhạc</div>
-                        <button type="button" class="btn-tab-save" data-tab-action="music"><i class="fa-solid fa-floppy-disk"></i> Lưu Playlist</button>
+                    <div class="adm-tab-topbar">
+                        <div class="adm-tab-title"><i class="fa-solid fa-music"></i> Playlist Âm Nhạc</div>
+                        <div class="adm-tab-actions">
+                            <button class="btn-add-item" id="btnAddPlaylistTrack"><i class="fa-solid fa-plus"></i> Thêm Bài</button>
+                            <button type="button" class="btn-tab-save" data-tab-action="music"><i class="fa-solid fa-floppy-disk"></i> Lưu Playlist</button>
+                        </div>
                     </div>
+                    <div class="adm-tab-scroll">
+                    <div class="tab-header-action-bar" style="display:none;"></div>
                     <div class="admin-items-container" id="musicPlaylistAdminList"></div>
-                    <button class="btn-add-item" id="btnAddPlaylistTrack"><i class="fa-solid fa-plus"></i> Thêm Bài Hát Mới</button>
+                    </div><!-- /adm-tab-scroll -->
                 </div>
 
                 <!-- TAB: SỞ THÍCH & GU CÁ NHÂN -->
                 <div id="tabFavorites" class="admin-tab-content">
-                    <div class="tab-header-action-bar">
-                        <div class="tab-header-title"><i class="fa-solid fa-heart"></i> Quản Lý Gu & Sở Thích Cá Nhân</div>
-                        <button type="button" class="btn-tab-save" data-tab-action="favorites"><i class="fa-solid fa-floppy-disk"></i> Lưu Sở Thích</button>
+                    <div class="adm-tab-topbar">
+                        <div class="adm-tab-title"><i class="fa-solid fa-heart"></i> Gu & Sở Thích Cá Nhân</div>
+                        <div class="adm-tab-actions">
+                            <button type="button" class="btn-tab-save" data-tab-action="favorites"><i class="fa-solid fa-floppy-disk"></i> Lưu</button>
+                        </div>
                     </div>
+                    <div class="adm-tab-scroll">
+                    <div class="tab-header-action-bar" style="display:none;"></div>
                     <div class="form-section-card">
                         <div class="form-section-title"><i class="fa-solid fa-sparkles"></i> Gu & Sở Thích Cá Nhân</div>
                         <div class="form-grid-2">
@@ -1158,63 +1268,75 @@
                             </div>
                         </div>
                     </div>
+                    </div><!-- /adm-tab-scroll -->
                 </div>
 
                 <!-- TAB: DẤU CHÂN THANH XUÂN -->
                 <div id="tabMilestones" class="admin-tab-content">
-                    <div class="tab-header-action-bar">
-                        <div class="tab-header-title"><i class="fa-solid fa-map-pin"></i> Quản Lý Dấu Chân Thanh Xuân</div>
-                        <button type="button" class="btn-tab-save" data-tab-action="milestones"><i class="fa-solid fa-floppy-disk"></i> Lưu Dấu Chân</button>
+                    <div class="adm-tab-topbar">
+                        <div class="adm-tab-title"><i class="fa-solid fa-map-pin"></i> Dấu Chân Thanh Xuân</div>
+                        <div class="adm-tab-actions">
+                            <button class="btn-add-item" id="btnAddJourneyCard"><i class="fa-solid fa-plus"></i> Thêm</button>
+                            <button type="button" class="btn-tab-save" data-tab-action="milestones"><i class="fa-solid fa-floppy-disk"></i> Lưu</button>
+                        </div>
                     </div>
+                    <div class="adm-tab-scroll">
+                    <div class="tab-header-action-bar" style="display:none;"></div>
                     <div class="admin-items-container" id="journeyAdminList"></div>
-                    <button class="btn-add-item" id="btnAddJourneyCard"><i class="fa-solid fa-plus"></i> Thêm Cột Mốc Mới</button>
+                    </div><!-- /adm-tab-scroll -->
                 </div>
 
                 <!-- TAB: BẢN ĐỒ KỶ NIỆM -->
                 <div id="tabMemoryMap" class="admin-tab-content">
-                    <div class="tab-header-action-bar">
-                        <div class="tab-header-title"><i class="fa-solid fa-map-location-dot"></i> Quản Lý Bản Đồ Kỷ Niệm</div>
-                        <button type="button" class="btn-tab-save" data-tab-action="memoryMap"><i class="fa-solid fa-floppy-disk"></i> Lưu Bản Đồ</button>
+                    <div class="adm-tab-topbar">
+                        <div class="adm-tab-title"><i class="fa-solid fa-map-location-dot"></i> Bản Đồ Kỷ Niệm</div>
+                        <div class="adm-tab-actions">
+                            <button class="btn-add-item" id="btnAddMapLocation"><i class="fa-solid fa-plus"></i> Thêm</button>
+                            <button type="button" class="btn-tab-save" data-tab-action="memoryMap"><i class="fa-solid fa-floppy-disk"></i> Lưu</button>
+                        </div>
                     </div>
+                    <div class="adm-tab-scroll">
+                    <div class="tab-header-action-bar" style="display:none;"></div>
                     <p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:16px;">
                         <i class="fa-solid fa-circle-info"></i> Thêm các địa điểm gắn với kỷ niệm. Tên địa điểm sẽ được tìm kiếm trên OpenStreetMap.
                     </p>
                     <div class="admin-items-container" id="mapLocationsAdminList"></div>
-                    <button class="btn-add-item" id="btnAddMapLocation"><i class="fa-solid fa-plus"></i> Thêm Địa Điểm Mới</button>
+                    </div><!-- /adm-tab-scroll -->
                 </div>
 
                 <!-- TAB: THƯ VIỆN ẢNH -->
                 <div id="tabGallery" class="admin-tab-content">
-                    <div class="tab-header-action-bar">
-                        <div class="tab-header-title"><i class="fa-solid fa-images"></i> Quản Lý Thư Viện Ảnh Kỷ Niệm</div>
-                        <button type="button" class="btn-tab-save" data-tab-action="gallery"><i class="fa-solid fa-floppy-disk"></i> Lưu Thư Viện Ảnh</button>
+                    <div class="adm-tab-topbar">
+                        <div class="adm-tab-title"><i class="fa-solid fa-images"></i> Thư Viện Ảnh Kỷ Niệm</div>
+                        <div class="adm-tab-actions">
+                            <button class="btn-add-item" id="btnAddGalleryPhoto"><i class="fa-solid fa-plus"></i> Thêm Ảnh</button>
+                            <button type="button" class="btn-tab-save" data-tab-action="gallery"><i class="fa-solid fa-floppy-disk"></i> Lưu</button>
+                        </div>
                     </div>
+                    <div class="adm-tab-scroll">
+                    <div class="tab-header-action-bar" style="display:none;"></div>
                     <div class="admin-items-container" id="galleryAdminList"></div>
-                    <button class="btn-add-item" id="btnAddGalleryPhoto"><i class="fa-solid fa-plus"></i> Thêm Ảnh Mới</button>
+                    </div><!-- /adm-tab-scroll -->
                 </div>
 
                 <!-- TAB: QUẢN LÝ ICON MEME -->
                 <div id="tabReactions" class="admin-tab-content">
-                    <div class="tab-header-action-bar">
-                        <div class="tab-header-title"><i class="fa-solid fa-icons"></i> Quản Lý 5 Icon Meme Reactions</div>
-                        <button type="button" class="btn-tab-save" data-tab-action="reactions"><i class="fa-solid fa-floppy-disk"></i> Lưu Icon Meme</button>
+                    <div class="adm-tab-topbar">
+                        <div class="adm-tab-title"><i class="fa-solid fa-icons"></i> 5 Icon Meme Reactions</div>
+                        <div class="adm-tab-actions">
+                            <button type="button" class="btn-tab-save" data-tab-action="reactions"><i class="fa-solid fa-floppy-disk"></i> Lưu Icon</button>
+                        </div>
                     </div>
-                    <p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:16px;">
-                        <i class="fa-solid fa-circle-info"></i> Tùy chỉnh tiêu đề và hình ảnh cho 5 nút cảm xúc reaction bên dưới. Tải ảnh từ thiết bị hoặc dán link URL!
-                    </p>
+                    <div class="adm-tab-scroll">
+                    <div class="tab-header-action-bar" style="display:none;"></div>
                     <div class="admin-items-container" id="reactionsAdminList"></div>
+                    </div><!-- /adm-tab-scroll -->
                 </div>
             </div>
 
-            <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
-                <div class="admin-backup-group" style="display:flex; gap:8px;">
-                    <button type="button" id="btnExportBackup" class="btn-backup-export" title="Xuất file JSON sao lưu toàn bộ web">
-                        <i class="fa-solid fa-download"></i> Xuất Backup JSON
-                    </button>
-                    <button type="button" id="btnImportBackup" class="btn-backup-import" title="Phục hồi dữ liệu từ file JSON">
-                        <i class="fa-solid fa-file-import"></i> Nhập Backup JSON
-                    </button>
-                    <input type="file" id="inputBackupFile" accept=".json" style="display:none;">
+            <!-- modal-footer hidden by CSS, backup buttons in sidebar -->
+            <div class="modal-footer" style="display:none;">
+                <div class="admin-backup-group">
                 </div>
             </div>
         </div>

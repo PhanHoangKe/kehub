@@ -412,32 +412,112 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
     // Admin Tabs Switching & Smart Tab-Scoped Polling
     let _visitorPollTimer = null;
 
-    document.addEventListener('click', (e) => {
-        const btn = e.target.closest('.admin-tab-btn');
-        if (!btn) return;
+    // Mapping tabId → header title + icon
+    const TAB_META = {
+        tabOverview:   { icon: 'fa-chart-line',         label: 'Tổng Quan — Bảng Giám Sát' },
+        tabVisitors:   { icon: 'fa-user-secret',        label: 'Khách Viếng Thăm — Realtime' },
+        tabAnonymous:  { icon: 'fa-envelope-open-text', label: 'Hộp Thư Ẩn Danh' },
+        tabProfile:    { icon: 'fa-user-pen',           label: 'Hồ Sơ & Thông Tin Cá Nhân' },
+        tabGallery:    { icon: 'fa-images',             label: 'Thư Viện Ảnh Kỷ Niệm' },
+        tabMusic:      { icon: 'fa-music',              label: 'Playlist Âm Nhạc' },
+        tabFavorites:  { icon: 'fa-heart',              label: 'Gu & Sở Thích Cá Nhân' },
+        tabMilestones: { icon: 'fa-map-pin',            label: 'Dấu Chân Thanh Xuân' },
+        tabMemoryMap:  { icon: 'fa-map-location-dot',   label: 'Bản Đồ Kỷ Niệm' },
+        tabReactions:  { icon: 'fa-icons',              label: 'Icon Meme Reactions' },
+    };
 
-        const targetTab = btn.getAttribute('data-tab');
+    function switchTab(targetTab) {
         if (!targetTab) return;
 
+        // Deactivate all
         document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
 
-        btn.classList.add('active');
+        // Activate target
+        document.querySelectorAll(`.admin-tab-btn[data-tab="${targetTab}"]`)
+            .forEach(b => b.classList.add('active'));
+
         const targetContent = document.getElementById(targetTab);
         if (targetContent) targetContent.classList.add('active');
 
-        if (_visitorPollTimer) {
-            clearInterval(_visitorPollTimer);
-            _visitorPollTimer = null;
+        // Update header title
+        const meta = TAB_META[targetTab];
+        const headerTitle = document.getElementById('admHeaderTitle');
+        if (headerTitle && meta) {
+            headerTitle.innerHTML = `<i class="fa-solid ${meta.icon}"></i> ${meta.label}`;
         }
 
+        // Stop old visitor poll
+        if (_visitorPollTimer) { clearInterval(_visitorPollTimer); _visitorPollTimer = null; }
+
+        // Start visitor realtime poll when on visitor tab
         if (targetTab === 'tabVisitors') {
             try { loadAdminVisitorsList(); } catch (err) {}
             _visitorPollTimer = setInterval(() => {
                 try { loadAdminVisitorsList(); } catch (err) {}
             }, 2000);
         }
+
+        // Load anonymous on enter
+        if (targetTab === 'tabAnonymous') {
+            try { fetchAndRenderAnonymousMessages(); } catch (err) {}
+        }
+
+        // Update live clock on overview
+        if (targetTab === 'tabOverview') {
+            startLiveClock();
+        } else {
+            stopLiveClock();
+        }
+    }
+
+    // Delegate click on sidebar nav buttons
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.admin-tab-btn');
+        if (!btn) return;
+        const targetTab = btn.getAttribute('data-tab');
+        switchTab(targetTab);
     });
+
+    // Live clock for overview tab
+    let _liveClockTimer = null;
+    function startLiveClock() {
+        const el = document.getElementById('admLiveTime');
+        if (!el) return;
+        function tick() {
+            const now = new Date();
+            el.textContent = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+        tick();
+        if (_liveClockTimer) clearInterval(_liveClockTimer);
+        _liveClockTimer = setInterval(tick, 1000);
+    }
+    function stopLiveClock() {
+        if (_liveClockTimer) { clearInterval(_liveClockTimer); _liveClockTimer = null; }
+    }
+
+    // Activity feed — thêm row mới vào feed khi có sự kiện
+    function pushFeedEvent(text, color) {
+        const feedBody = document.getElementById('admFeedBody');
+        if (!feedBody) return;
+        const row = document.createElement('div');
+        row.className = 'adm-feed-row';
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        row.innerHTML = `
+            <span class="adm-feed-row-dot" style="background:${color || 'var(--adm-violet)'};"></span>
+            <span>${text}</span>
+            <span class="adm-feed-row-time">${timeStr}</span>
+        `;
+        // Xóa placeholder nếu còn
+        const placeholder = feedBody.querySelector('.adm-feed-row span:not(.adm-feed-row-dot):not(.adm-feed-row-time)');
+        if (placeholder && placeholder.textContent.includes('Chưa có')) feedBody.innerHTML = '';
+
+        feedBody.prepend(row);
+        // Giữ tối đa 20 rows
+        while (feedBody.children.length > 20) feedBody.removeChild(feedBody.lastChild);
+    }
+    window._admPushFeed = pushFeedEvent;
 
     const btnRefreshVisitors = document.getElementById('btnRefreshVisitors');
     if (btnRefreshVisitors) {
@@ -564,6 +644,29 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
         try { fetchAndRenderAnonymousMessages(); } catch (err) {}
 
         customModal.classList.add('active');
+
+        // Ensure overview tab is active on open + start live clock
+        switchTab('tabOverview');
+
+        // Seed activity feed with recent data
+        try {
+            const res = await fetch('/api/data', {
+                headers: localStorage.getItem('admin_token')
+                    ? { 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` } : {},
+                credentials: 'include'
+            });
+            const db = await res.json();
+            const feedBody = document.getElementById('admFeedBody');
+            if (feedBody) feedBody.innerHTML = '';
+
+            (db.anonymousMessages || []).slice(-3).reverse().forEach(m => {
+                pushFeedEvent(`Tin nhắn ẩn danh${m.mediaType ? ' + ' + m.mediaType : ''}`, 'var(--adm-pink)');
+            });
+            const vis = (db.visitors || []).slice(-3).reverse();
+            vis.forEach(v => {
+                pushFeedEvent(`Khách từ ${v.city || 'Việt Nam'} — ${v.device || 'thiết bị'}`, 'var(--adm-cyan)');
+            });
+        } catch (e) { /* feed không quan trọng */ }
     }
 
     window.openAdminModal = openAdminModal;
@@ -680,10 +783,8 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
     if (btnCloseModal && customModal) {
         btnCloseModal.addEventListener('click', () => {
             customModal.classList.remove('active');
-            if (_visitorPollTimer) {
-                clearInterval(_visitorPollTimer);
-                _visitorPollTimer = null;
-            }
+            if (_visitorPollTimer) { clearInterval(_visitorPollTimer); _visitorPollTimer = null; }
+            stopLiveClock();
         });
     }
 
@@ -691,10 +792,8 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
     if (btnCancelSettings && customModal) {
         btnCancelSettings.addEventListener('click', () => {
             customModal.classList.remove('active');
-            if (_visitorPollTimer) {
-                clearInterval(_visitorPollTimer);
-                _visitorPollTimer = null;
-            }
+            if (_visitorPollTimer) { clearInterval(_visitorPollTimer); _visitorPollTimer = null; }
+            stopLiveClock();
         });
     }
 

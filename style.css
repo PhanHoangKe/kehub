@@ -4185,7 +4185,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
 
 /* ── Recording status bar ───────────────────────────────────────────────── */
 .anon-record-status {
-    display: flex;
+    display: none;  /* ẩn mặc định, hiện bằng class .is-visible */
     align-items: center;
     gap: 10px;
     padding: 8px 12px;
@@ -4193,6 +4193,9 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     border: 1px solid rgba(244, 63, 94, 0.3);
     border-radius: 14px;
     animation: recStatusSlide 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.anon-record-status.is-visible {
+    display: flex;
 }
 @keyframes recStatusSlide {
     from { opacity: 0; transform: translateY(-6px) scale(0.97); }

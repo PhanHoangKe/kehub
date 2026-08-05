@@ -711,12 +711,12 @@ export function initGuestbookEngine() {
 
     function enterRecordingMode() {
         if (btnAnonRecord) btnAnonRecord.classList.add('is-recording');
-        if (anonRecordStatus) anonRecordStatus.style.display = 'flex';
+        if (anonRecordStatus) anonRecordStatus.classList.add('is-visible');
     }
 
     function exitRecordingMode() {
         if (btnAnonRecord) btnAnonRecord.classList.remove('is-recording');
-        if (anonRecordStatus) anonRecordStatus.style.display = 'none';
+        if (anonRecordStatus) anonRecordStatus.classList.remove('is-visible');
         stopRecordTimer();
     }
 

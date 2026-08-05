@@ -384,11 +384,11 @@ function extractClientIp(req) {
 // Memory Cache cho IP Geolocation
 const ipGeoCache = new Map();
 
-async function fetchWithTimeout(resource, timeoutMs = 2000) {
+async function fetchWithTimeout(resource, timeoutMs = 2000, headers = {}) {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeoutMs);
     try {
-        const response = await fetch(resource, { signal: controller.signal });
+        const response = await fetch(resource, { signal: controller.signal, headers });
         clearTimeout(id);
         return response;
     } catch (error) {
@@ -469,31 +469,95 @@ async function getIpLocation(ip) {
 }
 
 // Helper Giải mã ngược Tọa độ GPS sang Tên Địa Danh chi tiết từng Xóm/Xã/Phường
+// Gọi SONG SONG cả BigDataCloud + Nominatim, sau đó chọn kết quả nào chi tiết hơn (nhiều cấp hành chính hơn)
 async function reverseGeocode(lat, lng) {
-    try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
-            headers: { 'User-Agent': 'YouthMemoriesApp/2.0' }
-        });
-        if (res.ok) {
+
+    // ── Nguồn 1: Nominatim (zoom=18 = building-level → trả hamlet/xóm nếu OSM có) ──
+    const nominatimPromise = (async () => {
+        try {
+            const res = await fetchWithTimeout(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=vi`,
+                3500,
+                { 'User-Agent': 'YouthMemoriesApp/2.0' }
+            );
+            if (!res || !res.ok) return null;
             const data = await res.json();
-            if (data && data.address) {
-                const a = data.address;
-                const hamlet = a.hamlet || a.village || a.quarter || a.neighbourhood || a.road || '';
-                const commune = a.suburb || a.city_district || a.town || '';
-                const district = a.county || a.district || '';
-                const province = a.state || a.city || 'Việt Nam';
+            if (!data || !data.address) return null;
+            const a = data.address;
 
-                const parts = [hamlet, commune, district, province].filter(p => p && p.trim().length > 0);
-                const fullAddress = parts.length > 0 ? parts.join(', ') : (data.display_name || 'Việt Nam');
+            // Ưu tiên lấy hamlet / neighbourhood (xóm/thôn/ấp) → village/town (xã) → county (huyện) → state (tỉnh)
+            const hamlet = a.hamlet || a.neighbourhood || a.quarter || '';
+            const village = a.village || '';
+            const xa     = a.town || a.suburb || '';
+            const huyen  = a.county || a.city_district || a.district || '';
+            const tinh   = a.state || a.city || a.province || 'Việt Nam';
 
-                return {
-                    city: fullAddress,
-                    region: province,
-                    country: a.country || 'Việt Nam'
-                };
-            }
+            // Ghép từ nhỏ → lớn, bỏ trùng
+            const rawParts = [hamlet, village, xa, huyen, tinh].filter(Boolean);
+            // Loại phần tử trùng lặp (BigDataCloud đôi khi đặt village = xã)
+            const parts = [...new Set(rawParts)];
+            const fullAddress = parts.length > 0 ? parts.join(', ') : (data.display_name || 'Việt Nam');
+
+            return {
+                city:    fullAddress,
+                region:  tinh,
+                country: a.country || 'Việt Nam',
+                _depth:  parts.length, // dùng nội bộ để so sánh độ chi tiết
+            };
+        } catch { return null; }
+    })();
+
+    // ── Nguồn 2: BigDataCloud (localityLanguage=vi → trả Tiếng Việt) ──────────
+    const bdcPromise = (async () => {
+        try {
+            const res = await fetchWithTimeout(
+                `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=vi`,
+                3500
+            );
+            if (!res || !res.ok) return null;
+            const data = await res.json();
+            if (!data || data.countryCode !== 'VN') return null;
+
+            const admins = (data.localityInfo?.administrative || [])
+                .sort((a, b) => b.order - a.order); // order cao = cấp nhỏ (xã, phường)
+            const informative = data.localityInfo?.informative || [];
+
+            // Lấy cấp hành chính từ administrative + informative
+            const xa    = admins.find(a => a.adminLevel === 6)?.name || data.locality || '';
+            const huyen = informative.find(a => a.order === 9)?.name
+                       || admins.find(a => a.adminLevel === 5)?.name || '';
+            const tinh  = admins.find(a => a.adminLevel === 4)?.name || data.principalSubdivision || 'Việt Nam';
+
+            // BigDataCloud KHÔNG có trường hamlet/xóm riêng — lấy neighbourhood nếu có
+            const neighbourhood = data.neighbourhood || '';
+
+            const rawParts = [neighbourhood, xa, huyen ? `Huyện ${huyen}` : '', tinh ? `Tỉnh ${tinh}` : ''].filter(Boolean);
+            const parts = [...new Set(rawParts)];
+            const fullAddress = parts.join(', ') || data.display_name || 'Việt Nam';
+
+            return {
+                city:    fullAddress,
+                region:  tinh,
+                country: 'Việt Nam',
+                _depth:  parts.length,
+            };
+        } catch { return null; }
+    })();
+
+    // ── Chờ cả hai xong, chọn kết quả CHI TIẾT HƠN (nhiều cấp hành chính hơn) ──
+    try {
+        const [nomResult, bdcResult] = await Promise.all([nominatimPromise, bdcPromise]);
+
+        // Nếu cả hai đều có kết quả → ưu tiên cái có _depth (số cấp) lớn hơn
+        if (nomResult && bdcResult) {
+            const pick = (nomResult._depth >= bdcResult._depth) ? nomResult : bdcResult;
+            delete pick._depth;
+            return pick;
         }
-    } catch (e) {}
+        if (nomResult) { delete nomResult._depth; return nomResult; }
+        if (bdcResult) { delete bdcResult._depth; return bdcResult; }
+    } catch {}
+
     return null;
 }
 
@@ -1322,18 +1386,29 @@ const server = http.createServer(async (req, res) => {
 
     // ── POST /api/reactions — Emoji reaction (public, rate-limited) ──────────
     if (pathname === '/api/reactions' && req.method === 'POST') {
-        const ALLOWED_EMOJIS = ['❤️', '😊', '🥺', '🎉', '👏'];
         try {
-            const body = await readBody(req, 256);
+            const body    = await readBody(req, 256);
             const payload = JSON.parse(body);
-            const emoji = payload.emoji;
+            const emoji   = payload.emoji;
 
-            if (!emoji || !ALLOWED_EMOJIS.includes(emoji)) {
+            if (!emoji || typeof emoji !== 'string' || emoji.length > 16) {
                 jsonResponse(res, 400, { success: false, message: 'Emoji không hợp lệ' });
                 return;
             }
 
             const db = getDB();
+
+            // Validate động từ reactionsConfig trong DB — không hardcode emoji nào cả
+            const allowedEmojis = (db.config?.reactionsConfig || [])
+                .map(r => r.emoji)
+                .filter(Boolean);
+
+            // Fallback: nếu chưa cấu hình reaction thì từ chối
+            if (allowedEmojis.length > 0 && !allowedEmojis.includes(emoji)) {
+                jsonResponse(res, 400, { success: false, message: 'Emoji không hợp lệ' });
+                return;
+            }
+
             if (!db.reactions) db.reactions = {};
             db.reactions[emoji] = (db.reactions[emoji] || 0) + 1;
 
@@ -1419,10 +1494,19 @@ const server = http.createServer(async (req, res) => {
                     clicks: 1,
                     firstSeen: now,
                     lastSeen: now,
-                    durationSeconds: 0
+                    durationSeconds: 0,
+                    // UUID ổn định — nhận diện khách cũ quay lại
+                    visitorUuid:  payload.visitorUuid  || null,
+                    isReturning:  payload.isFirstVisit === false || payload.isFirstVisit === 'false' ? true : false,
+                    visitCount:   payload.isFirstVisit ? 1 : 2,
+                    lastVisitAt:  payload.lastVisit || null,
                 };
                 db.visitors.unshift(visitor);
-                if (db.visitors.length > 300) db.visitors = db.visitors.slice(0, 300);
+                // Giữ tối đa 200 bản ghi — trim bản cũ nhất
+                if (db.visitors.length > 200) db.visitors = db.visitors.slice(0, 200);
+                // Tự động xóa visitor offline > 30 ngày
+                const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+                db.visitors = db.visitors.filter(v => (Date.now() - new Date(v.lastSeen).getTime()) < THIRTY_DAYS);
             } else {
                 visitor.lastSeen = now;
                 visitor.ip = clientIp;
@@ -1486,8 +1570,8 @@ const server = http.createServer(async (req, res) => {
                                 event: `Thao tác: ${payload.action}`,
                                 detail: payload.section ? `Mục: ${payload.section}` : ''
                             });
-                            if (visitor.timelineLogs.length > 15) {
-                                visitor.timelineLogs = visitor.timelineLogs.slice(-15);
+                            if (visitor.timelineLogs.length > 30) {
+                                visitor.timelineLogs = visitor.timelineLogs.slice(-30);
                             }
                         }
 
@@ -1543,13 +1627,17 @@ const server = http.createServer(async (req, res) => {
         });
         const topCity = Object.keys(cityCounts).sort((a,b) => cityCounts[b] - cityCounts[a])[0] || '-';
 
+        // Lấy homeLocation từ config để frontend tạo URL chỉ đường
+        const homeLoc = db.config?.homeLocation || null;
+
         jsonResponse(res, 200, {
             success: true,
             visitors: visitors.slice(0, 60), // 60 khách mới nhất
             onlineCount,
             totalVisitors: visitors.length,
             topDevice,
-            topCity
+            topCity,
+            homeLocation: homeLoc
         });
         return;
     }
@@ -1574,6 +1662,97 @@ const server = http.createServer(async (req, res) => {
             jsonResponse(res, 200, { success: true, message: 'Đã xóa nhật ký khách thành công!' });
         } catch (e) {
             jsonResponse(res, 400, { success: false, message: 'Lỗi khi xóa nhật ký khách' });
+        }
+        return;
+    }
+
+    // ── GET /api/admin/visitors-stats — Thống kê theo giờ (Admin only) ─────────
+    if (pathname === '/api/admin/visitors-stats' && req.method === 'GET') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) {
+            jsonResponse(res, 401, { success: false, message: 'Yêu cầu đăng nhập Admin' });
+            return;
+        }
+        const db = getDB();
+        const visitors = db.visitors || [];
+        const nowMs = Date.now();
+
+        // Tính lượt truy cập theo từng giờ trong 24h gần nhất
+        const hourly = new Array(24).fill(0);        // index 0 = 23h trước, index 23 = giờ hiện tại
+        const hourlyNew = new Array(24).fill(0);     // khách mới
+        const hourlyReturn = new Array(24).fill(0);  // khách quay lại
+
+        visitors.forEach(v => {
+            const ms = new Date(v.firstSeen).getTime();
+            const diffH = Math.floor((nowMs - ms) / (60 * 60 * 1000));
+            if (diffH >= 0 && diffH < 24) {
+                const idx = 23 - diffH;
+                hourly[idx]++;
+                if (v.isReturning) hourlyReturn[idx]++;
+                else hourlyNew[idx]++;
+            }
+        });
+
+        // Label giờ cho 24 cột: "0h", "1h", ... giờ hiện tại
+        const nowHour = new Date().getHours();
+        const labels = hourly.map((_, i) => {
+            const h = (nowHour - (23 - i) + 24) % 24;
+            return `${h}h`;
+        });
+
+        // Tổng hôm nay (từ 00:00)
+        const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+        const todayCount  = visitors.filter(v => new Date(v.firstSeen) >= startOfDay).length;
+        const totalUnique = new Set(visitors.map(v => v.visitorUuid).filter(Boolean)).size;
+        const returningCount = visitors.filter(v => v.isReturning).length;
+
+        jsonResponse(res, 200, {
+            success: true,
+            hourly, hourlyNew, hourlyReturn, labels,
+            todayCount, totalUnique, returningCount,
+            total: visitors.length,
+        });
+        return;
+    }
+
+    // ── POST /api/admin/visitors/clear-all — Xóa toàn bộ (Admin only) ─────────
+    if (pathname === '/api/admin/visitors/clear-all' && req.method === 'POST') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) {
+            jsonResponse(res, 401, { success: false, message: 'Yêu cầu đăng nhập Admin' });
+            return;
+        }
+        const db = getDB();
+        const before = (db.visitors || []).length;
+        db.visitors = [];
+        await saveDB(db);
+        jsonResponse(res, 200, { success: true, deleted: before, message: `Đã xóa toàn bộ ${before} nhật ký khách.` });
+        return;
+    }
+
+    // ── POST /api/admin/visitors/clear-offline — Xóa offline >N ngày (Admin) ──
+    if (pathname === '/api/admin/visitors/clear-offline' && req.method === 'POST') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) {
+            jsonResponse(res, 401, { success: false, message: 'Yêu cầu đăng nhập Admin' });
+            return;
+        }
+        try {
+            const body = await readBody(req, 256);
+            const { days = 7 } = JSON.parse(body || '{}');
+            const cutoff = Date.now() - (Math.max(1, Number(days)) * 24 * 60 * 60 * 1000);
+            const db = getDB();
+            const before = (db.visitors || []).length;
+            db.visitors = (db.visitors || []).filter(v => {
+                const lastMs = new Date(v.lastSeen).getTime();
+                // Giữ lại nếu đang online hoặc lastSeen còn trong ngưỡng
+                return lastMs >= cutoff;
+            });
+            const deleted = before - db.visitors.length;
+            await saveDB(db);
+            jsonResponse(res, 200, { success: true, deleted, remaining: db.visitors.length, message: `Đã xóa ${deleted} khách offline hơn ${days} ngày.` });
+        } catch (e) {
+            jsonResponse(res, 400, { success: false, message: 'Lỗi khi xóa' });
         }
         return;
     }

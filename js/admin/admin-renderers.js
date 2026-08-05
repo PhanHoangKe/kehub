@@ -219,17 +219,15 @@ export function renderAdminReactionsList() {
         card.className = 'admin-item-card';
         card.innerHTML = `
             <div class="admin-item-header">
-                <span><i class="fa-solid fa-face-smile"></i> Icon Meme #${index + 1} (${item.emoji || ''})</span>
+                <span><i class="fa-solid fa-face-smile"></i> Icon Meme #${index + 1}</span>
             </div>
-            <div class="admin-item-grid" style="grid-template-columns:80px 1fr 1fr;">
-                <div class="input-group" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+            <div class="admin-item-grid" style="grid-template-columns:80px 1fr;">
+                <div class="input-group" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;">
                     <label>Xem trước:</label>
-                    <img src="${escapeHTML(item.imgUrl || '')}" class="adm-react-preview" style="width:48px;height:48px;object-fit:cover;border-radius:50%;border:2px solid #f59e0b;margin-top:4px;" alt="preview">
+                    <img src="${escapeHTML(item.imgUrl || '')}" class="adm-react-preview" style="width:48px;height:48px;object-fit:cover;border-radius:50%;border:2px solid #f59e0b;margin-top:4px;${item.imgUrl ? '' : 'display:none;'}" alt="preview">
                 </div>
                 <div class="input-group"><label>Tên / Tiêu đề:</label>
-                    <input type="text" class="adm-react-title" data-index="${index}" value="${escapeHTML(item.title || '')}" placeholder="Thả Tim Hạ Nhân"></div>
-                <div class="input-group"><label>Symbol Emoji ID:</label>
-                    <input type="text" class="adm-react-emoji" data-index="${index}" value="${escapeHTML(item.emoji || '')}" readonly style="background:#f1f5f9;cursor:not-allowed;"></div>
+                    <input type="text" class="adm-react-title" data-index="${index}" value="${escapeHTML(item.title || '')}" placeholder="Tên hiển thị reaction..."></div>
                 <div class="input-group" style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                     <div class="input-group"><label>Tải File Ảnh từ máy:</label>
                         <input type="file" class="adm-react-file" data-index="${index}" accept="image/*"></div>

@@ -157,7 +157,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
     // ── Tab meta ────────────────────────────────────────────────────────────
     const TAB_META = {
         tabOverview:   { icon: 'fa-chart-line',         label: 'Tổng Quan',        actions: '' },
-        tabVisitors:   { icon: 'fa-user-secret',        label: 'Khách Viếng Thăm', actions: '<button id="btnRefreshVisitors2" class="btn-backup-export"><i class="fa-solid fa-rotate"></i> Làm Mới</button>' },
+        tabVisitors:   { icon: 'fa-user-secret',        label: 'Khách Viếng Thăm', actions: '<button id="btnRefreshVisitors2" class="btn-backup-export"><i class="fa-solid fa-rotate"></i> Làm Mới</button><button id="btnClearOfflineVisitors" class="btn-backup-export" style="color:#fbbf24;border-color:rgba(251,191,36,0.35);"><i class="fa-solid fa-clock"></i> Xóa Offline >7 Ngày</button><button id="btnClearAllVisitors" class="btn-backup-export" style="color:#f87171;border-color:rgba(239,68,68,0.35);"><i class="fa-solid fa-trash"></i> Xóa Tất Cả</button>' },
         tabAnonymous:  { icon: 'fa-envelope-open-text', label: 'Hộp Thư Ẩn Danh', actions: '' },
         tabProfile:    { icon: 'fa-user-pen',           label: 'Hồ Sơ',            actions: '<button class="btn-tab-save adm-header-save-btn" data-tab-action="profile"><i class="fa-solid fa-floppy-disk"></i> Lưu Hồ Sơ</button>' },
         tabGallery:    { icon: 'fa-images',             label: 'Thư Viện Ảnh',     actions: '<button class="btn-add-item2" onclick="document.getElementById(\'btnAddGalleryPhoto\').click()"><i class="fa-solid fa-plus"></i> Thêm</button><button class="btn-tab-save adm-header-save-btn" data-tab-action="gallery"><i class="fa-solid fa-floppy-disk"></i> Lưu</button>' },
@@ -225,11 +225,60 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
             _visitorPollTimer = setInterval(() => { try { loadAdminVisitorsList(); } catch {} }, 2000);
             const btn2 = document.getElementById('btnRefreshVisitors2');
             if (btn2) btn2.addEventListener('click', loadAdminVisitorsList, { once: true });
+
+            const btnClearOffline = document.getElementById('btnClearOfflineVisitors');
+            if (btnClearOffline) {
+                btnClearOffline.addEventListener('click', async () => {
+                    if (!confirm('Xóa tất cả khách đã offline hơn 7 ngày?\n\nHành động này không thể hoàn tác.')) return;
+                    btnClearOffline.disabled = true;
+                    btnClearOffline.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                    try {
+                        const token = localStorage.getItem('admin_token');
+                        const h = { 'Content-Type': 'application/json' };
+                        if (token) h['Authorization'] = `Bearer ${token}`;
+                        const res = await fetch('/api/admin/visitors/clear-offline', {
+                            method: 'POST', headers: h, credentials: 'include',
+                            body: JSON.stringify({ days: 7 })
+                        });
+                        const data = await res.json();
+                        showToast(data.message || 'Đã xóa!');
+                        loadAdminVisitorsList();
+                    } catch { showToast('Lỗi kết nối!', 'error'); }
+                    finally {
+                        btnClearOffline.disabled = false;
+                        btnClearOffline.innerHTML = '<i class="fa-solid fa-clock"></i> Xóa Offline >7 Ngày';
+                    }
+                }, { once: true });
+            }
+
+            const btnClearAll = document.getElementById('btnClearAllVisitors');
+            if (btnClearAll) {
+                btnClearAll.addEventListener('click', async () => {
+                    if (!confirm('XÓA TOÀN BỘ nhật ký khách viếng thăm?\n\nDữ liệu sẽ mất vĩnh viễn!')) return;
+                    btnClearAll.disabled = true;
+                    btnClearAll.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                    try {
+                        const token = localStorage.getItem('admin_token');
+                        const h = { 'Content-Type': 'application/json' };
+                        if (token) h['Authorization'] = `Bearer ${token}`;
+                        const res = await fetch('/api/admin/visitors/clear-all', {
+                            method: 'POST', headers: h, credentials: 'include'
+                        });
+                        const data = await res.json();
+                        showToast(data.message || 'Đã xóa tất cả!');
+                        loadAdminVisitorsList();
+                    } catch { showToast('Lỗi kết nối!', 'error'); }
+                    finally {
+                        btnClearAll.disabled = false;
+                        btnClearAll.innerHTML = '<i class="fa-solid fa-trash"></i> Xóa Tất Cả';
+                    }
+                }, { once: true });
+            }
         }
         if (targetTab === 'tabAnonymous') {
             try { fetchAndRenderAnonymousMessages(); } catch {}
         }
-        if (targetTab === 'tabOverview') startLiveClock();
+        if (targetTab === 'tabOverview') { startLiveClock(); renderSparkline(); }
         else stopLiveClock();
     }
 
@@ -327,6 +376,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
 
         customModal.classList.add('active');
         switchTab('tabOverview');
+        renderSparkline();
 
         // Seed activity feed
         try {

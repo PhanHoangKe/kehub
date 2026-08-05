@@ -218,24 +218,24 @@
                         <div class="reaction-bar-box">
                             <!-- Emoji Reactions -->
                             <div class="reaction-bar" id="reactionBar">
-                                <button class="reaction-btn" data-emoji="❤️" title="Thả Tim Hạ Nhân">
-                                    <img class="reaction-emoji-img meme-img" src="assets/memes/hanhan_3.png" alt="Thả Tim Hạ Nhân" loading="lazy">
+                                <button class="reaction-btn" data-emoji="" title="">
+                                    <img class="reaction-emoji-img meme-img" src="" alt="" loading="lazy">
                                     <span class="reaction-count" id="reactionCount-heart">0</span>
                                 </button>
-                                <button class="reaction-btn" data-emoji="🧹" title="Hạ Nhân Quét Rác">
-                                    <img class="reaction-emoji-img meme-img" src="assets/memes/hanhan_1.png" alt="Hạ Nhân Quét Rác" loading="lazy">
+                                <button class="reaction-btn" data-emoji="" title="">
+                                    <img class="reaction-emoji-img meme-img" src="" alt="" loading="lazy">
                                     <span class="reaction-count" id="reactionCount-smile">0</span>
                                 </button>
-                                <button class="reaction-btn" data-emoji="😏" title="Hạ Nhân Cười Khẩy">
-                                    <img class="reaction-emoji-img meme-img" src="assets/memes/hanhan_2.png" alt="Hạ Nhân Cười Khẩy" loading="lazy">
+                                <button class="reaction-btn" data-emoji="" title="">
+                                    <img class="reaction-emoji-img meme-img" src="" alt="" loading="lazy">
                                     <span class="reaction-count" id="reactionCount-tear">0</span>
                                 </button>
-                                <button class="reaction-btn" data-emoji="🔥" title="Hạ Nhân Cực Ngầu">
-                                    <img class="reaction-emoji-img meme-img" src="assets/memes/hanhan_4.png" alt="Hạ Nhân Cực Ngầu" loading="lazy">
+                                <button class="reaction-btn" data-emoji="" title="">
+                                    <img class="reaction-emoji-img meme-img" src="" alt="" loading="lazy">
                                     <span class="reaction-count" id="reactionCount-party">0</span>
                                 </button>
-                                <button class="reaction-btn" data-emoji="👑" title="Hạ Nhân Bá Đạo">
-                                    <img class="reaction-emoji-img meme-img" src="assets/memes/hanhan_2.png" alt="Hạ Nhân Bá Đạo" loading="lazy">
+                                <button class="reaction-btn" data-emoji="" title="">
+                                    <img class="reaction-emoji-img meme-img" src="" alt="" loading="lazy">
                                     <span class="reaction-count" id="reactionCount-clap">0</span>
                                 </button>
                             </div>
@@ -946,6 +946,21 @@
                                     <div class="adm-stat-label">Ảnh Kỷ Niệm</div>
                                     <div id="admStatGallery" class="adm-stat-value">0</div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Sparkline: Lượt truy cập 24h gần nhất -->
+                        <div class="adm-sparkline-widget" id="admSparklineWidget">
+                            <div class="adm-sparkline-header">
+                                <div class="adm-sparkline-title">
+                                    <i class="fa-solid fa-chart-area" style="color:var(--adm-cyan);"></i>
+                                    Lượt Truy Cập — 24 Giờ Gần Nhất
+                                </div>
+                                <div class="adm-sparkline-meta" id="admSparklineMeta">...</div>
+                            </div>
+                            <div class="adm-sparkline-body">
+                                <svg id="admSparklineSvg" class="adm-sparkline-svg" viewBox="0 0 480 80" preserveAspectRatio="none"></svg>
+                                <div class="adm-sparkline-labels" id="admSparklineLabels"></div>
                             </div>
                         </div>
 

@@ -39,6 +39,7 @@ export async function loadAdminVisitorsList() {
         if (statTopCity)       statTopCity.textContent       = data.topCity        || '-';
 
         const visitors = data.visitors || [];
+        const homeLoc  = data.homeLocation || null; // Vị trí nhà Admin — dùng để chỉ đường
         if (visitors.length === 0) {
             adminVisitorsList.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;">Chưa có khách viếng thăm nào.</div>';
             return;
@@ -71,6 +72,10 @@ export async function loadAdminVisitorsList() {
                 ? `<span style="background:rgba(34,197,94,0.2);color:#4ade80;border:1px solid rgba(34,197,94,0.4);padding:2px 8px;border-radius:12px;font-size:0.75rem;font-weight:bold;"><i class="fa-solid fa-circle" style="color:#22c55e"></i> ĐANG ONLINE</span>`
                 : `<span style="background:rgba(148,163,184,0.15);color:#94a3b8;padding:2px 8px;border-radius:12px;font-size:0.75rem;"><i class="fa-regular fa-circle" style="color:#94a3b8"></i> Đã rời đi</span>`;
 
+            const returningBadge = v.isReturning
+                ? `<span style="background:rgba(124,58,237,0.15);color:#a78bfa;border:1px solid rgba(124,58,237,0.3);padding:2px 8px;border-radius:12px;font-size:0.72rem;font-weight:bold;" title="UUID: ${v.visitorUuid || '?'}"><i class="fa-solid fa-rotate-left"></i> Quay Lại${v.visitCount ? ' (lần ' + v.visitCount + ')' : ''}</span>`
+                : `<span style="background:rgba(6,182,212,0.12);color:#22d3ee;border:1px solid rgba(6,182,212,0.28);padding:2px 8px;border-radius:12px;font-size:0.72rem;font-weight:bold;"><i class="fa-solid fa-user-plus"></i> Khách Mới</span>`;
+
             const timeStr      = new Date(v.lastSeen).toLocaleString('vi-VN');
             const durationMin  = Math.floor((v.durationSeconds || 0) / 60);
             const durationSec  = (v.durationSeconds || 0) % 60;
@@ -91,9 +96,21 @@ export async function loadAdminVisitorsList() {
                 </div>`
             ).join('');
 
-            const gmapBtn = (v.lat && v.lng)
-                ? `<a href="https://www.google.com/maps?q=${v.lat},${v.lng}" target="_blank" style="background:#0284c7;color:#ffffff;padding:3px 10px;border-radius:6px;font-size:0.75rem;font-weight:bold;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-left:6px;box-shadow:0 0 10px rgba(2,132,199,0.5);"><i class="fa-solid fa-map-location-dot"></i> Mở Google Maps</a>`
-                : '';
+            // Nút Xem vị trí (pin) + Nút Chỉ đường từ Nhà → Nhà Khách
+            let gmapBtn = '';
+            if (v.lat && v.lng) {
+                // Nút 1: Xem vị trí trên bản đồ
+                gmapBtn += `<a href="https://www.google.com/maps?q=${v.lat},${v.lng}" target="_blank" style="background:#0284c7;color:#ffffff;padding:3px 10px;border-radius:6px;font-size:0.75rem;font-weight:bold;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-left:6px;box-shadow:0 0 10px rgba(2,132,199,0.5);" title="Xem vị trí khách trên bản đồ"><i class="fa-solid fa-map-location-dot"></i> Xem Vị Trí</a>`;
+                // Nút 2: Chỉ đường từ Nhà Admin → Nhà Khách (nếu có homeLocation)
+                if (homeLoc && homeLoc.lat && homeLoc.lng) {
+                    const dirUrl = `https://www.google.com/maps/dir/?api=1&origin=${homeLoc.lat},${homeLoc.lng}&destination=${v.lat},${v.lng}&travelmode=driving`;
+                    gmapBtn += ` <a href="${dirUrl}" target="_blank" style="background:rgba(34,197,94,0.25);color:#4ade80;border:1px solid rgba(34,197,94,0.5);padding:3px 10px;border-radius:6px;font-size:0.75rem;font-weight:bold;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-left:4px;box-shadow:0 0 10px rgba(34,197,94,0.3);" title="Mở Google Maps chỉ đường từ nhà bạn đến nhà khách"><i class="fa-solid fa-route"></i> Chỉ Đường Đến</a>`;
+                } else {
+                    // Không có homeLocation → chỉ đường bằng cách để Google Maps tự lấy vị trí hiện tại
+                    const dirUrl = `https://www.google.com/maps/dir/?api=1&destination=${v.lat},${v.lng}&travelmode=driving`;
+                    gmapBtn += ` <a href="${dirUrl}" target="_blank" style="background:rgba(34,197,94,0.25);color:#4ade80;border:1px solid rgba(34,197,94,0.5);padding:3px 10px;border-radius:6px;font-size:0.75rem;font-weight:bold;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-left:4px;box-shadow:0 0 10px rgba(34,197,94,0.3);" title="Mở Google Maps chỉ đường đến nhà khách"><i class="fa-solid fa-route"></i> Chỉ Đường Đến</a>`;
+                }
+            }
 
             const isGpsExact = v.isGps || (v.accuracy && v.accuracy <= 500);
             const geoBadge   = isGpsExact
@@ -111,7 +128,7 @@ export async function loadAdminVisitorsList() {
 
             card.innerHTML = `
                 <div class="admin-item-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:4px;">
-                    <span><i class="fa-solid fa-user-ninja" style="color:#a855f7;"></i> Khách #${index + 1} — <strong style="color:#f472b6;">${escapeHTML(v.city || 'Việt Nam')}</strong> (${escapeHTML(v.isp || 'Nhà mạng')}) ${statusBadge} ${geoBadge} ${gmapBtn} ${deleteBtnHtml}</span>
+                    <span><i class="fa-solid fa-user-ninja" style="color:#a855f7;"></i> Khách #${index + 1} — <strong style="color:#f472b6;">${escapeHTML(v.city || 'Việt Nam')}</strong> (${escapeHTML(v.isp || 'Nhà mạng')}) ${statusBadge} ${returningBadge} ${geoBadge} ${gmapBtn} ${deleteBtnHtml}</span>
                     <span style="font-size:0.78rem;color:#94a3b8;"><i class="fa-solid fa-clock"></i> ${timeStr}</span>
                 </div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:6px;font-size:0.82rem;color:#cbd5e1;background:rgba(0,0,0,0.25);padding:10px;border-radius:8px;margin-bottom:8px;">

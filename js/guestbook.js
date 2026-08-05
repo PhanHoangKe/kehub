@@ -14,22 +14,25 @@ export function initGuestbookEngine() {
     const btnCloseWishModal = document.getElementById('btnCloseWishModal');
     const btnSubmitWish = document.getElementById('btnSubmitWish');
 
-    // ── Emoji Reactions ───────────────────────────────────────────────────────
-    const EMOJI_MAP = {
-        '❤️': 'reactionCount-heart',
-        '🧹': 'reactionCount-smile',
-        '😏': 'reactionCount-tear',
-        '🔥': 'reactionCount-party',
-        '👑': 'reactionCount-clap',
-    };
+    // ── Emoji Reactions — map xây động từ reactionsConfig (không hardcode) ───
+    // Được cập nhật bởi updateReactionsConfig() mỗi khi app.js apply state
+    let _reactionsConfig = [];   // [{emoji, title, countId, imgUrl}, ...]
 
-    const EMOJI_IMG_MAP = {
-        '❤️': 'assets/memes/hanhan_3.png',
-        '🧹': 'assets/memes/hanhan_1.png',
-        '😏': 'assets/memes/hanhan_2.png',
-        '🔥': 'assets/memes/hanhan_4.png',
-        '👑': 'assets/memes/hanhan_2.png',
-    };
+    // Build lookup nhanh: emoji → countId và countId → imgUrl
+    let EMOJI_MAP     = {};  // emoji → countId
+    let COUNTID_MAP   = {};  // countId → {emoji, title, imgUrl}
+
+    function _rebuildMaps(config) {
+        _reactionsConfig = config || [];
+        EMOJI_MAP   = {};
+        COUNTID_MAP = {};
+        _reactionsConfig.forEach(cfg => {
+            if (cfg.emoji && cfg.countId) {
+                EMOJI_MAP[cfg.emoji]   = cfg.countId;
+                COUNTID_MAP[cfg.countId] = cfg;
+            }
+        });
+    }
 
     // LocalStorage key lưu emoji nào user đã react (để bật active state)
     const LS_KEY = 'youth_my_reactions';
@@ -77,7 +80,7 @@ export function initGuestbookEngine() {
         const el = document.createElement('div');
         el.className = 'floating-emoji-pop';
         const btnImg = document.querySelector(`.reaction-btn[data-emoji="${emoji}"] img`);
-        const imgUrl = btnImg ? btnImg.getAttribute('src') : EMOJI_IMG_MAP[emoji];
+        const imgUrl = btnImg?.getAttribute('src') || COUNTID_MAP[EMOJI_MAP[emoji]]?.imgUrl || '';
         if (imgUrl) {
             el.innerHTML = `<img src="${imgUrl}" style="width:48px;height:48px;object-fit:cover;border-radius:50%;border:2px solid #f59e0b;box-shadow:0 6px 16px rgba(245,158,11,0.5);">`;
         } else {
@@ -1048,6 +1051,8 @@ export function initGuestbookEngine() {
         if (anonRecordStatus) anonRecordStatus.classList.remove('is-visible');
         stopRecordTimer();
     }
+    // Đảm bảo DOM sạch ngay khi khởi tạo (mobile cache có thể giữ class cũ)
+    exitRecordingMode();
 
     if (btnAnonRecord) {
         btnAnonRecord.addEventListener('click', async () => {
@@ -1178,6 +1183,16 @@ export function initGuestbookEngine() {
 
     if (btnOpenAnonymous && anonymousModal) {
         btnOpenAnonymous.addEventListener('click', () => {
+            // Reset recording state trước khi mở — đề phòng state cũ còn sót trên mobile
+            exitRecordingMode();
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.ondataavailable = null;
+                mediaRecorder.onstop = () => {
+                    if (mediaRecorder.stream) mediaRecorder.stream.getTracks().forEach(t => t.stop());
+                };
+                mediaRecorder.stop();
+                recordedChunks = [];
+            }
             buildTreeLeaves();
             anonymousModal.classList.add('active');
             setTimeout(() => inputAnonymousMessage && inputAnonymousMessage.focus(), 280);
@@ -1264,5 +1279,5 @@ export function initGuestbookEngine() {
         });
     }
 
-    return { renderWishCard };
+    return { renderWishCard, updateReactionsConfig: _rebuildMaps };
 }

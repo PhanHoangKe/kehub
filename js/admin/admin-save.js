@@ -251,7 +251,6 @@ async function _readReactionsInputs(state, getState) {
     const reactFiles  = document.querySelectorAll('.adm-react-file');
     const reactUrls   = document.querySelectorAll('.adm-react-url');
     const reactTitles = document.querySelectorAll('.adm-react-title');
-    const reactEmojis = document.querySelectorAll('.adm-react-emoji');
     const current     = getState().reactionsConfig?.length ? getState().reactionsConfig : (KE_CONFIG.reactionsConfig || []);
     const list = [];
     for (let i = 0; i < reactUrls.length; i++) {
@@ -260,8 +259,15 @@ async function _readReactionsInputs(state, getState) {
             const file   = reactFiles[i].files[0];
             const base64 = await readFileAsDataURL(file);
             imgUrl = await uploadFileToBackend(`reaction_${Date.now()}_${file.name}`, base64);
-        } else if (!imgUrl) { imgUrl = current[i]?.imgUrl || ''; }
-        list.push({ emoji: reactEmojis[i]?.value.trim() || current[i]?.emoji || '', title: reactTitles[i]?.value.trim() || 'Meme Reaction', countId: current[i]?.countId || `reactionCount-${i}`, imgUrl: imgUrl || 'assets/memes/hanhan_1.png' });
+        } else if (!imgUrl) {
+            imgUrl = current[i]?.imgUrl || '';
+        }
+        list.push({
+            emoji:   current[i]?.emoji   || '',           // giữ nguyên emoji từ config hiện tại
+            title:   reactTitles[i]?.value.trim() || '',
+            countId: current[i]?.countId || `reactionCount-${i}`,
+            imgUrl,
+        });
     }
     return list;
 }

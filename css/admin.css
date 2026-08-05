@@ -551,6 +551,77 @@
 .adm-feed-row-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
 .adm-feed-row-time { color: var(--adm-text-3); font-size: 0.65rem; margin-left:auto; font-variant-numeric: tabular-nums; }
 
+/* ── SPARKLINE WIDGET ─────────────────────────────────────────────────────── */
+.adm-sparkline-widget {
+    background: var(--adm-surface);
+    border: 1px solid var(--adm-line);
+    border-radius: var(--adm-r-xl);
+    overflow: hidden;
+}
+.adm-sparkline-header {
+    padding: 12px 16px 10px;
+    border-bottom: 1px solid var(--adm-line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.adm-sparkline-title {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--adm-text-2);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+.adm-sparkline-meta {
+    font-size: 0.65rem;
+    color: var(--adm-text-3);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+.adm-sparkline-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.adm-sparkline-meta .dot-new    { width:7px;height:7px;border-radius:50%;background:var(--adm-cyan);display:inline-block; }
+.adm-sparkline-meta .dot-return { width:7px;height:7px;border-radius:50%;background:#a78bfa;display:inline-block; }
+.adm-sparkline-body {
+    padding: 14px 16px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.adm-sparkline-svg {
+    width: 100%;
+    height: 80px;
+    display: block;
+    overflow: visible;
+}
+.adm-sparkline-labels {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 2px;
+}
+.adm-sparkline-labels span {
+    font-size: 0.55rem;
+    color: var(--adm-text-3);
+    font-variant-numeric: tabular-nums;
+    flex: 1;
+    text-align: center;
+    overflow: hidden;
+}
+/* Ẩn bớt label để tránh dày — chỉ hiện mỗi 3 cái */
+.adm-sparkline-labels span:not(:nth-child(3n+1)) {
+    opacity: 0;
+}
+
 /* ── VISITOR TAB ──────────────────────────────────────────────────────────── */
 .admin-stats-grid {
     display: grid;

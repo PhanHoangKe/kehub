@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+﻿﻿/* ==========================================================================
    YOUTH MEMORIES - STYLESHEET
    Aesthetic: Bright Student Notebook / Youth Landscape / Light Glassmorphism
    ========================================================================== */
@@ -280,7 +280,7 @@ body {
    SPEED DIAL MOOD FAB
    ========================================================================== */
 
-/* Wrapper cá»‘ Ä‘á»‹nh gĂ³c pháº£i giá»¯a mĂ n hĂ¬nh */
+/* Wrapper co dinh goc phai giua man hinh */
 .mood-fab-wrap {
     position: fixed;
     right: 24px;
@@ -293,7 +293,7 @@ body {
     z-index: 998;
 }
 
-/* â”€â”€ NĂºt Chatbox riĂªng â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- Nut Chatbox rieng --------------------------------------------------- */
 .mood-fab-chatbox {
     position: relative;
     width: 42px;
@@ -326,14 +326,14 @@ body {
     pointer-events: none;
 }
 
-/* â”€â”€ Speed Dial shell â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- Speed Dial shell ---------------------------------------------------- */
 .mood-speed-dial {
     position: relative;
     width: 48px;
     height: 48px;
 }
 
-/* â”€â”€ NĂºt chĂ­nh (trigger) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- Nut chinh (trigger) ------------------------------------------------- */
 .mood-dial-main {
     position: relative;
     z-index: 2;
@@ -351,11 +351,9 @@ body {
     box-shadow: 0 4px 18px rgba(37, 99, 235, 0.38), 0 2px 8px rgba(0,0,0,0.12) !important;
     transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1),
                 box-shadow 0.22s ease !important;
-    /* Tooltip */
-    --tooltip-content: 'CHá»¦ Äá»€';
 }
 .mood-dial-main::before {
-    content: 'CHá»¦ Äá»€';
+    content: "CHỦ ĐỀ";
     position: absolute;
     right: 58px;
     top: 50%;
@@ -377,20 +375,13 @@ body {
 }
 .mood-speed-dial:not(.open) .mood-dial-main:hover::before { opacity: 1; transform: translateY(-50%) scale(1); }
 
-/* Khi má»Ÿ: xoay nĂºt chĂ­nh 45Â° */
+/* Khi mo: xoay nut chinh 45deg */
 .mood-speed-dial.open .mood-dial-main {
     transform: rotate(45deg) scale(1.08) !important;
     box-shadow: 0 6px 24px rgba(37,99,235,0.45), 0 2px 8px rgba(0,0,0,0.15) !important;
 }
 
-/* â”€â”€ NĂºt con (vĂ²ng cung) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-/*
-   3 nĂºt bá»‘ cá»¥c vĂ²ng cung sang TRĂI:
-   --i:0  â†’ gĂ³c 250Â° (space)    â€” dÆ°á»›i-trĂ¡i
-   --i:1  â†’ gĂ³c 200Â° (rain)     â€” giá»¯a-trĂ¡i
-   --i:2  â†’ gĂ³c 150Â° (sunset)   â€” trĂªn-trĂ¡i
-   BĂ¡n kĂ­nh cung r = 72px
-*/
+/* -- Nut con (vong cung) ------------------------------------------------- */
 .mood-dial-item {
     position: absolute;
     top: 50%;
@@ -408,7 +399,6 @@ body {
     cursor: pointer;
     backdrop-filter: blur(12px);
     box-shadow: 0 3px 14px rgba(0,0,0,0.1);
-    /* Báº¯t Ä‘áº§u náº±m giá»¯a nĂºt chĂ­nh, áº©n */
     transform: translate(-50%, -50%) scale(0);
     opacity: 0;
     pointer-events: none;
@@ -417,11 +407,6 @@ body {
         opacity   0.22s ease;
     transition-delay: calc(var(--i) * 0.055s);
 }
-
-/* Toáº¡ Ä‘á»™ vĂ²ng cung khi má»Ÿ â€” r=76px tĂ­nh tá»« tĂ¢m nĂºt chĂ­nh */
-/* --i:0 â†’ 250Â°  x = cos(250Â°)*76 â‰ˆ -26,  y = sin(250Â°)*76 â‰ˆ -71 */
-/* --i:1 â†’ 200Â°  x = cos(200Â°)*76 â‰ˆ -71,  y = sin(200Â°)*76 â‰ˆ -26 */
-/* --i:2 â†’ 155Â°  x = cos(155Â°)*76 â‰ˆ -69,  y = sin(155Â°)*76 â‰ˆ  32 */
 .mood-speed-dial.open .mood-dial-item[style*="--i:0"] {
     transform: translate(calc(-50% - 26px), calc(-50% + 71px)) scale(1);
     opacity: 1;
@@ -437,8 +422,6 @@ body {
     opacity: 1;
     pointer-events: all;
 }
-
-/* Hover nĂºt con */
 .mood-dial-item:hover {
     background: #fff;
     border-color: var(--accent-blue);
@@ -452,8 +435,6 @@ body {
 .mood-speed-dial.open .mood-dial-item[style*="--i:2"]:hover {
     transform: translate(calc(-50% - 62px), calc(-50% - 44px)) scale(1.15) !important;
 }
-
-/* Tooltip nĂºt con */
 .mood-dial-item::before {
     content: attr(data-tooltip);
     position: absolute;
@@ -475,16 +456,12 @@ body {
     z-index: 10;
 }
 .mood-dial-item:hover::before { opacity: 1; transform: translateY(-50%) scale(1); }
-
-/* Active state nĂºt con */
 .mood-dial-item.active {
     background: linear-gradient(135deg, #2563eb, #3b82f6) !important;
     border-color: #2563eb !important;
     color: #fff !important;
     box-shadow: 0 4px 14px rgba(37,99,235,0.35) !important;
 }
-
-/* â”€â”€ Backdrop má» khi má»Ÿ (mobile tap outside Ä‘á»ƒ Ä‘Ă³ng) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .mood-dial-backdrop {
     display: none;
     position: fixed;

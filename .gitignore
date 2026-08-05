@@ -3,6 +3,7 @@
 
 # Dữ liệu người dùng runtime — không overwrite khi deploy
 data/
+db.json
 
 # File upload của người dùng
 uploads/

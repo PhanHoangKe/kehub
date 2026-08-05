@@ -1859,11 +1859,16 @@
     z-index: 99999;
     display: flex;
     align-items: flex-end;
-    gap: 14px;
-    max-width: 460px;
+    gap: 10px;
+    max-width: 320px;
     animation: announcerPopIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-    filter: drop-shadow(0 15px 30px rgba(244, 63, 94, 0.35));
+    filter: drop-shadow(0 8px 18px rgba(244, 63, 94, 0.3));
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
 }
+.announcer-widget-container:active { cursor: grabbing; }
 
 @keyframes announcerPopIn {
     0% { opacity: 0; transform: translateY(50px) scale(0.8); }
@@ -1872,8 +1877,8 @@
 
 .announcer-character-box {
     position: relative;
-    width: 105px;
-    height: 105px;
+    width: 72px;
+    height: 72px;
     flex-shrink: 0;
     cursor: pointer;
     animation: megaphoneShout 1.8s infinite ease-in-out;
@@ -1891,9 +1896,9 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 20px;
-    border: 3px solid #ff4757;
-    box-shadow: 0 8px 25px rgba(255, 71, 87, 0.4);
+    border-radius: 14px;
+    border: 2px solid #ff4757;
+    box-shadow: 0 4px 14px rgba(255, 71, 87, 0.35);
     background: #fff;
     transition: transform 0.3s ease;
 }
@@ -1905,7 +1910,7 @@
 .announcer-pulse-waves {
     position: absolute;
     top: 50%;
-    right: -10px;
+    right: -8px;
     transform: translateY(-50%);
     pointer-events: none;
 }
@@ -1917,9 +1922,9 @@
     animation: waveExpand 1.5s infinite ease-out;
 }
 
-.announcer-pulse-waves .wave-1 { width: 30px; height: 30px; animation-delay: 0s; }
-.announcer-pulse-waves .wave-2 { width: 55px; height: 55px; animation-delay: 0.4s; }
-.announcer-pulse-waves .wave-3 { width: 80px; height: 80px; animation-delay: 0.8s; }
+.announcer-pulse-waves .wave-1 { width: 22px; height: 22px; animation-delay: 0s; }
+.announcer-pulse-waves .wave-2 { width: 40px; height: 40px; animation-delay: 0.4s; }
+.announcer-pulse-waves .wave-3 { width: 58px; height: 58px; animation-delay: 0.8s; }
 
 @keyframes waveExpand {
     0% { opacity: 1; transform: scale(0.2); }
@@ -1928,11 +1933,11 @@
 
 .announcer-megaphone-blast {
     position: absolute;
-    top: -12px;
-    right: -15px;
+    top: -8px;
+    right: -10px;
     display: flex;
-    gap: 4px;
-    font-size: 1.2rem;
+    gap: 3px;
+    font-size: 0.85rem;
     animation: blastPop 0.8s infinite alternate ease-in-out;
 }
 
@@ -1944,10 +1949,10 @@
 .announcer-bubble-box {
     position: relative;
     background: linear-gradient(135deg, #ffffff 0%, #fff5f5 100%);
-    border: 3px solid #ff4757;
-    border-radius: 20px;
-    padding: 14px 18px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    border: 2px solid #ff4757;
+    border-radius: 14px;
+    padding: 8px 12px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
     color: #1e293b;
     transform-origin: bottom left;
     animation: bubbleBounce 2s infinite ease-in-out;
@@ -1961,60 +1966,60 @@
 .announcer-bubble-box::before {
     content: '';
     position: absolute;
-    bottom: 20px;
-    left: -14px;
+    bottom: 16px;
+    left: -11px;
     width: 0;
     height: 0;
-    border-top: 10px solid transparent;
-    border-bottom: 10px solid transparent;
-    border-right: 14px solid #ff4757;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-right: 11px solid #ff4757;
 }
 
 .announcer-bubble-box::after {
     content: '';
     position: absolute;
-    bottom: 22px;
-    left: -10px;
+    bottom: 18px;
+    left: -9px;
     width: 0;
     height: 0;
-    border-top: 8px solid transparent;
-    border-bottom: 8px solid transparent;
-    border-right: 11px solid #fff5f5;
+    border-top: 7px solid transparent;
+    border-bottom: 7px solid transparent;
+    border-right: 10px solid #fff5f5;
 }
 
 .announcer-bubble-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 6px;
+    gap: 8px;
+    margin-bottom: 4px;
     padding-bottom: 4px;
     border-bottom: 1.5px dashed rgba(255, 71, 87, 0.3);
 }
 
 .announcer-tag {
-    font-size: 0.78rem;
+    font-size: 0.68rem;
     font-weight: 800;
     color: #ff4757;
     text-transform: uppercase;
     letter-spacing: 0.8px;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
 }
 
 .btn-close-announcer {
     background: rgba(255, 71, 87, 0.1);
     border: none;
     color: #ff4757;
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     transition: all 0.2s ease;
 }
 
@@ -2025,7 +2030,7 @@
 }
 
 .announcer-bubble-text {
-    font-size: 0.95rem;
+    font-size: 0.82rem;
     font-weight: 700;
     line-height: 1.45;
     color: #0f172a;

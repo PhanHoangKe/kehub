@@ -121,22 +121,29 @@ export function applyStateToDOM() {
     renderMemoryMap(state);
     renderOutings(state);
 
-    // Cập nhật Cấu hình Icon Meme Reactions (5 Icon)
+    // ── Reactions: render DOM + cập nhật map động trong guestbook engine ─────
     if (state.reactionsConfig && Array.isArray(state.reactionsConfig) && state.reactionsConfig.length > 0) {
+        // 1. Cập nhật map động trong guestbook (EMOJI_MAP, COUNTID_MAP)
+        if (guestbookEngine?.updateReactionsConfig) {
+            guestbookEngine.updateReactionsConfig(state.reactionsConfig);
+        }
+
+        // 2. Render DOM các nút reaction
         const reactionBtns = document.querySelectorAll('.reaction-btn');
         state.reactionsConfig.forEach((cfg, idx) => {
-            if (reactionBtns[idx]) {
-                const btn = reactionBtns[idx];
-                if (cfg.emoji) btn.dataset.emoji = cfg.emoji;
-                if (cfg.title) btn.title = cfg.title;
-                const img = btn.querySelector('img');
-                if (img) {
-                    if (cfg.imgUrl) img.src = cfg.imgUrl;
-                    if (cfg.title) img.alt = cfg.title;
-                }
-                const countSpan = btn.querySelector('.reaction-count');
-                if (countSpan && cfg.countId) countSpan.id = cfg.countId;
+            if (!reactionBtns[idx]) return;
+            const btn = reactionBtns[idx];
+            btn.dataset.emoji = cfg.emoji   || '';
+            btn.title         = cfg.title   || '';
+            const img = btn.querySelector('img');
+            if (img) {
+                img.src = cfg.imgUrl || '';
+                img.alt = cfg.title  || '';
+                // Ẩn img nếu chưa có ảnh để tránh icon vỡ
+                img.style.display = cfg.imgUrl ? '' : 'none';
             }
+            const countSpan = btn.querySelector('.reaction-count');
+            if (countSpan && cfg.countId) countSpan.id = cfg.countId;
         });
     }
 
@@ -428,6 +435,17 @@ async function _runVisitorTracking() {
             sessionStorage.setItem('v_sess_id', sessionId);
         }
 
+        // UUID ổn định trong localStorage — phân biệt khách mới vs quay lại
+        let visitorUuid = localStorage.getItem('v_uuid');
+        const isFirstVisit = !visitorUuid;
+        if (!visitorUuid) {
+            visitorUuid = 'u_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('v_uuid', visitorUuid);
+        }
+        // Cập nhật lastVisit để server tính khoảng cách
+        const lastVisit = localStorage.getItem('v_last_visit') || null;
+        localStorage.setItem('v_last_visit', new Date().toISOString());
+
         // Gọi battery + hardwareInfo song song — không chờ tuần tự
         const [battery, hwInfo] = await Promise.all([
             getBatteryStatus(),
@@ -455,7 +473,10 @@ async function _runVisitorTracking() {
             deviceModel: hwInfo.deviceModel,
             gpu: hwInfo.gpu,
             cpuCores: hwInfo.cpuCores,
-            ramGB: hwInfo.ramGB
+            ramGB: hwInfo.ramGB,
+            visitorUuid,
+            isFirstVisit,
+            lastVisit,
         };
 
         const token = localStorage.getItem('admin_token');
@@ -751,6 +772,63 @@ function initAnnouncerEngine(getState) {
             window.triggerAnnouncerShout(text, true);
         });
     }
+
+    // ── Drag to move ──────────────────────────────────────────────────────
+    let isDragging = false;
+    let dragStartX = 0, dragStartY = 0;
+    let widgetStartLeft = 0, widgetStartTop = 0;
+    let hasDragged = false;
+
+    function onDragStart(clientX, clientY) {
+        isDragging = true;
+        hasDragged = false;
+        const rect = widget.getBoundingClientRect();
+        dragStartX = clientX;
+        dragStartY = clientY;
+        widgetStartLeft = rect.left;
+        widgetStartTop  = rect.top;
+        widget.style.transition  = 'none';
+        widget.style.animation   = 'none';
+        widget.style.bottom      = 'auto';
+        widget.style.left        = widgetStartLeft + 'px';
+        widget.style.top         = widgetStartTop  + 'px';
+    }
+
+    function onDragMove(clientX, clientY) {
+        if (!isDragging) return;
+        const dx = clientX - dragStartX;
+        const dy = clientY - dragStartY;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasDragged = true;
+
+        const newLeft = Math.max(0, Math.min(window.innerWidth  - widget.offsetWidth,  widgetStartLeft + dx));
+        const newTop  = Math.max(0, Math.min(window.innerHeight - widget.offsetHeight, widgetStartTop  + dy));
+        widget.style.left = newLeft + 'px';
+        widget.style.top  = newTop  + 'px';
+    }
+
+    function onDragEnd() {
+        isDragging = false;
+    }
+
+    // Mouse
+    widget.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.btn-close-announcer, #announcerCharacterBox')) return;
+        e.preventDefault();
+        onDragStart(e.clientX, e.clientY);
+    });
+    document.addEventListener('mousemove', (e) => { if (isDragging) onDragMove(e.clientX, e.clientY); });
+    document.addEventListener('mouseup',   onDragEnd);
+
+    // Touch
+    widget.addEventListener('touchstart', (e) => {
+        if (e.target.closest('.btn-close-announcer, #announcerCharacterBox')) return;
+        onDragStart(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+    document.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        onDragMove(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+    document.addEventListener('touchend', onDragEnd);
 
     setTimeout(() => {
         const state = getState();

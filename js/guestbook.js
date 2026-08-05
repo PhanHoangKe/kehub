@@ -147,7 +147,7 @@ export function initGuestbookEngine() {
             const currentUrl = window.location.href;
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(currentUrl).then(() => {
-                    showToast("Đã sao chép liên kết! Dán lên Facebook hoặc Messenger ngay nhé!");
+                    showToast("Đã sao chép liên kết! Dán lên Facebook hoặc Messenger ngay nhé!", 'info');
                 });
             } else {
                 const tempInput = document.createElement('input');
@@ -156,7 +156,7 @@ export function initGuestbookEngine() {
                 tempInput.select();
                 document.execCommand('copy');
                 document.body.removeChild(tempInput);
-                showToast("Đã sao chép liên kết! Dán lên Facebook hoặc Messenger ngay nhé!");
+                showToast("Đã sao chép liên kết! Dán lên Facebook hoặc Messenger ngay nhé!", 'info');
             }
         });
     }
@@ -190,7 +190,7 @@ export function initGuestbookEngine() {
             const message = inputWishMessage ? inputWishMessage.value.trim() : '';
 
             if (!message) {
-                showToast("Vui lòng viết đôi lời chúc gửi Kế nhé! 💌");
+                showToast("Vui lòng viết đôi lời chúc gửi Kế nhé!", 'warning');
                 return;
             }
 
@@ -209,7 +209,7 @@ export function initGuestbookEngine() {
 
             if (inputWishMessage) inputWishMessage.value = '';
             if (wishModal) wishModal.classList.remove('active');
-            showToast("Đã gửi lời chúc của bạn lên Sổ Lưu Bút! Cảm ơn bạn rất nhiều! ✨");
+            showToast("Đã gửi lời chúc của bạn lên Sổ Lưu Bút! Cảm ơn bạn rất nhiều!");
         });
     }
 
@@ -585,7 +585,30 @@ export function initGuestbookEngine() {
     const btnAnonCancelRecord= document.getElementById('btnAnonCancelRecord');
     const anonMediaPreview   = document.getElementById('anonMediaPreview');
     const anonPreviewInner   = anonMediaPreview ? anonMediaPreview.querySelector('.anon-preview-inner') : null;
-    const btnAnonRemoveMedia = document.getElementById('btnAnonRemoveMedia');
+
+    // ⚠️ NÚT X (xoá đính kèm) — TẠO 100% BẰNG JS (không dựa vào HTML tĩnh nữa)
+    //    → Dù HTML cache nút cũ hay sao cũng không liên quan: nút này chắc chắn
+    //      là con TRỰC TIẾP của .anon-preview-inner → position:absolute relative với
+    //      .anon-preview-inner (position:relative) đã được CSS set → KHÔNG BAO GIỜ
+    //      bay lạc ra ngoài khối preview được nữa.
+    let _cachedRemoveBtn = null;
+    function _getOrCreateRemoveBtn() {
+        if (!anonPreviewInner) return null;
+        // Nếu đã tạo rồi → return instance cũ (giữ listener click)
+        if (_cachedRemoveBtn && _cachedRemoveBtn.parentNode === anonPreviewInner) return _cachedRemoveBtn;
+        if (_cachedRemoveBtn) _cachedRemoveBtn.remove();
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.id   = 'btnAnonRemoveMedia';
+        btn.title = 'Xoá đính kèm';
+        btn.className = 'anon-remove-media';
+        btn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+        btn.addEventListener('click', clearMedia);
+        _cachedRemoveBtn = btn;
+        anonPreviewInner.appendChild(btn);
+        return btn;
+    }
 
     // Media state
     let currentMediaData = null;   // base64 dataURL string
@@ -603,6 +626,15 @@ export function initGuestbookEngine() {
         return `${m}:${s}`;
     }
 
+    // Dọn dẹp + bảo toàn nút X bên trong preview-inner (nếu không nó sẽ bị innerHTML='' xoá mất)
+    function _wipeInnerPreserveRemoveBtn() {
+        if (!anonPreviewInner) return;
+        const btn = _getOrCreateRemoveBtn();
+        if (btn) btn.remove();
+        anonPreviewInner.innerHTML = '';
+        if (btn) anonPreviewInner.appendChild(btn);
+    }
+
     function fileToBase64(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -613,46 +645,92 @@ export function initGuestbookEngine() {
     }
 
     function getMediaDOM() {
-        const prev = document.getElementById('anonMediaPreview');
+        const prev  = document.getElementById('anonMediaPreview');
         const inner = prev ? prev.querySelector('.anon-preview-inner') : null;
-        const remove = document.getElementById('btnAnonRemoveMedia');
-        return { prev, inner, remove };
+        return { prev, inner };
     }
 
-    function showMediaPreview(dataUrl, type) {
+    function showMediaPreview(dataUrl, type, extraInfo = {}) {
         const { prev, inner } = getMediaDOM();
         if (!prev || !inner) {
             console.error('[Guestbook] Không tìm thấy DOM preview (anonMediaPreview / .anon-preview-inner)');
             return;
         }
-        inner.innerHTML = '';
+        try {
+            // 1) Lấy ra nút X (tạo mới lần đầu nếu chưa có) → detach khỏi DOM
+            const removeBtn = _getOrCreateRemoveBtn();
+            if (removeBtn) removeBtn.remove();
+            // 2) Xoá toàn bộ nội dung cũ trong khối inner (anh/audio/video preview trước đó)
+            inner.innerHTML = '';
 
-        if (type === 'audio') {
-            const audio = document.createElement('audio');
-            audio.controls = true;
-            audio.src      = dataUrl;
-            audio.className = 'anon-preview-audio';
-            audio.addEventListener('error', () => {
-                showToast('<i class="fa-solid fa-triangle-exclamation" style="color:#eab308"></i> File ghi âm bị lỗi định dạng. Thử ghi lại nhé.');
-            });
-            inner.appendChild(audio);
-        } else if (type === 'image') {
-            const img = document.createElement('img');
-            img.src       = dataUrl;
-            img.className = 'anon-preview-img';
-            inner.appendChild(img);
-        } else if (type === 'video') {
-            const video = document.createElement('video');
-            video.controls  = true;
-            video.src       = dataUrl;
-            video.className = 'anon-preview-video';
-            inner.appendChild(video);
+            if (type === 'audio') {
+                const audio = document.createElement('audio');
+                audio.controls = true;
+                audio.src = dataUrl;
+                audio.className = 'anon-preview-audio';
+                audio.preload = 'metadata';
+                audio.addEventListener('error', () => {
+                    audio.remove();
+                    const warn = document.createElement('div');
+                    warn.className = 'ap-fallback';
+                    warn.innerHTML = `<i class="fa-solid fa-circle-info" style="color:#38bdf8"></i> <span>Đoạn ghi âm đã đính kèm — trình duyệt không phát trực tiếp được, hãy gửi đi hoặc xoá và ghi lại nhé.</span>`;
+                    inner.appendChild(warn);
+                    if (removeBtn && !removeBtn.parentNode) inner.appendChild(removeBtn);
+                });
+                inner.appendChild(audio);
+                const approxKB = dataUrl.length > 0 ? Math.round((dataUrl.length * 3) / 4 / 1024) : 0;
+                console.log('[Guestbook] Preview audio OK. ~size:', approxKB, 'KB');
+            } else if (type === 'image') {
+                const img = document.createElement('img');
+                img.src     = dataUrl;
+                img.className = 'anon-preview-img';
+                img.alt     = 'Ảnh đính kèm';
+                inner.appendChild(img);
+            } else if (type === 'video') {
+                const video = document.createElement('video');
+                video.controls  = true;
+                video.src       = dataUrl;
+                video.className = 'anon-preview-video';
+                video.preload   = 'metadata';
+                video.playsInline = true;
+                inner.appendChild(video);
+            }
+
+            // 3) Append nút X LÀM CON CUỐI cùng của inner → DOM order sau audio/img/video
+            //    → position absolute so với inner (relative) nên nằm góc trên phải, đè lên
+            //      trên cùng của media, KHÔNG BAO GIỜ bị đẩy ra ngoài khối.
+            if (removeBtn && !removeBtn.parentNode) inner.appendChild(removeBtn);
+
+            // 4) Hiên khối preview (outer container) — BẮT BUỘC PHẢI CHẠY ĐC ĐỂ KHỐI HIỆN RA
+            prev.classList.add('is-visible');
+
+            currentMediaData = dataUrl;
+            currentMediaType = type;
+            updateSubmitState();
+        } catch (err) {
+            // BẮT BẤT KỲ EXCEPTION NÀO → ĐẢM BẢO VẪN ADD .is-visible ĐỂ NGƯỜI DÙNG THẤY
+            // (hoặc fallback warn rõ ràng thay vì im lặng biến mất như bug trước)
+            console.error('[Guestbook] CRASH trong showMediaPreview → hiển thị fallback:', err);
+            try {
+                prev.classList.add('is-visible');
+                inner.innerHTML = `
+                    <div class="ap-fallback" style="border-color:rgba(244,63,94,0.35);background:rgba(244,63,94,0.08);color:rgba(255,255,255,0.85);">
+                        <i class="fa-solid fa-triangle-exclamation" style="color:#f87171"></i>
+                        <span>Đã ghi <strong>thành công</strong> và file đã sẵn sàng gửi!
+                        <br>(Lỗi UI khi tạo trình phát — ấn <strong>Niêm phong & Gửi đi</strong> là được, hoặc ấn X để xoá)
+                        </span>
+                    </div>
+                `;
+                const removeBtn = _getOrCreateRemoveBtn();
+                if (removeBtn) {
+                    if (removeBtn.parentNode) removeBtn.remove();
+                    inner.appendChild(removeBtn);
+                }
+                currentMediaData = dataUrl;
+                currentMediaType = type;
+                updateSubmitState();
+            } catch (e2) { console.error('[Guestbook] Fallback cũng fail:', e2); }
         }
-
-        prev.classList.add('is-visible');
-        currentMediaData = dataUrl;
-        currentMediaType = type;
-        updateSubmitState();
     }
 
     function clearMedia() {
@@ -660,15 +738,10 @@ export function initGuestbookEngine() {
         currentMediaType = null;
         const { prev, inner } = getMediaDOM();
         if (prev)  prev.classList.remove('is-visible');
-        if (inner) inner.innerHTML = '';
+        if (inner) _wipeInnerPreserveRemoveBtn();
         const fileInp = document.getElementById('anonFileInput');
         if (fileInp) fileInp.value = '';
         updateSubmitState();
-    }
-
-    // ── Remove media button ───────────────────────────────────────────────
-    if (btnAnonRemoveMedia) {
-        btnAnonRemoveMedia.addEventListener('click', clearMedia);
     }
 
     // ── File picker (image / video) ───────────────────────────────────────
@@ -682,7 +755,7 @@ export function initGuestbookEngine() {
             // Size guard trước khi convert
             const MAX_MB = file.type.startsWith('video') ? 30 : 5;
             if (file.size > MAX_MB * 1024 * 1024) {
-                showToast(`File quá lớn! Tối đa ${MAX_MB}MB nhé.`);
+                showToast(`File quá lớn! Tối đa ${MAX_MB}MB nhé.`, 'warning');
                 anonFileInput.value = '';
                 return;
             }
@@ -699,9 +772,9 @@ export function initGuestbookEngine() {
             try {
                 const dataUrl = await fileToBase64(file);
                 showMediaPreview(dataUrl, type);
-                showToast(`Đã chọn ${type === 'image' ? 'ảnh' : 'video'} đính kèm! ✅`);
+                showToast(`Đã chọn ${type === 'image' ? 'ảnh' : 'video'} đính kèm!`);
             } catch {
-                showToast('Không đọc được file. Thử lại nhé!');
+                showToast('Không đọc được file. Thử lại nhé!', 'error');
             }
         });
     }
@@ -720,7 +793,7 @@ export function initGuestbookEngine() {
             // Auto-stop khi đạt giới hạn
             if (recordSeconds >= MAX_RECORD_SEC && mediaRecorder && mediaRecorder.state === 'recording') {
                 mediaRecorder.stop();
-                showToast(`Đã đạt ${MAX_RECORD_SEC / 60} phút ghi âm tối đa.`);
+                showToast(`Đã đạt ${MAX_RECORD_SEC / 60} phút ghi âm tối đa.`, 'warning');
             }
         }, 1000);
     }
@@ -749,7 +822,7 @@ export function initGuestbookEngine() {
             try {
                 stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             } catch (err) {
-                showToast('Không truy cập được microphone. Hãy cấp quyền trong trình duyệt nhé!');
+                showToast('Không truy cập được microphone. Hãy cấp quyền trong trình duyệt nhé!', 'error');
                 return;
             }
 
@@ -773,7 +846,7 @@ export function initGuestbookEngine() {
 
                 if (!hasRecording) {
                     console.warn('[Guestbook] Ghi âm không có dữ liệu (recordedChunks rỗng hoặc < 50 bytes). Thời gian ghi:', recordSeconds, 's');
-                    showToast('<i class="fa-solid fa-triangle-exclamation" style="color:#eab308"></i> Ghi âm quá ngắn! Hãy giữ nút ghi ít nhất 0.5 giây nhé. <i class="fa-solid fa-microphone-lines"></i>');
+                    showToast('Ghi âm quá ngắn! Hãy giữ nút ghi ít nhất 0.5 giây nhé.', 'error');
                     recordedChunks = [];
                     return;
                 }
@@ -781,20 +854,29 @@ export function initGuestbookEngine() {
                 const blob     = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
                 if (blob.size < 512) {
                     console.warn('[Guestbook] Blob ghi âm quá nhỏ (', blob.size, 'bytes). Bỏ qua.');
-                    showToast('<i class="fa-solid fa-triangle-exclamation" style="color:#eab308"></i> Ghi âm không nhận được âm thanh. Kiểm tra micro và thử lại nhé.');
+                    showToast('Ghi âm không nhận được âm thanh. Kiểm tra micro và thử lại nhé.');
                     recordedChunks = [];
                     return;
                 }
 
+                const finalDurationSec = recordSeconds || 0;
                 const reader   = new FileReader();
                 reader.onload  = () => {
-                    showMediaPreview(reader.result, 'audio');
-                    showToast('✅ Đã ghi âm xong! Nghe lại trước khi gửi nhé <i class="fa-solid fa-microphone-lines"></i>');
-                    console.log('[Guestbook] Ghi âm OK. Blob size:', Math.round(blob.size/1024), 'KB, mime:', blob.type || mediaRecorder.mimeType);
+                    try {
+                        showMediaPreview(reader.result, 'audio', { durationSec: finalDurationSec });
+                        console.log('[Guestbook] Ghi âm OK. Blob size:', Math.round(blob.size/1024), 'KB, mime:', blob.type || mediaRecorder.mimeType);
+                    } catch (err) {
+                        console.error('[Guestbook] Lỗi showMediaPreview sau ghi âm:', err);
+                        currentMediaData = reader.result;
+                        currentMediaType = 'audio';
+                        updateSubmitState();
+                        const { prev } = getMediaDOM();
+                        if (prev) prev.classList.add('is-visible');
+                    }
                 };
                 reader.onerror = () => {
                     console.error('[Guestbook] FileReader lỗi khi đọc blob ghi âm.');
-                    showToast('❌ Lỗi đọc file ghi âm. Thử ghi lại nhé.');
+                    showToast('Lỗi đọc file ghi âm. Thử ghi lại nhé.', 'error');
                 };
                 reader.readAsDataURL(blob);
                 recordedChunks = [];
@@ -802,7 +884,7 @@ export function initGuestbookEngine() {
 
             mediaRecorder.onerror = (e) => {
                 console.error('[Guestbook] MediaRecorder lỗi:', e);
-                showToast('❌ Ghi âm gặp lỗi trình duyệt. Thử lại nhé.');
+                showToast('Ghi âm gặp lỗi trình duyệt. Thử lại nhé.', 'error');
             };
 
             mediaRecorder.start(250); // collect every 250ms
@@ -886,12 +968,12 @@ export function initGuestbookEngine() {
             const hasMedia = !!currentMediaData;
 
             if (!msg && !hasMedia) {
-                showToast("Viết gì đó hoặc đính kèm file trước khi gửi nhé! 🤫");
+                showToast("Viết gì đó hoặc đính kèm file trước khi gửi nhé!");
                 inputAnonymousMessage && inputAnonymousMessage.focus();
                 return;
             }
             if (msg.length > MAX_CHARS) {
-                showToast(`Tin nhắn quá dài! Giới hạn ${MAX_CHARS} ký tự nhé.`);
+                showToast(`Tin nhắn quá dài! Giới hạn ${MAX_CHARS} ký tự nhé.`, 'warning');
                 return;
             }
 
@@ -913,7 +995,7 @@ export function initGuestbookEngine() {
                 if (!res.ok) {
                     let errMsg = 'Lỗi server';
                     try { const errData = await res.json(); errMsg = errData.message || errMsg; } catch {}
-                    showToast(`❌ Gửi thất bại: ${errMsg}`);
+                    showToast(`Gửi thất bại: ${errMsg}`, 'error');
                     btnSubmitAnonymous.innerHTML = originalHTML;
                     updateSubmitState();
                     return;
@@ -923,9 +1005,9 @@ export function initGuestbookEngine() {
                                  : currentMediaType === 'video' ? '🎬 video'
                                  : '';
                 const extraLabel = mediaLabel ? ` kèm ${mediaLabel}` : '';
-                showToast(`✨ Đã gửi tin nhắn ẩn danh${extraLabel} thành công!`);
+                showToast(`Đã gửi tin nhắn ẩn danh${extraLabel} thành công!`);
             } catch {
-                showToast("❌ Lỗi kết nối! Kiểm tra mạng rồi thử lại nhé.");
+                showToast("Lỗi kết nối! Kiểm tra mạng rồi thử lại nhé.", 'error');
                 btnSubmitAnonymous.innerHTML = originalHTML;
                 updateSubmitState();
                 return;

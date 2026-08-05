@@ -537,7 +537,7 @@ async function _runVisitorTracking() {
                 e.stopPropagation();
 
                 if (!('geolocation' in navigator)) {
-                    if (typeof showToast === 'function') showToast('⚠️ Trình duyệt của bạn chưa hỗ trợ tính năng định vị GPS.', 'warning');
+                    if (typeof showToast === 'function') showToast('Trình duyệt của bạn chưa hỗ trợ tính năng định vị GPS.', 'warning');
                     return;
                 }
 
@@ -578,7 +578,7 @@ async function _runVisitorTracking() {
                         btnCheckinLocation.innerHTML = `<i class="fa-solid fa-map-location-dot" style="color:#4ade80;"></i> <span>Cách Nhà Kế ${distStr} (Mở Google Maps)</span>`;
                         
                         if (typeof showToast === 'function') {
-                            showToast(`🚗 Đang mở Google Maps chỉ đường từ vị trí của bạn đến Nhà Kế (${distStr})...`, 'success');
+                            showToast(`Đang mở Google Maps chỉ đường từ vị trí của bạn đến Nhà Kế (${distStr})...`);
                         }
 
                         // Mở Google Maps: KHÔNG truyền origin để Google Maps tự lấy "Vị trí của bạn" thời gian thực!
@@ -612,7 +612,7 @@ async function _runVisitorTracking() {
                     btnCheckinLocation.innerHTML = `<i class="fa-solid fa-map-location-dot"></i> <span>Tìm Đường Đến Nhà Kế</span>`;
 
                     if (typeof showToast === 'function') {
-                        showToast('🚗 Đang mở ứng dụng Google Maps để dẫn đường tới Nhà Kế...', 'info');
+                        showToast('Đang mở ứng dụng Google Maps để dẫn đường tới Nhà Kế...', 'info');
                     }
 
                     // Mở Google Maps App: Google Maps tự động lấy vị trí thực tế của thiết bị
@@ -733,7 +733,7 @@ function initAnnouncerEngine(getState) {
         }
 
         if (typeof showToast === 'function') {
-            showToast('📢 Có thông báo mới từ Chú Bé Loa Phường!', 'info');
+            showToast('Có thông báo mới từ Chú Bé Loa Phường!', 'info');
         }
     };
 
@@ -887,7 +887,7 @@ function initOutingsEngine() {
                 if (res.ok) {
                     const data = await res.json();
                     if (data.success) {
-                        showToast('Đã đăng nhật ký chuyến đi thành công! 🎉', 'success');
+                        showToast('Đã đăng nhật ký chuyến đi thành công!');
                         if (!state.outings) state.outings = [];
                         state.outings.unshift(data.outing);
                         renderOutings(state);
@@ -929,7 +929,7 @@ function initOutingsEngine() {
                 if (data.success) {
                     const el = document.getElementById(`outingHeart-${id}`);
                     if (el) el.textContent = data.hearts;
-                    showToast('Đã thả tim chuyến đi! ❤️', 'info');
+                    showToast('Đã thả tim chuyến đi!', 'info');
                 }
             }
         } catch (e) {}

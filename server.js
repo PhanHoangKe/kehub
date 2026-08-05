@@ -52,6 +52,9 @@ const CLOUDINARY_API_KEY    = process.env.CLOUDINARY_API_KEY    || '';
 const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET || '';
 const CLOUDINARY_ENABLED    = !!(CLOUDINARY_CLOUD_NAME && CLOUDINARY_API_KEY && CLOUDINARY_API_SECRET);
 
+const JSONBIN_BIN_ID = process.env.JSONBIN_BIN_ID || '';
+const JSONBIN_API_KEY = process.env.JSONBIN_API_KEY || process.env.JSONBIN_SECRET || '';
+
 // ── Smart Circuit Breaker (Modern Adaptive Fail-Stop) ───────────────────────
 //   • Lỗi HARD (401/403/404/sai cấu hình/missing params)  → TẮT VĨNH VIỄN cho đến restart server
 //   • Lỗi SOFT (mạng ECONNRESET / 5xx / timeout)           → retry 2 lần với exponential backoff
@@ -644,8 +647,6 @@ function validateBase64File(base64DataUrl) {
 }
 
 // ── Database với Write Queue & Cloud Backup (tránh race condition & mất data) ──
-const JSONBIN_BIN_ID = process.env.JSONBIN_BIN_ID || '';
-const JSONBIN_API_KEY = process.env.JSONBIN_API_KEY || process.env.JSONBIN_SECRET || '';
 
 if (JSONBIN_BIN_ID && JSONBIN_API_KEY) {
     console.log('  🗃️  [JSONBin] Đã cấu hình — DB sẽ được backup lên Cloud sau mỗi lần ghi.');
@@ -677,7 +678,8 @@ function _jbnRequestOnce(method, extraPath = '', payloadBuffer = null) {
                 res.on('data', c => body += c);
                 res.on('end', () => {
                     const isHard = (res.statusCode === 401) || (res.statusCode === 403) ||
-                                   (res.statusCode === 404);
+                                   (res.statusCode === 404) || (res.statusCode === 413) ||
+                                   (res.statusCode === 400) || (res.statusCode === 422);
                     const isOk = res.statusCode >= 200 && res.statusCode < 300;
                     let parsedJson = null;
                     try { parsedJson = JSON.parse(body); } catch {}
@@ -742,6 +744,8 @@ async function syncFromCloudDB() {
             if (lastRes.status === 401) reason += ' → JSONBIN_API_KEY (X-Master-Key) SAI — không có quyền truy cập bin này';
             if (lastRes.status === 403) reason += ' → Bin bị khóa riêng tư / API key không thuộc tài khoản sở hữu bin (Lỗi phổ biến khi xóa bin cũ mà chưa đổi ID mới)';
             if (lastRes.status === 404) reason += ' → JSONBIN_BIN_ID không tồn tại (bạn đã xóa bin trên dashboard JSONBin nhưng chưa cập nhật lại trong file .env!)';
+            if (lastRes.status === 413) reason += ' → DỮ LIỆU DB QUÁ LỚN so với giới hạn JSONBin Free Plan (thường 100KB/bin). Giảm bớt tin nhắn cũ / media base64 trong db.json hoặc nâng cấp tài khoản JSONBin.';
+            if (lastRes.status === 400 || lastRes.status === 422) reason += ' → Dữ liệu gửi lên JSONBin bị lỗi định dạng / không hợp lệ.';
             if (lastRes.data?.message) reason += ` — ${lastRes.data.message}`;
             _disableHard(jbnState, 'JSONBin', reason);
             return false;
@@ -781,6 +785,8 @@ async function saveToCloudDB(data) {
                 if (lastRes.status === 401) reason += ' → JSONBIN_API_KEY (X-Master-Key) SAI — kiểm tra file .env';
                 if (lastRes.status === 403) reason += ' → ⚠️ Rất hay gặp: BIN TRÊN DASHBOARD ĐÃ BỊ XÓA nhưng JSONBIN_BIN_ID trong .env vẫn là CŨ — hãy tạo bin mới và dán ID vào .env! Hoặc API key không thuộc tài khoản sở hữu bin.';
                 if (lastRes.status === 404) reason += ' → JSONBIN_BIN_ID không tồn tại (bạn đã xóa bin cũ rồi).';
+                if (lastRes.status === 413) reason += ` → 📦 DỮ LIỆU DB QUÁ LỚN! JSONBin Free Plan giới hạn ~100KB/bin. DB hiện tại của bạn đã vượt giới hạn này (payload ${(payloadBuffer.length/1024).toFixed(1)} KB). Giảm bớt tin nhắn cũ hoặc tắt tính năng lưu base64 raw media, hoặc nâng cấp tài khoản JSONBin Pro để có giới hạn lớn hơn.`;
+                if (lastRes.status === 400 || lastRes.status === 422) reason += ' → Dữ liệu JSON gửi lên bị lỗi định dạng / thiếu trường.';
                 if (lastRes.data?.message) reason += ` — JSONBin message: ${lastRes.data.message}`;
                 _disableHard(jbnState, 'JSONBin', reason);
                 return;

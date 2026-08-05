@@ -76,10 +76,10 @@ export function initInlineEditEngine(getState, saveBackendConfig) {
 
         if (isInlineEditing) {
             btnInlineToggle.classList.add('active');
-            showToast(`<i class="fa-solid fa-pen"></i> Đã bật Chế Độ Chỉnh Sửa Trực Tiếp! Bạn chỉ cần chạm vào chữ để sửa.`);
+            showToast(`Đã bật Chế Độ Chỉnh Sửa Trực Tiếp! Bạn chỉ cần chạm vào chữ để sửa.`);
         } else {
             btnInlineToggle.classList.remove('active');
-            showToast("🔒 Đã tắt chế độ sửa trực tiếp.");
+            showToast("Đã tắt chế độ sửa trực tiếp.");
         }
     });
 
@@ -106,7 +106,7 @@ export function initInlineEditEngine(getState, saveBackendConfig) {
                         if (!state.socialLinks) state.socialLinks = {};
                         state.socialLinks[social.key] = newUrl.trim();
                         elem.href = newUrl.trim();
-                        showToast(`✅ Đã cập nhật link ${social.name} tạm thời! Nhớ bấm "Lưu Tất Cả" nhé.`);
+                        showToast(`Đã cập nhật link ${social.name} tạm thời! Nhớ bấm "Lưu Tất Cả" nhé.`);
                     }
                 }
             });
@@ -124,7 +124,7 @@ export function initInlineEditEngine(getState, saveBackendConfig) {
             });
 
             await saveBackendConfig(state);
-            showToast("✨ Đã lưu tất cả nội dung chỉnh sửa trực tiếp thành công!");
+            showToast("Đã lưu tất cả nội dung chỉnh sửa trực tiếp thành công!");
 
             isInlineEditing = false;
             document.body.classList.remove('inline-edit-mode');
@@ -189,7 +189,7 @@ export function initQuickTouchModals(getState, saveBackendConfig, refreshDOM, au
                 await saveBackendConfig(state);
                 if (typeof refreshDOM === 'function') refreshDOM();
                 if (modalQuickPhoto) modalQuickPhoto.classList.remove('active');
-                showToast("✨ Đã cập nhật ảnh đĩa thanh xuân thành công!");
+                showToast("Đã cập nhật ảnh đĩa thanh xuân thành công!");
             } catch (err) {
                 console.error("Lỗi cập nhật ảnh đĩa:", err);
             } finally {
@@ -263,13 +263,13 @@ async function extractTikTokAudio(tiktokUrl) {
                     const base64 = await readFileAsDataURL(file);
                     trackUrl = await uploadFileToBackend(`music_${Date.now()}_${file.name}`, base64);
                 } else if (trackUrl && (trackUrl.includes('tiktok.com/') || trackUrl.includes('vt.tiktok.com/'))) {
-                    showToast("🔄 Đang tự động tách âm thanh MP3 từ link TikTok...");
+                    showToast("Đang tự động tách âm thanh MP3 từ link TikTok...", 'info');
                     const extracted = await extractTikTokAudio(trackUrl);
                     if (extracted && extracted.audioUrl) {
                         trackUrl = extracted.audioUrl;
                         if (!quickTrackTitle || !quickTrackTitle.value.trim()) title = extracted.title || 'Bài Hát TikTok';
                         if (!quickTrackArtist || !quickTrackArtist.value.trim()) artist = extracted.artist || 'TikTok';
-                        showToast("✨ Tách âm thanh MP3 từ TikTok thành công!");
+                        showToast("Tách âm thanh MP3 từ TikTok thành công!");
                     }
                 }
 
@@ -289,7 +289,7 @@ async function extractTikTokAudio(tiktokUrl) {
                     }
 
                     if (modalQuickMusic) modalQuickMusic.classList.remove('active');
-                    showToast(`<i class="fa-solid fa-music"></i> Đã thêm "${title}" & tự động quay đĩa phát nhạc! <i class="fa-solid fa-compact-disc"></i>`);
+                    showToast(`Đã thêm "${title}" & tự động quay đĩa phát nhạc!`);
 
                     // Reset form
                     if (quickTrackTitle) quickTrackTitle.value = '';

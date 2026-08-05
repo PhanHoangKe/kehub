@@ -276,10 +276,12 @@ body {
     color: var(--accent-blue) !important;
 }
 
-/* --------------------------------------------------------------------------
-   Vertical Floating Mood Widget Dock (Góc Bên Phải Màn Hình)
-   -------------------------------------------------------------------------- */
-.vertical-mood-dock {
+/* ==========================================================================
+   SPEED DIAL MOOD FAB
+   ========================================================================== */
+
+/* Wrapper cố định góc phải giữa màn hình */
+.mood-fab-wrap {
     position: fixed;
     right: 24px;
     top: 50%;
@@ -287,84 +289,209 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
-    background: rgba(255, 255, 255, 0.92);
-    border: 1px solid var(--glass-border);
-    border-radius: 40px;
-    padding: 20px 12px;
-    backdrop-filter: blur(20px);
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08), 0 2px 10px rgba(37, 99, 235, 0.1);
+    gap: 12px;
     z-index: 998;
 }
 
-.mood-dock-title {
-    font-size: 0.6rem;
-    font-weight: 800;
-    letter-spacing: 1.5px;
-    color: var(--accent-blue);
-    writing-mode: horizontal-tb;
-    text-align: center;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-    opacity: 0.9;
-}
-
-.mood-btn-circle {
+/* ── Nút Chatbox riêng ─────────────────────────────────────────────────── */
+.mood-fab-chatbox {
     position: relative;
     width: 42px;
     height: 42px;
     border-radius: 50%;
-    background: #f1f5f9;
-    border: 1px solid #cbd5e1;
-    color: var(--text-primary);
+    background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+    border: 1px solid #c4b5fd;
+    color: #7c3aed;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    font-size: 1rem;
+    cursor: not-allowed;
+    opacity: 0.6;
+    transition: opacity 0.2s ease, transform 0.2s ease;
 }
-
-.mood-btn-circle:hover {
-    background: #ffffff;
-    border-color: var(--accent-blue);
-    transform: scale(1.12);
-    color: var(--accent-blue);
-}
-
-.mood-btn-circle.active {
-    background: linear-gradient(135deg, #2563eb, #3b82f6);
-    border-color: #2563eb;
-    color: #ffffff;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
-    transform: scale(1.08);
-}
-
-/* Tooltip khi hover vào nút tròn chủ đề */
-.mood-btn-circle::before {
-    content: attr(data-tooltip);
+.mood-fab-chatbox:hover { opacity: 0.8; transform: scale(1.06); }
+.mood-fab-chatbox-beta {
     position: absolute;
-    right: 54px;
+    top: -5px; right: -5px;
+    font-size: 0.38rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: #7c3aed;
+    color: #fff;
+    padding: 2px 4px;
+    border-radius: 4px;
+    line-height: 1;
+    pointer-events: none;
+}
+
+/* ── Speed Dial shell ──────────────────────────────────────────────────── */
+.mood-speed-dial {
+    position: relative;
+    width: 48px;
+    height: 48px;
+}
+
+/* ── Nút chính (trigger) ───────────────────────────────────────────────── */
+.mood-dial-main {
+    position: relative;
+    z-index: 2;
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 50% !important;
+    background: linear-gradient(135deg, #2563eb, #3b82f6) !important;
+    border: 2px solid #fff !important;
+    color: #fff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.15rem !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 18px rgba(37, 99, 235, 0.38), 0 2px 8px rgba(0,0,0,0.12) !important;
+    transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1),
+                box-shadow 0.22s ease !important;
+    /* Tooltip */
+    --tooltip-content: 'CHỦ ĐỀ';
+}
+.mood-dial-main::before {
+    content: 'CHỦ ĐỀ';
+    position: absolute;
+    right: 58px;
     top: 50%;
     transform: translateY(-50%) scale(0.85);
     background: #0f172a;
-    color: #ffffff;
-    padding: 6px 14px;
-    border-radius: var(--radius-soft);
-    font-size: 0.78rem;
-    font-weight: 600;
+    color: #fff;
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
     white-space: nowrap;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.18);
     opacity: 0;
     pointer-events: none;
-    transition: all 0.25s ease;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+.mood-speed-dial:not(.open) .mood-dial-main:hover::before { opacity: 1; transform: translateY(-50%) scale(1); }
+
+/* Khi mở: xoay nút chính 45° */
+.mood-speed-dial.open .mood-dial-main {
+    transform: rotate(45deg) scale(1.08) !important;
+    box-shadow: 0 6px 24px rgba(37,99,235,0.45), 0 2px 8px rgba(0,0,0,0.15) !important;
 }
 
-.mood-btn-circle:hover::before {
-    opacity: 1;
-    transform: translateY(-50%) scale(1);
+/* ── Nút con (vòng cung) ───────────────────────────────────────────────── */
+/*
+   3 nút bố cục vòng cung sang TRÁI:
+   --i:0  → góc 250° (space)    — dưới-trái
+   --i:1  → góc 200° (rain)     — giữa-trái
+   --i:2  → góc 150° (sunset)   — trên-trái
+   Bán kính cung r = 72px
+*/
+.mood-dial-item {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.92);
+    border: 1px solid #e2e8f0;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    cursor: pointer;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 3px 14px rgba(0,0,0,0.1);
+    /* Bắt đầu nằm giữa nút chính, ẩn */
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+        transform 0.32s cubic-bezier(0.34,1.56,0.64,1),
+        opacity   0.22s ease;
+    transition-delay: calc(var(--i) * 0.055s);
 }
+
+/* Toạ độ vòng cung khi mở — r=76px tính từ tâm nút chính */
+/* --i:0 → 250°  x = cos(250°)*76 ≈ -26,  y = sin(250°)*76 ≈ -71 */
+/* --i:1 → 200°  x = cos(200°)*76 ≈ -71,  y = sin(200°)*76 ≈ -26 */
+/* --i:2 → 155°  x = cos(155°)*76 ≈ -69,  y = sin(155°)*76 ≈  32 */
+.mood-speed-dial.open .mood-dial-item[style*="--i:0"] {
+    transform: translate(calc(-50% - 26px), calc(-50% + 71px)) scale(1);
+    opacity: 1;
+    pointer-events: all;
+}
+.mood-speed-dial.open .mood-dial-item[style*="--i:1"] {
+    transform: translate(calc(-50% - 72px), calc(-50% + 18px)) scale(1);
+    opacity: 1;
+    pointer-events: all;
+}
+.mood-speed-dial.open .mood-dial-item[style*="--i:2"] {
+    transform: translate(calc(-50% - 62px), calc(-50% - 44px)) scale(1);
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* Hover nút con */
+.mood-dial-item:hover {
+    background: #fff;
+    border-color: var(--accent-blue);
+    transform: translate(calc(-50% - 26px), calc(-50% + 71px)) scale(1.15) !important;
+    color: var(--accent-blue);
+    box-shadow: 0 4px 18px rgba(37,99,235,0.2);
+}
+.mood-speed-dial.open .mood-dial-item[style*="--i:1"]:hover {
+    transform: translate(calc(-50% - 72px), calc(-50% + 18px)) scale(1.15) !important;
+}
+.mood-speed-dial.open .mood-dial-item[style*="--i:2"]:hover {
+    transform: translate(calc(-50% - 62px), calc(-50% - 44px)) scale(1.15) !important;
+}
+
+/* Tooltip nút con */
+.mood-dial-item::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    right: 50px;
+    top: 50%;
+    transform: translateY(-50%) scale(0.85);
+    background: #0f172a;
+    color: #fff;
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 10;
+}
+.mood-dial-item:hover::before { opacity: 1; transform: translateY(-50%) scale(1); }
+
+/* Active state nút con */
+.mood-dial-item.active {
+    background: linear-gradient(135deg, #2563eb, #3b82f6) !important;
+    border-color: #2563eb !important;
+    color: #fff !important;
+    box-shadow: 0 4px 14px rgba(37,99,235,0.35) !important;
+}
+
+/* ── Backdrop mờ khi mở (mobile tap outside để đóng) ──────────────────── */
+.mood-dial-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 997;
+}
+.mood-dial-backdrop.active { display: block; }
 
 /* --------------------------------------------------------------------------
    Main Container & Text Reveal
@@ -1179,7 +1306,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     background: linear-gradient(135deg, #f43f5e, #e11d48);
     border: none;
     color: #fff;
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     font-weight: 700;
     padding: 12px 28px;
     border-radius: 30px;
@@ -1444,7 +1571,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
 }
 
 .projects-title {
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     font-weight: 700;
     letter-spacing: 1.5px;
     color: #fff;
@@ -1496,7 +1623,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
 }
 
 .project-card h5 {
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     font-weight: 600;
     color: #fff;
 }
@@ -2364,7 +2491,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
 }
 
 .sub-quote {
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     color: #475569 !important;
     font-weight: 500;
     line-height: 1.6;
@@ -2788,8 +2915,18 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
         width: 100%;
     }
 
-    .vertical-mood-dock {
-        display: none !important;
+    .mood-fab-wrap {
+        right: 14px;
+    }
+    .mood-dial-main {
+        width: 42px !important;
+        height: 42px !important;
+        font-size: 1rem !important;
+    }
+    .mood-fab-chatbox {
+        width: 36px;
+        height: 36px;
+        font-size: 0.85rem;
     }
 
     .music-player-bar {
@@ -2919,7 +3056,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     border: none;
     border-bottom: 3px solid transparent;
     color: rgba(255, 255, 255, 0.65);
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
     display: flex;
@@ -2992,7 +3129,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     align-items: center;
     justify-content: space-between;
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     color: #fff;
     border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
     padding-bottom: 10px;
@@ -3052,7 +3189,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     border-radius: 18px;
     color: var(--accent-gold, #fbbf24);
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -3919,7 +4056,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     background: linear-gradient(135deg, #a855f7 0%, #f59e0b 45%, #f43f5e 100%);
     background-size: 200% 200%;
     color: #fff;
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     font-weight: 700;
     letter-spacing: 0.3px;
     box-shadow:
@@ -4230,17 +4367,19 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
 /* ── Media preview area ─────────────────────────────────────────────────── */
 .anon-media-preview {
     display: none;  /* mặc định ẩn, hiện bằng class .is-visible */
-    align-items: flex-start;
-    gap: 10px;
-    padding: 12px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px 12px 12px;
+    margin-top: 8px;
     background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 16px;
     position: relative;
+    overflow: visible;
     animation: previewSlide 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .anon-media-preview.is-visible {
-    display: flex;
+    display: block !important;
 }
 @keyframes previewSlide {
     from { opacity: 0; transform: translateY(8px) scale(0.97); }
@@ -4248,28 +4387,57 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
 }
 
 .anon-preview-inner {
-    flex: 1;
+    width: 100%;
+    box-sizing: border-box;
     min-width: 0;
+    min-height: 44px;   /* tối thiểu để audio 40px + nút X không bị co hẹp */
+    position: relative;
+    display: block;
+    padding: 0;
 }
 
-/* Audio player */
+/* LƯU Ý QUAN TRỌNG: Nếu khối preview CHƯA CÓ .is-visible → ẨN HẲN NÚT X
+   → tránh trường hợp nút absolute bị nhảy loạn ra ngoài khối khi cha không visible */
+.anon-media-preview:not(.is-visible) .anon-remove-media {
+    display: none !important;
+}
+/* HACK CHROME: audio element controls phải có min-height rõ ràng và margin-top để
+   không bị nút X (absolute top 8) đè mất thanh play/volume. */
 .anon-preview-audio {
-    width: 100%;
-    height: 38px;
+    width: calc(100% - 34px);   /* chừa khoảng trống bên phải 34px cho nút X đỏ 24px + spacing */
+    height: 40px;
+    min-height: 40px;
+    max-height: 40px;
+    margin-top: 2px;
+    margin-right: auto;
     border-radius: 10px;
     accent-color: #f472b6;
     filter: saturate(1.2) brightness(1.05);
+}
+/* Với audio: nút X vẫn ở góc trên phải, nhưng thanh audio được hẹp lại 1 bên phải để
+   nút play / timeline / volume KHÔNG BỊ NÚT X ĐÈ LÊN. */
+.ap-fallback {
+    width: calc(100% - 34px);
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: rgba(56, 189, 248, 0.08);
+    border: 1px solid rgba(56, 189, 248, 0.22);
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.8rem;
+    line-height: 1.45;
+    box-sizing: border-box;
 }
 
 /* Image preview */
 .anon-preview-img {
     width: 100%;
-    max-height: 180px;
+    max-height: 240px;
     object-fit: cover;
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.15);
     cursor: pointer;
     transition: transform 0.3s ease;
+    display: block;
 }
 .anon-preview-img:hover {
     transform: scale(1.02);
@@ -4278,35 +4446,41 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
 /* Video preview */
 .anon-preview-video {
     width: 100%;
-    max-height: 200px;
+    max-height: 240px;
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.15);
     background: #000;
+    display: block;
 }
 
-/* Remove media button */
+/* Remove media button — NÚT X ĐỎ, NHỎ, GÓC PHẢI TRÊN CỦA ẢNH/MEDIA */
 .anon-remove-media {
-    flex-shrink: 0;
-    width: 30px;
-    height: 30px;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 20;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    background: rgba(255, 255, 255, 0.07);
-    color: rgba(255, 255, 255, 0.55);
-    font-size: 0.9rem;
+    border: 1px solid rgba(244, 63, 94, 0.6);
+    background: rgba(244, 63, 94, 0.92);
+    color: #fff;
+    font-size: 0.72rem;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
-    align-self: flex-start;
-    margin-top: 2px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
 }
 .anon-remove-media:hover {
-    background: rgba(244, 63, 94, 0.25);
-    border-color: rgba(244, 63, 94, 0.5);
-    color: #f87171;
-    transform: scale(1.1) rotate(90deg);
+    background: #e11d48;
+    border-color: #fff;
+    transform: scale(1.14) rotate(90deg);
+    box-shadow: 0 4px 10px rgba(244, 63, 94, 0.5);
+}
+.anon-remove-media:active {
+    transform: scale(0.94) rotate(90deg);
 }
 
 /* ── Mobile adjustments ─────────────────────────────────────────────────── */
@@ -5158,7 +5332,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
 }
 
 .balloon-video-header h4 {
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     font-weight: 600;
     display: flex;
     align-items: center;
@@ -5595,3 +5769,68 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
 }
 
 
+
+
+/* ==========================================================================
+   Custom Dropdown Component
+   ========================================================================== */
+.custom-dropdown {
+    position: relative;
+    width: 100%;
+    font-family: inherit;
+}
+.custom-dropdown-btn {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 0.95rem;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    color: #fff;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s;
+}
+.custom-dropdown-btn:hover {
+    border-color: rgba(251, 191, 36, 0.6);
+    background: rgba(0, 0, 0, 0.5);
+}
+.custom-dropdown .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: #1e1e2d;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 10px;
+    margin-top: 5px;
+    display: none;
+    z-index: 1000;
+    max-height: 250px;
+    overflow-y: auto;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    padding: 5px 0;
+}
+.custom-dropdown .dropdown-item {
+    padding: 10px 14px;
+    color: #fff;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    transition: background 0.2s;
+}
+.custom-dropdown .dropdown-item:hover {
+    background: rgba(251, 191, 36, 0.15);
+}
+.custom-dropdown .dropdown-item i {
+    width: 20px;
+    text-align: center;
+}

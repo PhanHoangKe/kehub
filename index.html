@@ -56,21 +56,32 @@
     <div class="glow-orb orb-1"></div>
     <div class="glow-orb orb-2"></div>
 
-    <!-- Vertical Floating Mood Widget Dock (Góc Phải Màn Hình) -->
-    <div class="vertical-mood-dock">
-        <span class="mood-dock-title">CHỦ ĐỀ</span>
-        <button class="mood-btn-circle active" data-mood="auto" data-tooltip="Thời Tiết Thực">
-            <i class="fa-solid fa-wand-magic-sparkles icon-realtime"></i>
+    <!-- Speed Dial Mood FAB (Góc Phải Màn Hình) -->
+    <div class="mood-fab-wrap" id="moodFabWrap">
+        <!-- Nút chatbox riêng, phía trên -->
+        <button class="mood-fab-chatbox" id="btnOpenChatbox" data-tooltip="Chatbox (Sắp Ra Mắt)" disabled>
+            <i class="fa-solid fa-message"></i>
+            <span class="mood-fab-chatbox-beta">Beta</span>
         </button>
-        <button class="mood-btn-circle" data-mood="sunset" data-tooltip="Hoàng Hôn & Lofi">
-            <i class="fa-solid fa-cloud-sun icon-sunset"></i>
-        </button>
-        <button class="mood-btn-circle" data-mood="rain" data-tooltip="Mưa Đêm & Acoustic">
-            <i class="fa-solid fa-cloud-showers-heavy icon-rain"></i>
-        </button>
-        <button class="mood-btn-circle" data-mood="space" data-tooltip="Ngàn Sao & Vũ Trụ">
-            <i class="fa-solid fa-meteor icon-space"></i>
-        </button>
+
+        <!-- Speed dial container -->
+        <div class="mood-speed-dial" id="moodSpeedDial">
+            <!-- Các nút con hiện ra dạng vòng cung -->
+            <button class="mood-dial-item" data-mood="space" data-tooltip="Ngàn Sao & Vũ Trụ" style="--i:0">
+                <i class="fa-solid fa-meteor icon-space"></i>
+            </button>
+            <button class="mood-dial-item" data-mood="rain" data-tooltip="Mưa Đêm & Acoustic" style="--i:1">
+                <i class="fa-solid fa-cloud-showers-heavy icon-rain"></i>
+            </button>
+            <button class="mood-dial-item" data-mood="sunset" data-tooltip="Hoàng Hôn & Lofi" style="--i:2">
+                <i class="fa-solid fa-cloud-sun icon-sunset"></i>
+            </button>
+
+            <!-- Nút chính (trigger) -->
+            <button class="mood-dial-main mood-btn-circle active" id="moodDialMain" data-mood="auto" data-tooltip="CHỦ ĐỀ">
+                <i class="fa-solid fa-wand-magic-sparkles" id="moodDialMainIcon"></i>
+            </button>
+        </div>
     </div>
 
     <!-- Header Navigation Bar -->
@@ -1094,17 +1105,24 @@
                         <div class="form-grid-2">
                             <div class="input-group">
                                 <label><i class="fa-solid fa-bullseye"></i> Chọn Mục Nổi Bật Nút Chỉ Trỏ:</label>
-                                <select id="inputSpotlightTarget" style="width:100%; padding:10px 14px; border-radius:10px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(251,191,36,0.3); font-family:inherit;">
-                                    <option value="none">-- Tắt Tiêu Điểm Nổi Bật --</option>
-                                    <option value="outings">🏕️ Nhật Ký Đi Chơi & Vi Vu</option>
-                                    <option value="guestbook">💌 Sổ Lưu Bút & Lời Chúc</option>
-                                    <option value="gallery"><i class="fa-solid fa-camera"></i> Bộ Sưu Tập Kỷ Niệm</option>
-                                    <option value="diary">📖 Nhật Ký Thanh Xuân</option>
-                                    <option value="school">🎓 Trường Lớp & Bạn Bè</option>
-                                    <option value="achievements">🏆 Thành Tích & CLB</option>
-                                    <option value="taste">✨ Gu Cá Nhân & Style</option>
-                                    <option value="goals"><i class="fa-solid fa-bullseye"></i> Mục Tiêu & Cột Mốc</option>
-                                </select>
+                                <div class="custom-dropdown" id="dd_spotlight">
+    <div class="custom-dropdown-btn" onclick="toggleDropdown('dd_spotlight')">
+        <span class="dropdown-value">-- Tắt Tiêu Điểm Nổi Bật --</span>
+        <i class="fa-solid fa-chevron-down"></i>
+    </div>
+    <div class="dropdown-menu">
+        <button type="button" class="dropdown-item" onclick="selectDropdown('dd_spotlight', 'none', '-- Tắt Tiêu Điểm Nổi Bật --', 'inputSpotlightTarget')">-- Tắt Tiêu Điểm Nổi Bật --</button>
+        <button type="button" class="dropdown-item" onclick="selectDropdown('dd_spotlight', 'outings', '<i class=\'fa-solid fa-tent\' style=\'color:#22c55e\'></i> Nhật Ký Đi Chơi & Vi Vu', 'inputSpotlightTarget')"><i class="fa-solid fa-tent" style="color:#22c55e"></i> Nhật Ký Đi Chơi & Vi Vu</button>
+        <button type="button" class="dropdown-item" onclick="selectDropdown('dd_spotlight', 'guestbook', '<i class=\'fa-solid fa-envelope-open-text\' style=\'color:#f43f5e\'></i> Sổ Lưu Bút & Lời Chúc', 'inputSpotlightTarget')"><i class="fa-solid fa-envelope-open-text" style="color:#f43f5e"></i> Sổ Lưu Bút & Lời Chúc</button>
+        <button type="button" class="dropdown-item" onclick="selectDropdown('dd_spotlight', 'gallery', '<i class=\'fa-solid fa-camera\' style=\'color:#38bdf8\'></i> Bộ Sưu Tập Kỷ Niệm', 'inputSpotlightTarget')"><i class="fa-solid fa-camera" style="color:#38bdf8"></i> Bộ Sưu Tập Kỷ Niệm</button>
+        <button type="button" class="dropdown-item" onclick="selectDropdown('dd_spotlight', 'diary', '<i class=\'fa-solid fa-book-open\' style=\'color:#3b82f6\'></i> Nhật Ký Thanh Xuân', 'inputSpotlightTarget')"><i class="fa-solid fa-book-open" style="color:#3b82f6"></i> Nhật Ký Thanh Xuân</button>
+        <button type="button" class="dropdown-item" onclick="selectDropdown('dd_spotlight', 'school', '<i class=\'fa-solid fa-graduation-cap\' style=\'color:#10b981\'></i> Trường Lớp & Bạn Bè', 'inputSpotlightTarget')"><i class="fa-solid fa-graduation-cap" style="color:#10b981"></i> Trường Lớp & Bạn Bè</button>
+        <button type="button" class="dropdown-item" onclick="selectDropdown('dd_spotlight', 'achievements', '<i class=\'fa-solid fa-trophy\' style=\'color:#f59e0b\'></i> Thành Tích & CLB', 'inputSpotlightTarget')"><i class="fa-solid fa-trophy" style="color:#f59e0b"></i> Thành Tích & CLB</button>
+        <button type="button" class="dropdown-item" onclick="selectDropdown('dd_spotlight', 'taste', '<i class=\'fa-solid fa-wand-magic-sparkles\' style=\'color:#facc15\'></i> Gu Cá Nhân & Style', 'inputSpotlightTarget')"><i class="fa-solid fa-wand-magic-sparkles" style="color:#facc15"></i> Gu Cá Nhân & Style</button>
+        <button type="button" class="dropdown-item" onclick="selectDropdown('dd_spotlight', 'goals', '<i class=\'fa-solid fa-bullseye\' style=\'color:#ef4444\'></i> Mục Tiêu & Cột Mốc', 'inputSpotlightTarget')"><i class="fa-solid fa-bullseye" style="color:#ef4444"></i> Mục Tiêu & Cột Mốc</button>
+    </div>
+    <input type="hidden" id="inputSpotlightTarget" value="none">
+</div>
                             </div>
                             <div class="input-group">
                                 <label><i class="fa-solid fa-tag"></i> Nhãn Chữ Nổi Bật (Badge):</label>
@@ -1462,9 +1480,6 @@
                     <!-- Media preview -->
                     <div id="anonMediaPreview" class="anon-media-preview">
                         <div class="anon-preview-inner"></div>
-                        <button type="button" id="btnAnonRemoveMedia" class="anon-remove-media" title="Xoá đính kèm">
-                            <i class="fa-solid fa-xmark"></i>
-                        </button>
                     </div>
                 </div>
 
@@ -1574,6 +1589,36 @@
     </div>
 
     <script type="module" src="js/app.js"></script>
+
+<script>
+function toggleDropdown(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var menu = el.querySelector('.dropdown-menu');
+    
+    document.querySelectorAll('.custom-dropdown .dropdown-menu').forEach(m => {
+        if(m !== menu) m.style.display = 'none';
+    });
+    
+    menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+}
+
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.custom-dropdown')) {
+         document.querySelectorAll('.custom-dropdown .dropdown-menu').forEach(m => {
+            m.style.display = 'none';
+        });
+    }
+});
+
+function selectDropdown(ddId, value, text, inputId) {
+    var dd = document.getElementById(ddId);
+    dd.querySelector('.dropdown-value').innerHTML = text;
+    dd.querySelector('.dropdown-menu').style.display = 'none';
+    
+    document.getElementById(inputId).value = value;
+}
+</script>
 </body>
 
 </html>

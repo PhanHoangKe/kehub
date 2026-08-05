@@ -1,11 +1,94 @@
 {
   "test": true,
   "project": "youth-memories",
-  "config": {},
+  "config": {
+    "name": "Phan Hoàng Kế",
+    "schoolName": "Trường THPT",
+    "className": "A4-K54-YT2",
+    "gradYear": "",
+    "classSlogan": "Nice to meet you",
+    "photoUrl": "https://res.cloudinary.com/ilwr8kuy/image/upload/v1785912761/youth-memories/admin/image/y8qvm5ev9b4irq1moppz.jpg",
+    "photoFallbackUrl": "",
+    "balloonTiktokUrl": "",
+    "audioUrl": "",
+    "audioFallbackUrl": "",
+    "quote1": "",
+    "quote2": "",
+    "quote3": "",
+    "birthdayDate": "2004-12-17",
+    "displayMode": "vinyl",
+    "favMusic": "",
+    "favMovie": "",
+    "favBook": "",
+    "favDrink": "",
+    "favFashion": "",
+    "favLover": "",
+    "favLifestyle": "",
+    "favColor": "",
+    "graduationDate": "",
+    "isCapsuleLocked": false,
+    "sealedAt": "",
+    "graduationMessage": "",
+    "socialLinks": {
+      "facebook": "",
+      "messenger": "",
+      "zalo": "",
+      "tiktok": "",
+      "instagram": ""
+    },
+    "achievements": [],
+    "clubs": [],
+    "friends": [],
+    "diary": [],
+    "goals": [],
+    "journey": [],
+    "gallery": [],
+    "playlist": [],
+    "mapLocations": [],
+    "spotlightConfig": {
+      "target": "none",
+      "badgeText": "",
+      "active": true
+    },
+    "announcementText": "",
+    "announcementActive": true,
+    "reactionsConfig": [
+      {
+        "emoji": "❤️",
+        "title": "Thả Tim Hạ Nhân",
+        "countId": "reactionCount-heart",
+        "imgUrl": "assets/memes/hanhan_3.png"
+      },
+      {
+        "emoji": "🧹",
+        "title": "Hạ Nhân Quét Rác",
+        "countId": "reactionCount-smile",
+        "imgUrl": "assets/memes/hanhan_1.png"
+      },
+      {
+        "emoji": "😏",
+        "title": "Hạ Nhân Cười Khẩy",
+        "countId": "reactionCount-tear",
+        "imgUrl": "assets/memes/hanhan_2.png"
+      },
+      {
+        "emoji": "🔥",
+        "title": "Hạ Nhân Cực Ngầu",
+        "countId": "reactionCount-party",
+        "imgUrl": "assets/memes/hanhan_4.png"
+      },
+      {
+        "emoji": "👑",
+        "title": "Hạ Nhân Bá Đạo",
+        "countId": "reactionCount-clap",
+        "imgUrl": "assets/memes/hanhan_2.png"
+      }
+    ]
+  },
   "reactions": {},
   "visitors": [
     {
-      "id": "vis_1785909833261_em2u",
+      "id": "vis_1785912762564_e9xs",
       "sessionId": "s_1785908981265_j85ff9",
       "ip": "127.0.0.1",
       "city": "Localhost",
@@ -37,85 +120,85 @@
       ],
       "timelineLogs": [
         {
-          "time": "13:04:12",
-          "event": "Thao tác: Khách Thăm 1",
+          "time": "14:02:48",
+          "event": "Thao tác: Mở trang quản trị Admin",
           "detail": "Mục: Chuyển mục"
         },
         {
-          "time": "13:08:59",
+          "time": "14:02:50",
           "event": "Thao tác: Khách Thăm",
           "detail": "Mục: Chuyển mục"
         },
         {
-          "time": "13:09:00",
+          "time": "14:02:52",
           "event": "Thao tác: Hộp Thư Ẩn",
           "detail": "Mục: Chuyển mục"
         },
         {
-          "time": "13:09:00",
+          "time": "14:02:53",
+          "event": "Thao tác: Khách Thăm 1",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "14:03:18",
+          "event": "Thao tác: close-btn",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "14:12:28",
           "event": "Thao tác: Định vị trạm sóng (Tan Phong, Tinh Thanh Hoa)",
           "detail": ""
         },
         {
-          "time": "13:09:01",
-          "event": "Thao tác: Tổng Quan",
+          "time": "14:12:29",
+          "event": "Thao tác: Khách Thăm",
           "detail": "Mục: Chuyển mục"
         },
         {
-          "time": "13:09:02",
-          "event": "Thao tác: Khách Thăm 1",
+          "time": "14:12:29",
+          "event": "Thao tác: Hộp Thư Ẩn",
           "detail": "Mục: Chuyển mục"
         },
         {
-          "time": "13:09:03",
-          "event": "Thao tác: Hồ Sơ",
-          "detail": "Mục: Chuyển mục"
-        },
-        {
-          "time": "13:09:03",
+          "time": "14:12:30",
           "event": "Thao tác: Thư Viện Ảnh",
           "detail": "Mục: Chuyển mục"
         },
         {
-          "time": "13:09:04",
+          "time": "14:12:30",
+          "event": "Thao tác: Thư Viện Ảnh",
+          "detail": "Mục: Chuyển mục"
+        },
+        {
+          "time": "14:12:31",
           "event": "Thao tác: Playlist",
           "detail": "Mục: Chuyển mục"
         },
         {
-          "time": "13:09:04",
-          "event": "Thao tác: Sở Thích",
+          "time": "14:12:31",
+          "event": "Thao tác: Hồ Sơ",
           "detail": "Mục: Chuyển mục"
         },
         {
-          "time": "13:09:05",
-          "event": "Thao tác: Dấu Chân",
+          "time": "14:12:33",
+          "event": "Thao tác: Lấy Vị Trí Hiện Tại Làm Vị Trí Nhà",
           "detail": "Mục: Chuyển mục"
         },
         {
-          "time": "13:09:05",
-          "event": "Thao tác: Bản Đồ",
+          "time": "14:12:38",
+          "event": "Thao tác: Lưu Hồ Sơ",
           "detail": "Mục: Chuyển mục"
         },
         {
-          "time": "13:09:06",
-          "event": "Thao tác: Icon Meme",
-          "detail": "Mục: Chuyển mục"
-        },
-        {
-          "time": "13:09:07",
-          "event": "Thao tác: Khách Thăm 1",
-          "detail": "Mục: Chuyển mục"
-        },
-        {
-          "time": "13:09:09",
+          "time": "14:12:39",
           "event": "Thao tác: close-btn",
           "detail": "Mục: Chuyển mục"
         }
       ],
-      "clicks": 28,
-      "firstSeen": "2026-08-05T06:03:53.260Z",
-      "lastSeen": "2026-08-05T06:09:23.504Z",
-      "durationSeconds": 330
+      "clicks": 43,
+      "firstSeen": "2026-08-05T06:52:42.562Z",
+      "lastSeen": "2026-08-05T07:12:53.187Z",
+      "durationSeconds": 1211
     }
   ],
   "anonymousMessages": []

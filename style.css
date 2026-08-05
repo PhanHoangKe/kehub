@@ -4258,7 +4258,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     height: 38px;
     border-radius: 10px;
     accent-color: #f472b6;
-    filter: invert(1) hue-rotate(180deg) brightness(0.85);
+    filter: saturate(1.2) brightness(1.05);
 }
 
 /* Image preview */

@@ -180,22 +180,38 @@ function uploadToCloudinary(buffer, mime, folder = 'youth-memories') {
  */
 async function saveFile(buffer, mime, folder = 'youth-memories') {
     // Thử Cloudinary
-    const cloudUrl = await uploadToCloudinary(buffer, mime, folder);
-    if (cloudUrl) return cloudUrl;
+    try {
+        const cloudUrl = await uploadToCloudinary(buffer, mime, folder);
+        if (cloudUrl) return cloudUrl;
+    } catch (e) {
+        console.error('  ⚠️  [saveFile] Cloudinary thất bại, fallback xuống disk local:', e && e.message ? e.message : String(e));
+    }
 
     // Fallback: lưu vào disk local
-    const extMap = {
-        'image/jpeg': '.jpg', 'image/png': '.png', 'image/gif': '.gif', 'image/webp': '.webp',
-        'audio/mpeg': '.mp3', 'audio/ogg': '.ogg', 'audio/wav': '.wav',
-        'audio/webm': '.webm', 'audio/webm;codecs=opus': '.webm', 'audio/mp4': '.m4a',
-        'video/mp4': '.mp4', 'video/webm': '.webm', 'video/ogg': '.ogv',
-    };
-    const ext      = extMap[mime] || extMap[mime.split(';')[0].trim()] || '.bin';
-    const prefix   = folder.split('/').pop() || 'file';
-    const filename = `${prefix}_${Date.now()}_${crypto.randomBytes(4).toString('hex')}${ext}`;
-    const filePath = path.join(UPLOADS_DIR, filename);
-    fs.writeFileSync(filePath, buffer);
-    return `/uploads/${filename}`;
+    try {
+        const extMap = {
+            'image/jpeg': '.jpg', 'image/png': '.png', 'image/gif': '.gif', 'image/webp': '.webp',
+            'audio/mpeg': '.mp3', 'audio/ogg': '.ogg', 'audio/wav': '.wav',
+            'audio/webm': '.webm', 'audio/webm;codecs=opus': '.webm', 'audio/mp4': '.m4a',
+            'video/mp4': '.mp4', 'video/webm': '.webm', 'video/ogg': '.ogv',
+        };
+        const ext      = extMap[mime] || extMap[mime.split(';')[0].trim()] || '.bin';
+        const prefix   = folder.split('/').pop() || 'file';
+        const filename = `${prefix}_${Date.now()}_${crypto.randomBytes(4).toString('hex')}${ext}`;
+
+        if (!fs.existsSync(UPLOADS_DIR)) {
+            fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+            console.warn('  ⚠️  [saveFile] UPLOADS_DIR chưa tồn tại, đã tự động tạo lại:', UPLOADS_DIR);
+        }
+        const filePath = path.join(UPLOADS_DIR, filename);
+        fs.writeFileSync(filePath, buffer);
+        console.log(`  💾  [saveFile] Lưu local OK: ${filename} (${(buffer.length/1024).toFixed(1)} KB)`);
+        return `/uploads/${filename}`;
+    } catch (e) {
+        console.error('  ❌  [saveFile] Lưu local BỊ LỖI:', e && e.message ? e.message : String(e),
+                      '\n  → Server sẽ trả về null cho savedMediaUrl — DB sẽ lưu mediaData base64 raw thay thế (tốn bộ nhớ hơn nhưng không mất file).');
+        return null;
+    }
 }
 
 // ── Cấu hình Admin ───────────────────────────────────────────────────────────
@@ -502,7 +518,9 @@ function validateBase64File(base64DataUrl) {
     if (!base64DataUrl || typeof base64DataUrl !== 'string') {
         return { ok: false, error: 'Dữ liệu file rỗng' };
     }
-    const matches = base64DataUrl.match(/^data:([a-zA-Z0-9\/\-\+\.]+);base64,(.+)$/);
+    // Regex phải hỗ trợ MIME có tham số, vd: "audio/webm;codecs=opus"
+    // Data URL format: data:<mime>[;params];base64,<data>
+    const matches = base64DataUrl.match(/^data:([^;]+(?:;(?!base64,)[^;]*)*);base64,(.+)$/);
     if (!matches || matches.length !== 3) {
         return { ok: false, error: 'Định dạng base64 không đúng' };
     }
@@ -905,37 +923,56 @@ const server = http.createServer(async (req, res) => {
             if (mediaData) {
                 const validation = validateBase64File(mediaData);
                 if (!validation.ok) {
+                    console.error('  ⚠️  [Anon Media] Validate thất bại:', validation.error, '| mediaType từ client:', mediaType || '(không có)');
                     jsonResponse(res, 400, { success: false, message: `File không hợp lệ: ${validation.error}` });
                     return;
                 }
 
-                // Chỉ cho phép ảnh, audio, video — không cho phép file khác
-                // audio/webm & audio/webm;codecs=opus là định dạng MediaRecorder mặc định trên Chrome/Edge/Firefox
+                // Normalize MIME: bỏ tham số sau ';' để tránh 'audio/webm; codecs=opus' vs 'audio/webm' không khớp
+                const rawMime = (validation.mime || '').toLowerCase();
+                const cleanMime = rawMime.split(';')[0].trim();
+
                 const allowedMimes = ['image/jpeg','image/png','image/gif','image/webp',
                                       'audio/mpeg','audio/ogg','audio/wav',
                                       'audio/webm','audio/webm;codecs=opus',
                                       'audio/mp4','audio/aac',
                                       'video/mp4','video/webm','video/ogg'];
-                if (!allowedMimes.includes(validation.mime)) {
+                const isAllowed = allowedMimes.some(m => {
+                    const cleanAllowed = m.toLowerCase().split(';')[0].trim();
+                    return cleanAllowed === cleanMime;
+                });
+                if (!isAllowed) {
+                    console.error('  ⚠️  [Anon Media] MIME không được phép:', rawMime, '(clean:', cleanMime + ')');
                     jsonResponse(res, 400, { success: false, message: 'Định dạng file không được phép' });
                     return;
                 }
 
                 // Giới hạn kích thước theo loại
-                const maxBytes = validation.mime.startsWith('video') ? 30 * 1024 * 1024  // video: 30MB
-                               : validation.mime.startsWith('audio') ? 10 * 1024 * 1024  // audio: 10MB
-                               : 5 * 1024 * 1024;                                         // ảnh:   5MB
+                const maxBytes = cleanMime.startsWith('video') ? 30 * 1024 * 1024
+                               : cleanMime.startsWith('audio') ? 10 * 1024 * 1024
+                               : 5 * 1024 * 1024;
                 if (validation.buffer.length > maxBytes) {
                     const mbLimit = maxBytes / 1024 / 1024;
+                    console.error('  ⚠️  [Anon Media] File quá lớn:', (validation.buffer.length/1024/1024).toFixed(2), 'MB > giới hạn', mbLimit, 'MB (mime:', cleanMime + ')');
                     jsonResponse(res, 400, { success: false, message: `File quá lớn (tối đa ${mbLimit}MB cho loại này)` });
                     return;
                 }
 
                 // Upload lên Cloudinary (hoặc fallback disk)
-                const folder = validation.mime.startsWith('audio') ? 'youth-memories/anon/audio'
-                             : validation.mime.startsWith('video') ? 'youth-memories/anon/video'
+                const folder = cleanMime.startsWith('audio') ? 'youth-memories/anon/audio'
+                             : cleanMime.startsWith('video') ? 'youth-memories/anon/video'
                              : 'youth-memories/anon/image';
+                console.log(`  📎  [Anon Media] Đang lưu file (${cleanMime}, ${(validation.buffer.length/1024).toFixed(1)} KB) vào folder: ${folder}...`);
                 savedMediaUrl = await saveFile(validation.buffer, validation.mime, folder);
+
+                if (!savedMediaUrl) {
+                    console.warn('  ⚠️  [Anon Media] saveFile trả về NULL — Cloudinary chưa cấu hình → lưu tạm mediaData base64 trực tiếp vào DB (DB sẽ lớn hơn bình thường).');
+                    savedMediaUrl = null; // fallback: tin nhắn sẽ dùng mediaData base64 để hiển thị (admin.js có fallback: mediaUrl || mediaData)
+                } else {
+                    console.log(`  ✅  [Anon Media] Lưu file THÀNH CÔNG → URL: ${savedMediaUrl}`);
+                }
+            } else {
+                console.log('  📝  [Anon Message] Tin nhắn chỉ có text (không đính kèm media).');
             }
 
             const db = getDB();

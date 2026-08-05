@@ -591,9 +591,41 @@
     padding: 10px !important;
 }
 .anon-media-tag { color: var(--adm-cyan) !important; font-size: 0.65rem !important; }
-.anon-admin-audio { border-radius: var(--adm-r-sm) !important; }
+.anon-admin-audio { border-radius: var(--adm-r-sm) !important; width: 100% !important; margin-top: 8px !important; }
 .anon-admin-img { border-radius: var(--adm-r-lg) !important; border-color: var(--adm-line) !important; }
-.anon-admin-video { border-radius: var(--adm-r-lg) !important; border-color: var(--adm-line) !important; }
+.anon-admin-video { border-radius: var(--adm-r-lg) !important; border-color: var(--adm-line) !important; width: 100% !important; margin-top: 8px !important; }
+.anon-media-head {
+    display: flex !important; flex-wrap: wrap !important;
+    align-items: center !important; gap: 8px !important;
+    margin-bottom: 4px !important;
+}
+.anon-src-badge {
+    font-size: 0.6rem !important; padding: 2px 8px !important;
+    border-radius: 999px !important; display: inline-flex !important; align-items: center !important; gap: 4px !important;
+    font-weight: 600 !important;
+}
+.anon-src-badge.ok   { background: rgba(16,185,129,0.14) !important; color: #34d399 !important; border: 1px solid rgba(16,185,129,0.3) !important; }
+.anon-src-badge.warn { background: rgba(245,158,11,0.12) !important; color: #fbbf24 !important; border: 1px solid rgba(245,158,11,0.28) !important; }
+.anon-dl-link {
+    margin-left: auto !important;
+    font-size: 0.68rem !important; padding: 4px 10px !important;
+    background: rgba(59,130,246,0.15) !important;
+    color: #93c5fd !important;
+    border: 1px solid rgba(59,130,246,0.35) !important;
+    border-radius: 8px !important;
+    text-decoration: none !important;
+    display: inline-flex !important; align-items: center !important; gap: 5px !important;
+    transition: background .18s ease, transform .18s ease !important;
+}
+.anon-dl-link:hover { background: rgba(59,130,246,0.28) !important; transform: translateY(-1px) !important; }
+.anon-media-attach.lost {
+    background: rgba(220,38,38,0.08) !important;
+    border: 1px solid rgba(220,38,38,0.3) !important;
+    color: #fca5a5 !important;
+    display: flex !important; align-items: flex-start !important; gap: 10px !important;
+}
+.anon-media-attach.lost i { font-size: 1.3rem !important; padding-top: 2px !important; }
+.anon-empty-text { font-style: italic !important; }
 
 /* ── FORM CARDS ───────────────────────────────────────────────────────────── */
 .form-section-card {

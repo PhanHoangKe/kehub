@@ -717,32 +717,73 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                 div.dataset.msgId = msg.id;
                 const timeStr = new Date(msg.createdAt).toLocaleString('vi-VN');
 
-                // Render media attachment nếu có
+                const hasMediaUrl  = !!msg.mediaUrl && typeof msg.mediaUrl === 'string' && msg.mediaUrl.trim().length > 0;
+                const hasMediaData = !!msg.mediaData && typeof msg.mediaData === 'string' && msg.mediaData.startsWith('data:');
+                const mediaSrc = hasMediaUrl ? msg.mediaUrl : (hasMediaData ? msg.mediaData : null);
+                const type = msg.mediaType || '';
+
                 let mediaHTML = '';
-                const mediaSrc = msg.mediaUrl || msg.mediaData || null;
                 if (mediaSrc) {
-                    const type = msg.mediaType || '';
+                    const sourceBadge = hasMediaUrl
+                        ? '<span class="anon-src-badge ok"><i class="fa-solid fa-cloud"></i> Đã lưu file</span>'
+                        : '<span class="anon-src-badge warn"><i class="fa-solid fa-triangle-exclamation"></i> Lưu trong DB (chưa cấu hình Cloud)</span>';
+
                     if (type === 'audio') {
+                        const ext = hasMediaUrl
+                            ? ((msg.mediaUrl.match(/\.(webm|ogg|mp3|wav|m4a|aac)(\?|#|$)/i) || [])[1] || 'webm')
+                            : 'webm';
+                        const downloadName = `ghi-am-${msg.id}.${ext}`;
                         mediaHTML = `
                             <div class="anon-media-attach">
-                                <span class="anon-media-tag"><i class="fa-solid fa-microphone"></i> Ghi âm</span>
-                                <audio controls class="anon-admin-audio" src="${escapeHTML(mediaSrc)}"></audio>
+                                <div class="anon-media-head">
+                                    <span class="anon-media-tag"><i class="fa-solid fa-microphone"></i> Ghi âm</span>
+                                    ${sourceBadge}
+                                    <a class="anon-dl-link" href="${escapeHTML(mediaSrc)}" download="${downloadName}" title="Tải file ghi âm về máy">
+                                        <i class="fa-solid fa-download"></i> Tải file
+                                    </a>
+                                </div>
+                                <audio controls class="anon-admin-audio" src="${escapeHTML(mediaSrc)}" data-audio-id="${escapeHTML(String(msg.id))}">
+                                    Trình duyệt không hỗ trợ phát audio. Hãy nhấn "Tải file" để nghe.
+                                </audio>
                             </div>`;
                     } else if (type === 'image') {
+                        const openHref = escapeHTML(hasMediaUrl ? msg.mediaUrl : '#');
+                        const ext = hasMediaUrl
+                            ? ((msg.mediaUrl.match(/\.(png|jpe?g|gif|webp)(\?|#|$)/i) || [])[1] || 'png')
+                            : 'png';
                         mediaHTML = `
                             <div class="anon-media-attach">
-                                <span class="anon-media-tag"><i class="fa-solid fa-image"></i> Ảnh</span>
+                                <div class="anon-media-head">
+                                    <span class="anon-media-tag"><i class="fa-solid fa-image"></i> Ảnh</span>
+                                    ${sourceBadge}
+                                </div>
                                 <img class="anon-admin-img" src="${escapeHTML(mediaSrc)}"
                                      alt="Ảnh ẩn danh"
-                                     onclick="window.open('${escapeHTML(msg.mediaUrl || '#')}','_blank')">
+                                     onclick="${hasMediaUrl ? `window.open('${openHref}','_blank')` : ''}">
                             </div>`;
                     } else if (type === 'video') {
                         mediaHTML = `
                             <div class="anon-media-attach">
-                                <span class="anon-media-tag"><i class="fa-solid fa-video"></i> Video</span>
+                                <div class="anon-media-head">
+                                    <span class="anon-media-tag"><i class="fa-solid fa-video"></i> Video</span>
+                                    ${sourceBadge}
+                                </div>
                                 <video controls class="anon-admin-video" src="${escapeHTML(mediaSrc)}"></video>
                             </div>`;
+                    } else {
+                        mediaHTML = `
+                            <div class="anon-media-attach">
+                                <span class="anon-media-tag"><i class="fa-solid fa-file"></i> File đính kèm (${escapeHTML(type || 'không xác định')})</span>
+                                ${sourceBadge}
+                            </div>`;
                     }
+                } else if (type) {
+                    mediaHTML = `
+                        <div class="anon-media-attach lost">
+                            <i class="fa-solid fa-circle-exclamation"></i>
+                            <div><strong>⚠️ File ${escapeHTML(type)} đã bị MẤT</strong><br>
+                            <small style="opacity:.6;">URL lưu file không còn tồn tại và DB cũng không có bản dự phòng.</small></div>
+                        </div>`;
                 }
 
                 div.innerHTML = `
@@ -752,9 +793,22 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                             <i class="fa-solid fa-trash-can"></i>
                         </button>
                     </div>
-                    ${msg.message ? `<div class="anon-message-text">${escapeHTML(msg.message)}</div>` : ''}
+                    ${msg.message ? `<div class="anon-message-text">${escapeHTML(msg.message)}</div>` : '<div class="anon-message-text anon-empty-text" style="opacity:.45;padding:6px 0 2px;"><i class="fa-regular fa-comment-slash"></i> Tin nhắn chỉ chứa tệp đính kèm (không có lời văn).</div>'}
                     ${mediaHTML}
                 `;
+
+                // Bắt lỗi audio không phát được sau khi append DOM
+                const audioEl = div.querySelector(`audio[data-audio-id="${String(msg.id)}"]`);
+                if (audioEl) {
+                    audioEl.addEventListener('error', () => {
+                        const attach = div.querySelector('.anon-media-attach');
+                        if (!attach) return;
+                        const errTip = document.createElement('div');
+                        errTip.style.cssText = 'margin-top:8px;padding:8px 10px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.3);border-radius:8px;font-size:0.8rem;color:#fca5a5;';
+                        errTip.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> <strong>Không thể phát audio trong trình duyệt.</strong> Hãy nhấn nút <b>"Tải file"</b> ở trên về máy rồi nghe với phần mềm nghe nhạc (VLC, Groove...) nhé. Định dạng ghi âm WebM/Opus của trình duyệt đôi khi không được <code>audio</code> element hỗ trợ đầy đủ.';
+                        attach.appendChild(errTip);
+                    });
+                }
 
                 // Xử lý nút xóa
                 div.querySelector('.btn-anon-delete').addEventListener('click', async (e) => {

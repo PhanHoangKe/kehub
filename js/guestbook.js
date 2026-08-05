@@ -612,30 +612,44 @@ export function initGuestbookEngine() {
         });
     }
 
+    function getMediaDOM() {
+        const prev = document.getElementById('anonMediaPreview');
+        const inner = prev ? prev.querySelector('.anon-preview-inner') : null;
+        const remove = document.getElementById('btnAnonRemoveMedia');
+        return { prev, inner, remove };
+    }
+
     function showMediaPreview(dataUrl, type) {
-        if (!anonMediaPreview || !anonPreviewInner) return;
-        anonPreviewInner.innerHTML = '';
+        const { prev, inner } = getMediaDOM();
+        if (!prev || !inner) {
+            console.error('[Guestbook] Không tìm thấy DOM preview (anonMediaPreview / .anon-preview-inner)');
+            return;
+        }
+        inner.innerHTML = '';
 
         if (type === 'audio') {
             const audio = document.createElement('audio');
             audio.controls = true;
             audio.src      = dataUrl;
             audio.className = 'anon-preview-audio';
-            anonPreviewInner.appendChild(audio);
+            audio.addEventListener('error', () => {
+                showToast('⚠️ File ghi âm bị lỗi định dạng. Thử ghi lại nhé.');
+            });
+            inner.appendChild(audio);
         } else if (type === 'image') {
             const img = document.createElement('img');
             img.src       = dataUrl;
             img.className = 'anon-preview-img';
-            anonPreviewInner.appendChild(img);
+            inner.appendChild(img);
         } else if (type === 'video') {
             const video = document.createElement('video');
             video.controls  = true;
             video.src       = dataUrl;
             video.className = 'anon-preview-video';
-            anonPreviewInner.appendChild(video);
+            inner.appendChild(video);
         }
 
-        anonMediaPreview.classList.add('is-visible');
+        prev.classList.add('is-visible');
         currentMediaData = dataUrl;
         currentMediaType = type;
         updateSubmitState();
@@ -644,9 +658,11 @@ export function initGuestbookEngine() {
     function clearMedia() {
         currentMediaData = null;
         currentMediaType = null;
-        if (anonMediaPreview)  anonMediaPreview.classList.remove('is-visible');
-        if (anonPreviewInner)  anonPreviewInner.innerHTML = '';
-        if (anonFileInput)     anonFileInput.value = '';
+        const { prev, inner } = getMediaDOM();
+        if (prev)  prev.classList.remove('is-visible');
+        if (inner) inner.innerHTML = '';
+        const fileInp = document.getElementById('anonFileInput');
+        if (fileInp) fileInp.value = '';
         updateSubmitState();
     }
 
@@ -749,20 +765,44 @@ export function initGuestbookEngine() {
             };
 
             mediaRecorder.onstop = () => {
-                // Tắt microphone ngay
                 stream.getTracks().forEach(t => t.stop());
                 exitRecordingMode();
 
-                if (recordedChunks.length === 0) return;
+                const hasRecording = recordedChunks.length > 0
+                    && recordedChunks.some(c => c && c.size > 50);
+
+                if (!hasRecording) {
+                    console.warn('[Guestbook] Ghi âm không có dữ liệu (recordedChunks rỗng hoặc < 50 bytes). Thời gian ghi:', recordSeconds, 's');
+                    showToast('⚠️ Ghi âm quá ngắn! Hãy giữ nút ghi ít nhất 0.5 giây nhé. 🎙️');
+                    recordedChunks = [];
+                    return;
+                }
 
                 const blob     = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+                if (blob.size < 512) {
+                    console.warn('[Guestbook] Blob ghi âm quá nhỏ (', blob.size, 'bytes). Bỏ qua.');
+                    showToast('⚠️ Ghi âm không nhận được âm thanh. Kiểm tra micro và thử lại nhé.');
+                    recordedChunks = [];
+                    return;
+                }
+
                 const reader   = new FileReader();
                 reader.onload  = () => {
                     showMediaPreview(reader.result, 'audio');
-                    showToast('Đã ghi âm xong! Nghe lại trước khi gửi nhé 🎙️');
+                    showToast('✅ Đã ghi âm xong! Nghe lại trước khi gửi nhé 🎙️');
+                    console.log('[Guestbook] Ghi âm OK. Blob size:', Math.round(blob.size/1024), 'KB, mime:', blob.type || mediaRecorder.mimeType);
+                };
+                reader.onerror = () => {
+                    console.error('[Guestbook] FileReader lỗi khi đọc blob ghi âm.');
+                    showToast('❌ Lỗi đọc file ghi âm. Thử ghi lại nhé.');
                 };
                 reader.readAsDataURL(blob);
                 recordedChunks = [];
+            };
+
+            mediaRecorder.onerror = (e) => {
+                console.error('[Guestbook] MediaRecorder lỗi:', e);
+                showToast('❌ Ghi âm gặp lỗi trình duyệt. Thử lại nhé.');
             };
 
             mediaRecorder.start(250); // collect every 250ms
@@ -861,7 +901,7 @@ export function initGuestbookEngine() {
                 '<span class="btn-inner"><i class="fa-solid fa-circle-notch fa-spin"></i><span>Đang gửi...</span></span>';
 
             try {
-                await fetch('/api/anonymous', {
+                const res = await fetch('/api/anonymous', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -870,6 +910,14 @@ export function initGuestbookEngine() {
                         mediaType: currentMediaType || null,
                     }),
                 });
+                if (!res.ok) {
+                    let errMsg = 'Lỗi server';
+                    try { const errData = await res.json(); errMsg = errData.message || errMsg; } catch {}
+                    showToast(`❌ Gửi thất bại: ${errMsg}`);
+                    btnSubmitAnonymous.innerHTML = originalHTML;
+                    updateSubmitState();
+                    return;
+                }
                 const mediaLabel = currentMediaType === 'audio' ? '🎙️ ghi âm'
                                  : currentMediaType === 'image' ? '🖼️ ảnh'
                                  : currentMediaType === 'video' ? '🎬 video'
@@ -877,7 +925,10 @@ export function initGuestbookEngine() {
                 const extraLabel = mediaLabel ? ` kèm ${mediaLabel}` : '';
                 showToast(`✨ Đã gửi tin nhắn ẩn danh${extraLabel} thành công!`);
             } catch {
-                showToast("🤫 Đã gửi thành công! (Offline Mode)");
+                showToast("❌ Lỗi kết nối! Kiểm tra mạng rồi thử lại nhé.");
+                btnSubmitAnonymous.innerHTML = originalHTML;
+                updateSubmitState();
+                return;
             }
 
             if (inputAnonymousMessage) inputAnonymousMessage.value = '';

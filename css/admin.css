@@ -49,6 +49,7 @@
 #customModal ::-webkit-scrollbar-thumb:hover { background:rgba(124,58,237,0.7); }
 
 /* ── Overlay ───────────────────────────────────────────────────────────────── */
+/* Override style.css: .modal-overlay { padding: 20px; align-items: center } */
 #customModal.modal-overlay {
     position: fixed !important;
     inset: 0 !important;
@@ -66,17 +67,24 @@
     margin: 0 !important;
     font-family: var(--adm-font) !important;
 }
-#customModal.modal-overlay.active { opacity:1; visibility:visible; }
+#customModal.modal-overlay.active { opacity:1 !important; visibility:visible !important; }
 
 /* ── Modal shell: full screen ─────────────────────────────────────────────── */
+/* Override style.css: .modal-box { max-width: 500px; padding: 28px } */
 #customModal .modal-box {
     width: 100% !important;
     max-width: 100% !important;
+    min-width: 100% !important;
     height: 100% !important;
+    max-height: 100% !important;
+    min-height: 100% !important;
     margin: 0 !important;
     background: var(--adm-bg) !important;
     border: none !important;
     border-radius: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+    transition: none !important;
     display: grid !important;
     grid-template-columns: var(--sidebar-w) minmax(0, 1fr) !important;
     grid-template-rows: var(--header-h) 1fr !important;
@@ -86,8 +94,6 @@
     overflow: hidden !important;
     box-shadow: none !important;
     animation: adminModalIn 0.32s cubic-bezier(0.16,1,0.3,1) !important;
-    transform: none !important;
-    padding: 0 !important;
 }
 @keyframes adminModalIn {
     from { opacity:0; transform: scale(0.985); }
@@ -304,53 +310,60 @@
 #customModal .admin-tab-nav { display: none !important; }
 
 /* ── BODY (content area) ──────────────────────────────────────────────────── */
+/* Override style.css: .modal-body { max-height: 62vh } */
 #customModal .modal-body {
-    grid-area: body;
+    grid-area: body !important;
     padding: 0 !important;
     overflow: hidden !important;
     flex: unset !important;
     max-width: 100% !important;
+    max-height: none !important;
+    height: 100% !important;
     margin: 0 !important;
     width: 100% !important;
     min-width: 0 !important;
     background: var(--adm-bg) !important;
-    /* Fill hết grid cell */
     display: flex !important;
     flex-direction: column !important;
     min-height: 0 !important;
 }
 
-/* Mỗi tab-content fill toàn bộ modal-body */
-.admin-tab-content {
-    display: none;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-    width: 100%;
-    min-width: 0;
-    overflow: hidden;
-    animation: tabIn 0.22s cubic-bezier(0.16,1,0.3,1);
+/* Override style.css: .admin-tab-content */
+#customModal .admin-tab-content {
+    display: none !important;
+    flex-direction: column !important;
+    flex: 1 !important;
+    min-height: 0 !important;
+    height: 0 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    gap: 0 !important;
+    animation: tabIn 0.22s cubic-bezier(0.16,1,0.3,1) !important;
 }
-.admin-tab-content.active { display: flex; }
+#customModal .admin-tab-content.active {
+    display: flex !important;
+}
 
 @keyframes tabIn {
     from { opacity:0; transform: translateX(10px); }
     to   { opacity:1; transform: translateX(0); }
 }
 
-/* Scroll area fill phần còn lại sau topbar */
-.adm-tab-scroll {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 24px 28px;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    min-width: 0;
-    width: 100%;
-    box-sizing: border-box;
+/* Scroll area fill phần còn lại */
+#customModal .adm-tab-scroll {
+    flex: 1 !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 24px 28px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 18px !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    max-height: none !important;
 }
 
 /* Tab sticky top bar — ẩn, title đã có trên modal-header */

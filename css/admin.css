@@ -78,8 +78,8 @@
     border: none !important;
     border-radius: 0 !important;
     display: grid !important;
-    grid-template-columns: var(--sidebar-w) 1fr !important;
-    grid-template-rows: var(--header-h) 1fr !important;
+    grid-template-columns: var(--sidebar-w) minmax(0, 1fr) !important;
+    grid-template-rows: var(--header-h) minmax(0, 1fr) !important;
     grid-template-areas:
         "sidebar header"
         "sidebar body" !important;
@@ -104,6 +104,10 @@
     overflow: hidden;
     position: relative;
     z-index: 2;
+    width: var(--sidebar-w);
+    min-width: var(--sidebar-w);
+    max-width: var(--sidebar-w);
+    flex-shrink: 0;
 }
 
 /* Sidebar top brand */
@@ -303,12 +307,13 @@
 #customModal .modal-body {
     grid-area: body;
     padding: 0 !important;
-    overflow-y: auto !important;
+    overflow: hidden !important;
     flex: unset !important;
     max-width: 100% !important;
     margin: 0 !important;
     width: 100% !important;
     background: var(--adm-bg) !important;
+    min-width: 0 !important;
 }
 .admin-tab-content {
     display: none;
@@ -316,6 +321,9 @@
     gap: 0;
     animation: tabIn 0.22s cubic-bezier(0.16,1,0.3,1);
     height: 100%;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
 }
 .admin-tab-content.active { display: flex; }
 @keyframes tabIn {
@@ -326,18 +334,25 @@
 /* Content inner scroll area */
 .adm-tab-scroll {
     flex: 1; overflow-y: auto;
+    overflow-x: hidden;
     padding: 24px 28px;
     display: flex; flex-direction: column; gap: 18px;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Tab sticky top bar */
 .adm-tab-topbar {
-    padding: 14px 28px;
+    padding: 12px 28px;
     background: var(--adm-bg-2);
     border-bottom: 1px solid var(--adm-line);
     display: flex; align-items: center; justify-content: space-between;
     flex-shrink: 0;
     gap: 12px;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
 }
 .adm-tab-title {
     font-size: 0.9rem; font-weight: 800;
@@ -548,6 +563,9 @@
     padding: 20px !important;
     gap: 16px !important;
     box-shadow: none !important; backdrop-filter: none !important;
+    display: flex !important; flex-direction: column !important;
+    width: 100% !important; box-sizing: border-box !important;
+    min-width: 0 !important;
 }
 .form-section-title {
     font-size: 0.75rem !important; font-weight: 800 !important;
@@ -557,10 +575,15 @@
     text-transform: uppercase !important; letter-spacing: 0.08em !important;
 }
 .form-section-title i { color: var(--adm-cyan) !important; }
-.form-grid-2 { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 14px !important; }
+.form-grid-2 {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 14px !important;
+    min-width: 0 !important;
+}
 
 /* ── INPUT GROUPS ─────────────────────────────────────────────────────────── */
-.input-group { display: flex !important; flex-direction: column !important; gap: 6px !important; }
+.input-group { display: flex !important; flex-direction: column !important; gap: 6px !important; min-width: 0 !important; }
 .input-group label {
     font-size: 0.7rem !important; font-weight: 700 !important;
     color: var(--adm-text-3) !important; text-transform: uppercase !important;
@@ -584,6 +607,7 @@
     outline: none !important;
     width: 100% !important;
     box-sizing: border-box !important;
+    min-width: 0 !important;
 }
 .input-group input:focus,
 .input-group textarea:focus,
@@ -596,9 +620,7 @@
     border-radius: var(--adm-r-sm) !important; color: var(--adm-text-2) !important;
     padding: 8px 12px !important; font-size: 0.78rem !important; cursor: pointer !important;
 }
-.input-group input[type="checkbox"] {
-    accent-color: var(--adm-violet) !important;
-}
+.input-group input[type="checkbox"] { accent-color: var(--adm-violet) !important; }
 .input-desc { font-size: 0.68rem !important; color: var(--adm-text-3) !important; }
 
 /* ── ITEMS LIST (playlist, gallery, journey, map, reactions) ──────────────── */
@@ -756,7 +778,7 @@
     text-transform: uppercase; letter-spacing: 0.1em;
     display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
 }
-.admin-password-wrap { position: relative; }
+.admin-password-wrap { position: relative; display: flex; align-items: center; }
 .admin-login-input {
     width: 100%; padding: 10px 42px 10px 14px;
     background: var(--adm-bg-3);
@@ -766,6 +788,7 @@
     font-family: var(--adm-font); outline: none;
     transition: border-color 0.18s, box-shadow 0.18s;
     box-sizing: border-box;
+    flex: 1;
 }
 .admin-login-input:focus {
     border-color: rgba(124,58,237,0.6);
@@ -773,9 +796,13 @@
 }
 .admin-toggle-eye {
     position: absolute; right: 0; top: 0; bottom: 0;
-    padding: 0 13px; background: transparent; border: none;
+    width: 40px;
+    padding: 0;
+    background: transparent; border: none;
     color: var(--adm-text-3); cursor: pointer; font-size: 0.8rem;
     transition: color 0.15s ease;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
 }
 .admin-toggle-eye:hover { color: var(--adm-text-2); }
 .admin-login-error {

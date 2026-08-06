@@ -379,14 +379,9 @@ export function initGuestbookEngine() {
         }
     });
 
-    // Load reactions từ server khi init
-    fetch('/api/data')
-        .then(r => r.json())
-        .then(db => {
-            if (db.reactions) applyReactionCounts(db.reactions);
-            else if (db.hearts) applyReactionCounts({ '❤️': db.hearts });
-        })
-        .catch(() => {});
+    // Reactions sẽ được cập nhật bởi app.js thông qua applyReactionCounts()
+    // sau khi loadBackendData() hoàn tất → không cần fetch riêng ở đây nữa.
+    // (tránh fetch /api/data 2 lần khi trang load)
 
     // applyActiveStates() sẽ được gọi bởi app.js sau khi
     // applyStateToDOM() đã gán dataset.emoji vào các buttons.
@@ -1286,5 +1281,5 @@ export function initGuestbookEngine() {
         });
     }
 
-    return { renderWishCard, updateReactionsConfig: _rebuildMaps, applyActiveStates };
+    return { renderWishCard, updateReactionsConfig: _rebuildMaps, applyActiveStates, applyReactionCounts };
 }

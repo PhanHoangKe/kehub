@@ -67,7 +67,7 @@ let navEngine;
 let balloonEngine;
 
 // ── Áp dụng state vào DOM ────────────────────────────────────────────────────
-export function applyStateToDOM() {
+export function applyStateToDOM(reactionsData = null) {
     const highlightName = document.querySelector('.highlight-name');
     if (highlightName) highlightName.textContent = state.name || "Phan Hoàng Kế";
 
@@ -160,6 +160,12 @@ export function applyStateToDOM() {
         if (guestbookEngine?.applyActiveStates) {
             guestbookEngine.applyActiveStates();
         }
+
+        // 4. Cập nhật số đếm reactions NGAY BÂY nếu có data từ server
+        // EMOJI_MAP đã được build ở bước 1 nên applyReactionCounts sẽ tìm đúng element
+        if (reactionsData && guestbookEngine?.applyReactionCounts) {
+            guestbookEngine.applyReactionCounts(reactionsData);
+        }
     }
 
     if (audioEngine && audioEngine.renderPlaylist) audioEngine.renderPlaylist();
@@ -181,16 +187,19 @@ async function loadBackendData() {
                 if (guestbookWall) guestbookWall.innerHTML = '';
                 db.wishes.forEach(w => guestbookEngine.renderWishCard(w.author, w.message, w.time, w.style));
             }
+            // Truyền reactions vào applyStateToDOM để cập nhật đếm đúng NGAY SAU khi
+            // EMOJI_MAP đã được build từ reactionsConfig → không còn hiện 0 nữa
+            applyStateToDOM(db.reactions || null);
         } else {
             loadFromLocalStorage();
+            applyStateToDOM();
         }
     } catch (e) {
         console.log('Fallback sang LocalStorage.');
         loadFromLocalStorage();
-    } finally {
         applyStateToDOM();
-        if (audioEngine && audioEngine.renderPlaylist) audioEngine.renderPlaylist();
     }
+    if (audioEngine && audioEngine.renderPlaylist) audioEngine.renderPlaylist();
 }
 
 function loadFromLocalStorage() {

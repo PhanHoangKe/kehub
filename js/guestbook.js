@@ -66,12 +66,17 @@ export function initGuestbookEngine() {
         if (heartCounterNumber) heartCounterNumber.textContent = reactions['❤️'] || 0;
     }
 
-    // Đánh dấu emoji user đã react
+    // Đánh dấu emoji user đã react — gọi SAU khi dataset.emoji đã được gán
     function applyActiveStates() {
         const mine = getMyReactions();
         document.querySelectorAll('.reaction-btn').forEach(btn => {
             const emoji = btn.dataset.emoji;
-            btn.classList.toggle('reacted', !!(mine[emoji]));
+            // Chỉ đánh dấu reacted nếu emoji đã được gán (khác rỗng) VÀ user đã react emoji đó
+            if (emoji && emoji.length > 0) {
+                btn.classList.toggle('reacted', !!(mine[emoji] && mine[emoji] > 0));
+            } else {
+                btn.classList.remove('reacted');
+            }
         });
     }
 
@@ -383,7 +388,9 @@ export function initGuestbookEngine() {
         })
         .catch(() => {});
 
-    applyActiveStates();
+    // applyActiveStates() sẽ được gọi bởi app.js sau khi
+    // applyStateToDOM() đã gán dataset.emoji vào các buttons.
+    // Không gọi ở đây vì lúc này data-emoji chưa được set → sẽ bị sai.
 
     if (btnCopyShareLink) {
         btnCopyShareLink.addEventListener('click', () => {
@@ -1279,5 +1286,5 @@ export function initGuestbookEngine() {
         });
     }
 
-    return { renderWishCard, updateReactionsConfig: _rebuildMaps };
+    return { renderWishCard, updateReactionsConfig: _rebuildMaps, applyActiveStates };
 }

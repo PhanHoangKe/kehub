@@ -129,22 +129,37 @@ export function applyStateToDOM() {
         }
 
         // 2. Render DOM các nút reaction
+        // QUAN TRỌNG: gán đúng emoji vào đúng button THEO countId (không theo index)
+        // để tránh lỗi nhầm button khi thứ tự config thay đổi
         const reactionBtns = document.querySelectorAll('.reaction-btn');
         state.reactionsConfig.forEach((cfg, idx) => {
             if (!reactionBtns[idx]) return;
             const btn = reactionBtns[idx];
-            btn.dataset.emoji = cfg.emoji   || '';
-            btn.title         = cfg.title   || '';
+
+            // Gán emoji vào dataset — phải làm TRƯỚC khi guestbook dùng
+            btn.dataset.emoji = cfg.emoji || '';
+            btn.title         = cfg.title || '';
+
             const img = btn.querySelector('img');
             if (img) {
                 img.src = cfg.imgUrl || '';
                 img.alt = cfg.title  || '';
-                // Ẩn img nếu chưa có ảnh để tránh icon vỡ
                 img.style.display = cfg.imgUrl ? '' : 'none';
             }
+
+            // Gán countId: tìm span trong chính button này (không dùng document.getElementById
+            // để tránh nhầm nếu có span cũ từ lần render trước)
             const countSpan = btn.querySelector('.reaction-count');
-            if (countSpan && cfg.countId) countSpan.id = cfg.countId;
+            if (countSpan && cfg.countId) {
+                countSpan.id = cfg.countId;
+            }
         });
+
+        // 3. Sau khi emoji đã được gán vào dataset → cập nhật active state đúng
+        // (guestbook.applyActiveStates cần dataset.emoji đã có giá trị)
+        if (guestbookEngine?.applyActiveStates) {
+            guestbookEngine.applyActiveStates();
+        }
     }
 
     if (audioEngine && audioEngine.renderPlaylist) audioEngine.renderPlaylist();

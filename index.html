@@ -949,9 +949,37 @@
                             </div>
                         </div>
 
+                        <!-- GitHub Backup Status Card -->
+                        <div class="adm-github-backup-card" id="admGithubBackupCard">
+                            <div class="adm-ghb-header">
+                                <div class="adm-ghb-title">
+                                    <i class="fa-brands fa-github"></i>
+                                    <span>GitHub Backup</span>
+                                    <span class="adm-ghb-badge" id="admGhbBadge">Đang kiểm tra...</span>
+                                </div>
+                                <button class="adm-ghb-btn-now" id="btnGithubBackupNow" title="Backup ngay lên GitHub">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i> Backup Ngay
+                                </button>
+                            </div>
+                            <div class="adm-ghb-body">
+                                <div class="adm-ghb-row">
+                                    <span class="adm-ghb-label"><i class="fa-solid fa-database"></i> Kích thước DB</span>
+                                    <span class="adm-ghb-val" id="admGhbDbSize">...</span>
+                                </div>
+                                <div class="adm-ghb-row">
+                                    <span class="adm-ghb-label"><i class="fa-solid fa-clock-rotate-left"></i> Backup lần cuối</span>
+                                    <span class="adm-ghb-val" id="admGhbLastBackup">...</span>
+                                </div>
+                                <div class="adm-ghb-row">
+                                    <span class="adm-ghb-label"><i class="fa-brands fa-github"></i> Repo</span>
+                                    <span class="adm-ghb-val" id="admGhbRepo">...</span>
+                                </div>
+                            </div>
+                            <div class="adm-ghb-suggestion" id="admGhbSuggestion"></div>
+                        </div>
+
                         <!-- Sparkline: Lượt truy cập 24h gần nhất -->
-                        <div class="adm-sparkline-widget" id="admSparklineWidget">
-                            <div class="adm-sparkline-header">
+                        <div class="adm-sparkline-widget" id="admSparklineWidget">                            <div class="adm-sparkline-header">
                                 <div class="adm-sparkline-title">
                                     <i class="fa-solid fa-chart-area" style="color:var(--adm-cyan);"></i>
                                     Lượt Truy Cập — 24 Giờ Gần Nhất

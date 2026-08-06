@@ -278,7 +278,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
         if (targetTab === 'tabAnonymous') {
             try { fetchAndRenderAnonymousMessages(); } catch {}
         }
-        if (targetTab === 'tabOverview') { startLiveClock(); renderSparkline(); }
+        if (targetTab === 'tabOverview') { startLiveClock(); renderSparkline(); loadGithubBackupStatus(); }
         else stopLiveClock();
     }
 
@@ -377,6 +377,7 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
         customModal.classList.add('active');
         switchTab('tabOverview');
         renderSparkline();
+        loadGithubBackupStatus();
 
         // Seed activity feed
         try {
@@ -395,6 +396,156 @@ export function initAdminEngine(getState, setState, saveBackendConfig, refreshDO
                 pushFeedEvent(`Khách từ ${v.city || 'Việt Nam'} — ${v.device || 'thiết bị'}`, 'var(--adm-cyan)');
             });
         } catch {}
+    }
+
+    // ── renderSparkline — Vẽ biểu đồ lượt truy cập 24h ───────────────────────
+    async function renderSparkline() {
+        try {
+            const token = localStorage.getItem('admin_token');
+            const h = token ? { 'Authorization': `Bearer ${token}` } : {};
+            const res = await fetch('/api/admin/visitors-stats', { headers: h, credentials: 'include' });
+            if (!res.ok) return;
+            const data = await res.json();
+            if (!data.success) return;
+
+            const { hourly = [], labels = [], todayCount = 0, total = 0, hourlyNew = [], hourlyReturn = [] } = data;
+            const meta = document.getElementById('admSparklineMeta');
+            if (meta) meta.textContent = `Hôm nay: ${todayCount} lượt · Tổng: ${total} khách`;
+
+            const svg  = document.getElementById('admSparklineSvg');
+            const lbls = document.getElementById('admSparklineLabels');
+            if (!svg) return;
+
+            const W = 480, H = 80, pad = 4;
+            const max = Math.max(...hourly, 1);
+            const step = (W - pad * 2) / (hourly.length - 1 || 1);
+            const toX = i => pad + i * step;
+            const toY = v => H - pad - (v / max) * (H - pad * 2);
+
+            const pts = hourly.map((v, i) => `${toX(i).toFixed(1)},${toY(v).toFixed(1)}`).join(' ');
+            const ptsNew = hourlyNew.map((v, i) => `${toX(i).toFixed(1)},${toY(v).toFixed(1)}`).join(' ');
+
+            svg.innerHTML = `
+                <defs>
+                    <linearGradient id="spkGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%"   stop-color="#7c3aed" stop-opacity="0.35"/>
+                        <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+                    </linearGradient>
+                </defs>
+                <polygon points="${pts} ${toX(hourly.length-1).toFixed(1)},${H} ${toX(0).toFixed(1)},${H}"
+                    fill="url(#spkGrad)" />
+                <polyline points="${pts}" fill="none" stroke="#7c3aed" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+                <polyline points="${ptsNew}" fill="none" stroke="#22c55e" stroke-width="1.2" stroke-dasharray="3,2" stroke-linejoin="round" stroke-linecap="round" opacity="0.7"/>
+                ${hourly.map((v, i) => v > 0 ? `<circle cx="${toX(i).toFixed(1)}" cy="${toY(v).toFixed(1)}" r="2.5" fill="#7c3aed"/>` : '').join('')}
+            `;
+
+            if (lbls) {
+                lbls.innerHTML = '';
+                // Chỉ hiện mỗi 4 label để không bị chật
+                labels.forEach((lbl, i) => {
+                    if (i % 4 !== 0 && i !== labels.length - 1) return;
+                    const span = document.createElement('span');
+                    span.textContent = lbl;
+                    span.style.cssText = `position:absolute;left:${(toX(i)/W*100).toFixed(1)}%;transform:translateX(-50%);font-size:0.6rem;color:var(--adm-text-3);white-space:nowrap;`;
+                    lbls.appendChild(span);
+                });
+            }
+        } catch (e) { /* silent fail */ }
+    }
+
+    // ── loadGithubBackupStatus — Load và render trạng thái GitHub Backup ──────
+    async function loadGithubBackupStatus() {
+        const card = document.getElementById('admGithubBackupCard');
+        if (!card) return;
+        try {
+            const token = localStorage.getItem('admin_token');
+            const h = { 'Content-Type': 'application/json' };
+            if (token) h['Authorization'] = `Bearer ${token}`;
+            const res = await fetch('/api/admin/backup/github-status', { headers: h, credentials: 'include' });
+            if (!res.ok) return;
+            const data = await res.json();
+            if (!data.success) return;
+
+            const { github, db, suggestion } = data;
+            const badge     = document.getElementById('admGhbBadge');
+            const dbSize    = document.getElementById('admGhbDbSize');
+            const lastBackup = document.getElementById('admGhbLastBackup');
+            const repoEl    = document.getElementById('admGhbRepo');
+            const suggEl    = document.getElementById('admGhbSuggestion');
+
+            // Badge
+            if (badge) {
+                if (!github.enabled) {
+                    badge.textContent = 'Chưa cấu hình';
+                    badge.className = 'adm-ghb-badge off';
+                } else if (github.mode === 'hard-off') {
+                    badge.textContent = 'Lỗi cấu hình';
+                    badge.className = 'adm-ghb-badge error';
+                } else if (github.mode === 'cooldown') {
+                    badge.textContent = 'Tạm dừng';
+                    badge.className = 'adm-ghb-badge warn';
+                } else {
+                    badge.textContent = '✓ Hoạt động';
+                    badge.className = 'adm-ghb-badge ok';
+                }
+            }
+
+            // DB size
+            if (dbSize) dbSize.textContent = `${db.sizeKB} KB · ${db.records} records`;
+
+            // Last backup
+            if (lastBackup) {
+                if (github.lastBackupAt) {
+                    const agoSec = github.lastBackupAgoSeconds || 0;
+                    const agoStr = agoSec < 60 ? `${agoSec}s trước`
+                        : agoSec < 3600 ? `${Math.round(agoSec/60)} phút trước`
+                        : `${Math.round(agoSec/3600)} giờ trước`;
+                    lastBackup.textContent = agoStr;
+                } else {
+                    lastBackup.textContent = github.enabled ? 'Chưa backup phiên này' : 'N/A';
+                }
+            }
+
+            // Repo
+            if (repoEl) {
+                repoEl.textContent = github.enabled
+                    ? `${github.repo} / ${github.filePath}`
+                    : 'Chưa cấu hình GITHUB_TOKEN + GITHUB_REPO';
+            }
+
+            // Suggestion
+            if (suggEl) suggEl.textContent = suggestion || '';
+
+            // Nút Backup Ngay
+            const btnNow = document.getElementById('btnGithubBackupNow');
+            if (btnNow) {
+                if (!github.enabled) {
+                    btnNow.disabled = true;
+                    btnNow.title = 'Chưa cấu hình GitHub Backup';
+                } else {
+                    btnNow.disabled = false;
+                    btnNow.addEventListener('click', async () => {
+                        btnNow.disabled = true;
+                        btnNow.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang backup...';
+                        try {
+                            const r = await fetch('/api/admin/backup/github-now', {
+                                method: 'POST', headers: h, credentials: 'include'
+                            });
+                            const d = await r.json();
+                            showToast(d.message || (d.success ? 'Backup thành công!' : 'Backup thất bại!'));
+                            if (d.success) setTimeout(loadGithubBackupStatus, 1000);
+                        } catch { showToast('Lỗi kết nối server', 'error'); }
+                        finally {
+                            btnNow.disabled = false;
+                            btnNow.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Backup Ngay';
+                        }
+                    }, { once: true });
+                }
+            }
+        } catch (e) {
+            const badge = document.getElementById('admGhbBadge');
+            if (badge) { badge.textContent = 'Lỗi tải'; badge.className = 'adm-ghb-badge error'; }
+        }
     }
 
     window.openAdminModal    = openAdminModal;

@@ -1,12 +1,15 @@
 /* ==========================================================================
    YOUTH MEMORIES - BACKEND SERVER (Node.js REST API & Static File Server)
-   - Thêm xác thực Admin bằng password + session token (task #2, #3)
-   - Validate magic bytes khi upload file (task #4)
-   - Rate limiting cho các endpoint nhạy cảm (task #5)
-   - Input sanitization phía server (task #6)
-   - Write queue tránh race condition db.json (task #7)
-   - Bỏ express/cors khỏi package.json không cần thiết (task #8)
-   - Tách data vào thư mục /data/ tránh bị overwrite khi redeploy (task #11)
+   - Xác thực Admin bằng password + session token
+   - Validate magic bytes khi upload file
+   - Rate limiting cho các endpoint nhạy cảm
+   - Input sanitization phía server
+   - Write queue tránh race condition db.json
+   - Tách data vào thư mục /data/ tránh bị overwrite khi redeploy
+   - GitHub Backup: backup DB vĩnh viễn lên GitHub repo (thay JSONBin)
+     → Không giới hạn dung lượng (JSONBin free chỉ 100KB → bị ngắt)
+     → Tự động restore khi Render wipe ephemeral filesystem
+     → Lịch sử commit = lịch sử backup có thể xem/rollback bất kỳ lúc nào
    ========================================================================== */
 
 const http = require('http');
@@ -39,10 +42,11 @@ const PORT = process.env.PORT || 3000;
 const DATA_DIR = path.join(__dirname, 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
+const BACKUPS_DIR = path.join(DATA_DIR, 'backups');
 
-// Đảm bảo thư mục tồn tại (vẫn giữ /uploads/ làm fallback khi Cloudinary chưa cấu hình)
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+if (!fs.existsSync(BACKUPS_DIR)) fs.mkdirSync(BACKUPS_DIR, { recursive: true });
 
 // ── Cloudinary Config ────────────────────────────────────────────────────────
 // Đặt 3 biến môi trường để bật Cloudinary. Nếu chưa cấu hình, fallback về disk local.
@@ -52,6 +56,20 @@ const CLOUDINARY_API_KEY    = process.env.CLOUDINARY_API_KEY    || '';
 const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET || '';
 const CLOUDINARY_ENABLED    = !!(CLOUDINARY_CLOUD_NAME && CLOUDINARY_API_KEY && CLOUDINARY_API_SECRET);
 
+// ── GitHub Backup Config ─────────────────────────────────────────────────────
+// Đây là backup chính, thay thế JSONBin (không giới hạn dung lượng, lịch sử vĩnh viễn)
+// Tạo PAT token tại: https://github.com/settings/tokens → New token (classic)
+// Cần scope: repo (full control of private repositories)
+// GITHUB_REPO format: "username/repo-name" (vd: "kedep2004/youth-memories-backup")
+const GITHUB_TOKEN  = process.env.GITHUB_TOKEN  || '';
+const GITHUB_REPO   = process.env.GITHUB_REPO   || '';
+const GITHUB_BRANCH = process.env.GITHUB_BRANCH || 'main';
+const GITHUB_FILE_PATH = process.env.GITHUB_FILE_PATH || 'data/db.json'; // đường dẫn trong repo
+const GITHUB_ENABLED = !!(GITHUB_TOKEN && GITHUB_REPO);
+
+// ── JSONBin Config (Legacy / Fallback) ───────────────────────────────────────
+// JSONBin vẫn được giữ như fallback thứ hai nếu GitHub chưa cấu hình
+// Giới hạn: 100KB/bin (free) — sẽ bị Circuit Breaker tắt khi DB lớn hơn
 const JSONBIN_BIN_ID = process.env.JSONBIN_BIN_ID || '';
 const JSONBIN_API_KEY = process.env.JSONBIN_API_KEY || process.env.JSONBIN_SECRET || '';
 
@@ -61,9 +79,11 @@ const JSONBIN_API_KEY = process.env.JSONBIN_API_KEY || process.env.JSONBIN_SECRE
 //     * Nếu vẫn thất bại → tạm tắt 5 phút (cooldown), sau đó thử lại
 let cldState = { enabled: CLOUDINARY_ENABLED, reason: null, disabledUntil: 0, mode: 'active' };
 let jbnState = { enabled: !!(JSONBIN_BIN_ID && JSONBIN_API_KEY), reason: null, disabledUntil: 0, mode: 'active' };
+let ghbState = { enabled: GITHUB_ENABLED, reason: null, disabledUntil: 0, mode: 'active', lastBackupAt: 0, lastBackupSha: '' };
 
 function _cldCooldownMs(attempt)   { return 1000 * Math.pow(2, attempt); } // 1s, 2s, 4s
 function _jbnCooldownMs(attempt)   { return 1000 * Math.pow(2, attempt); }
+function _ghbCooldownMs(attempt)   { return 1000 * Math.pow(2, attempt); } // 1s, 2s, 4s
 
 function _disableHard(state, integration, reason) {
     state.mode = 'hard-off';
@@ -100,8 +120,13 @@ if (CLOUDINARY_ENABLED) {
     console.log('  ⚠️  [Cloudinary] Chưa cấu hình — file sẽ chỉ lưu vào /uploads/ local.');
 }
 
+if (GITHUB_ENABLED) {
+    console.log(`  🐙 [GitHub Backup] Đã cấu hình — DB sẽ backup lên: ${GITHUB_REPO} / ${GITHUB_FILE_PATH} (branch: ${GITHUB_BRANCH})`);
+} else {
+    console.log('  ⚠️  [GitHub Backup] Chưa cấu hình — thêm GITHUB_TOKEN + GITHUB_REPO vào .env để bảo vệ dữ liệu.');
+}
+
 /**
- * Upload một file (dạng Buffer) lên Cloudinary qua REST API (không cần SDK).
  * Cloudinary hỗ trợ ảnh (jpg/png/gif/webp), video (mp4/webm), audio (mp3/ogg/webm).
  *
  * Modern behaviour (Circuit Breaker):
@@ -338,6 +363,7 @@ const RATE_LIMITS = {
     '/api/upload':       { max: 20,  windowMs: 60 * 1000 },       // 20 req / phút
     '/api/track/ping':   { max: 30,  windowMs: 60 * 1000 },       // 30 req / phút
     '/api/track/event':  { max: 60,  windowMs: 60 * 1000 },       // 60 req / phút
+    '/api/admin/backup/github-now': { max: 5, windowMs: 60 * 1000 }, // 5 req / phút
 };
 
 // ── Helper parse User-Agent ───────────────────────────────────────────────────
@@ -710,12 +736,142 @@ function validateBase64File(base64DataUrl) {
     return { ok: true, buffer: fileBuffer, ext: detected.ext, mime: detected.mime };
 }
 
+// ── Anti-DataLoss Helpers (Snapshot + Smart Merge + Anti-Corruption Guard) ──
+// Đảm bảo DỮ LIỆU KHÔNG BAO GIỜ MẤT, cho dù Cloud backup lỗi / server restart
+
+function _countDBRecords(data) {
+    if (!data || typeof data !== 'object') return 0;
+    let total = 0;
+    if (Array.isArray(data.wishes)) total += data.wishes.length;
+    if (Array.isArray(data.anonymousMessages)) total += data.anonymousMessages.length;
+    if (Array.isArray(data.visitors)) total += data.visitors.length;
+    if (data.config && typeof data.config === 'object') {
+        total += Object.keys(data.config).length * 2;
+        if (Array.isArray(data.config.gallery)) total += data.config.gallery.length;
+    }
+    return total;
+}
+
+function _snapshotDB(reason = 'auto', minIntervalMinutes = 0) {
+    try {
+        if (minIntervalMinutes > 0) {
+            const now = Date.now();
+            if (_lastSnapshotAt && (now - _lastSnapshotAt) < minIntervalMinutes * 60 * 1000) return null;
+        }
+        if (!fs.existsSync(DB_FILE)) return null;
+        const raw = fs.readFileSync(DB_FILE, 'utf8');
+        if (!raw || raw.trim() === '') return null;
+        const ts = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '_').slice(0, 19);
+        const backupFile = path.join(BACKUPS_DIR, `db_snapshot_${ts}__${reason}.json`);
+        fs.writeFileSync(backupFile, raw, 'utf8');
+        _lastSnapshotAt = Date.now();
+        const files = fs.readdirSync(BACKUPS_DIR)
+            .filter(f => f.startsWith('db_snapshot_') && f.endsWith('.json'))
+            .sort()
+            .reverse();
+        const MAX_SNAPSHOTS = 30;
+        if (files.length > MAX_SNAPSHOTS) {
+            for (let i = MAX_SNAPSHOTS; i < files.length; i++) {
+                try { fs.unlinkSync(path.join(BACKUPS_DIR, files[i])); } catch {}
+            }
+        }
+        return backupFile;
+    } catch (e) {
+        console.error('  ⚠️  [Backup] Lỗi tạo snapshot:', e.message);
+        return null;
+    }
+}
+let _lastSnapshotAt = 0;
+
+function _restoreFromLatestBackupIfDBEmpty() {
+    try {
+        const currentDB = _loadDBFromDisk();
+        const currentCount = _countDBRecords(currentDB);
+        if (currentCount >= 10) return false;
+
+        const files = fs.readdirSync(BACKUPS_DIR)
+            .filter(f => f.startsWith('db_snapshot_') && f.endsWith('.json'))
+            .sort()
+            .reverse();
+        if (files.length === 0) return false;
+
+        for (const f of files) {
+            try {
+                const backupPath = path.join(BACKUPS_DIR, f);
+                const backupData = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
+                const backupCount = _countDBRecords(backupData);
+                if (backupCount > currentCount * 1.5 || (backupCount >= 10 && currentCount < 10)) {
+                    fs.writeFileSync(DB_FILE, JSON.stringify(backupData, null, 2), 'utf8');
+                    const legacyDB = path.join(__dirname, 'db.json');
+                    try { fs.writeFileSync(legacyDB, JSON.stringify(backupData, null, 2), 'utf8'); } catch {}
+                    _dbCache = null;
+                    console.log(`  🔧 [Auto-Restore] ✅ Phát hiện DB cục bộ bị rỗng/${currentCount} records!`);
+                    console.log(`     → Tự động khôi phục từ backup gần nhất: ${f}`);
+                    console.log(`     → Đã khôi phục ${backupCount} records (wishes + guests + messages + config).`);
+                    console.log(`     💡 Lưu ý: Mặc dù đã khôi phục, hãy kiểm tra kỹ dữ liệu trong Admin nhé.`);
+                    return true;
+                }
+            } catch (e) {
+                console.warn('  ⚠️  [Auto-Restore] Skip backup lỗi format:', f, '-', e.message);
+                continue;
+            }
+        }
+        return false;
+    } catch (e) {
+        console.warn('  ⚠️  [Auto-Restore] Không thể quét thư mục backup:', e.message);
+        return false;
+    }
+}
+
+function _smartMergeDB(localData, cloudData) {
+    if (!localData || typeof localData !== 'object') localData = { config: {}, wishes: [], hearts: 0, reactions: {}, anonymousMessages: [], visitors: [] };
+    if (!cloudData || typeof cloudData !== 'object') return localData;
+
+    const localCount = _countDBRecords(localData);
+    const cloudCount = _countDBRecords(cloudData);
+    const localCopy = JSON.parse(JSON.stringify(localData));
+
+    function mergeArrays(localArr, cloudArr, idKey) {
+        if (!Array.isArray(localArr)) localArr = [];
+        if (!Array.isArray(cloudArr)) cloudArr = [];
+        const seen = new Map();
+        [...localArr, ...cloudArr].forEach(item => {
+            if (!item || typeof item !== 'object') return;
+            let key;
+            if (idKey && item[idKey]) key = String(item[idKey]);
+            else key = JSON.stringify(item).slice(0, 200);
+            if (!seen.has(key)) seen.set(key, item);
+        });
+        return Array.from(seen.values());
+    }
+
+    const merged = localCopy;
+    if (!merged.config || typeof merged.config !== 'object') merged.config = {};
+
+    if (cloudData.config && typeof cloudData.config === 'object') {
+        for (const k of Object.keys(cloudData.config)) {
+            if (merged.config[k] === undefined || merged.config[k] === null || merged.config[k] === '') {
+                merged.config[k] = cloudData.config[k];
+            }
+        }
+    }
+
+    merged.wishes = mergeArrays(merged.wishes, cloudData.wishes, 'id');
+    merged.anonymousMessages = mergeArrays(merged.anonymousMessages, cloudData.anonymousMessages, 'id');
+    merged.visitors = mergeArrays(merged.visitors, cloudData.visitors, 'ip');
+    merged.hearts = Math.max(merged.hearts || 0, cloudData.hearts || 0);
+    merged.reactions = { ...(cloudData.reactions || {}), ...(merged.reactions || {}) };
+
+    const mergedCount = _countDBRecords(merged);
+    return { data: merged, localCount, cloudCount, mergedCount };
+}
+
 // ── Database với Write Queue & Cloud Backup (tránh race condition & mất data) ──
 
 if (JSONBIN_BIN_ID && JSONBIN_API_KEY) {
-    console.log('  🗃️  [JSONBin] Đã cấu hình — DB sẽ được backup lên Cloud sau mỗi lần ghi.');
+    console.log('  🗃️  [JSONBin] Đã cấu hình — dùng làm backup phụ khi GitHub chưa cấu hình.');
 } else {
-    console.log('  ⚠️  [JSONBin] Chưa cấu hình — DB chỉ lưu local (sao lưu /data/db.json thủ công thường xuyên nhé).');
+    console.log('  ⚠️  [JSONBin] Chưa cấu hình — không sao nếu đã có GitHub Backup.');
 }
 
 function _jbnRequestOnce(method, extraPath = '', payloadBuffer = null) {
@@ -773,6 +929,14 @@ async function syncFromCloudDB() {
     }
     if (!_isAvailable(jbnState, 'JSONBin')) return false;
 
+    const snapFile = _snapshotDB('before-cloud-sync');
+    if (snapFile) {
+        console.log(`  📸 [Anti-DataLoss] Đã snapshot DB cục bộ TRƯỚC khi sync Cloud: ${path.basename(snapFile)}`);
+    }
+
+    const localDataBefore = _loadDBFromDisk();
+    const localCount = _countDBRecords(localDataBefore);
+
     const MAX_ATTEMPTS = 2;
     let lastRes = null;
 
@@ -787,22 +951,52 @@ async function syncFromCloudDB() {
         if (lastRes.ok) {
             try {
                 if (lastRes.data && lastRes.data.record && typeof lastRes.data.record === 'object' && Object.keys(lastRes.data.record).length > 0) {
-                    fs.writeFileSync(DB_FILE, JSON.stringify(lastRes.data.record, null, 2), 'utf8');
+                    const cloudData = lastRes.data.record;
+                    const cloudCount = _countDBRecords(cloudData);
+
+                    // ⛔ ANTI-CORRUPTION GUARD: Nếu Cloud ÍT record hơn rõ rệt so với Local → NGUY CƠ MẤT DỮ LIỆU!
+                    // Bỏ qua sync và giữ Local. Log cảnh báo cực kỳ rõ ràng.
+                    if (localCount > 0 && cloudCount < localCount * 0.7) {
+                        console.error('');
+                        console.error('  ⚠️⚠️⚠️  [ANTI-CORRUPTION GUARD] CẢNH BÁO MẤT DỮ LIỆU TỪ CLOUD!  ⚠️⚠️⚠️');
+                        console.error(`     → DB Local hiện có:  ${localCount} records (wishes + guests + messages + config)`);
+                        console.error(`     → DB Cloud tải về:    ${cloudCount} records`);
+                        console.error(`     → Cloud kém hơn ${((1 - cloudCount / Math.max(1, localCount)) * 100).toFixed(0)}% so với Local → RẤT NGUY HIỂM NẾU GHI ĐÈ!`);
+                        console.error(`     → 🛡️ HỆ THỐNG ĐÃ TỰ ĐỘNG BỎ QUA GHI ĐÈ, GIỮ NGUYÊN DB CỤC BỘ để tránh mất dữ liệu.`);
+                        console.error(`     💡 NGUYÊN NHÂN THƯỜNG GẶP:`);
+                        console.error(`        • DB đã vượt 100KB → JSONBin trả lỗi 413 → Circuit Breaker tắt backup → Cloud giữ BẢN CŨ`);
+                        console.error(`        • Server bị host restart / redeploy → syncFromCloudDB tải BẢN CŨ về`);
+                        console.error(`     💡 XỬ LÝ:`);
+                        console.error(`        • Bỏ qua bước này, giữ Local làm chuẩn ✓ (đã làm)`);
+                        console.error(`        • Lên JSONBin dashboard kiểm tra Bin thực sự có chứa dữ liệu mới không`);
+                        console.error(`        • Nếu DB > 100KB: Giảm bớt base64 media cũ hoặc tắt JSONBin backup để tránh rắc rối trong tương lai`);
+                        console.error('');
+                        return false;
+                    }
+
+                    // Chạy SMART MERGE (Union): không ghi đè, cộng thêm dữ liệu thiếu từ Cloud vào Local
+                    const mergeResult = _smartMergeDB(localDataBefore, cloudData);
+                    const finalData = mergeResult.data;
+
+                    fs.writeFileSync(DB_FILE, JSON.stringify(finalData, null, 2), 'utf8');
                     const legacyDB = path.join(__dirname, 'db.json');
-                    try { fs.writeFileSync(legacyDB, JSON.stringify(lastRes.data.record, null, 2), 'utf8'); } catch (e) {}
+                    try { fs.writeFileSync(legacyDB, JSON.stringify(finalData, null, 2), 'utf8'); } catch (e) {}
                     _dbCache = null;
-                    console.log('  ✅ [Cloud DB] Khôi phục 100% dữ liệu Cloud về đĩa cục bộ thành công!');
+
+                    console.log(`  ✅ [Cloud DB] SMART MERGE thành công!`);
+                    console.log(`     → Trước merge:  Local=${mergeResult.localCount} records, Cloud=${mergeResult.cloudCount} records`);
+                    console.log(`     → Sau merge:    ${mergeResult.mergedCount} records (đã cộng thêm dữ liệu thiếu từ Cloud)`);
+                    console.log(`     💡 Ưu tiên luôn giữ Local làm gốc, chỉ thêm Cloud nếu có phần tử mới.`);
                     return true;
                 }
                 console.warn('  ⚠️  [Cloud DB] Dữ liệu từ JSONBin rỗng hoặc sai cấu trúc (bin mới tạo?). Bỏ qua & giữ db cục bộ.');
                 return false;
             } catch (e) {
-                console.error('  ⚠️  [Cloud DB] Lỗi ghi dữ liệu Cloud xuống đĩa:', e.message);
+                console.error('  ⚠️  [Cloud DB] Lỗi merge dữ liệu Cloud vào Local:', e.message);
                 return false;
             }
         }
 
-        // Phân loại lỗi chi tiết
         if (lastRes.hard) {
             let reason = `GET /latest trả về HTTP ${lastRes.status}`;
             if (lastRes.status === 401) reason += ' → JSONBIN_API_KEY (X-Master-Key) SAI — không có quyền truy cập bin này';
@@ -864,6 +1058,264 @@ async function saveToCloudDB(data) {
     }
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+// ██  GITHUB BACKUP — Backup chính thay thế JSONBin (không giới hạn size)  ██
+// ════════════════════════════════════════════════════════════════════════════
+//
+//  Cách hoạt động:
+//   • Mỗi lần saveDB() → push commit lên GitHub repo private
+//   • Khi startup và DB rỗng (Render wipe filesystem) → fetch file từ GitHub về
+//   • Lịch sử commit = lịch sử backup có thể rollback bất kỳ lúc nào
+//   • Không giới hạn dung lượng (GitHub free = 1GB/repo)
+//   • Throttle: không push quá 1 lần/phút để tránh rate-limit API
+//
+//  Setup (5 phút):
+//   1. Tạo private repo trên GitHub (vd: kedep2004/youth-memories-backup)
+//   2. Vào Settings → Developer settings → Personal access tokens → Classic
+//      → New token → Chọn scope "repo" → Generate → Copy token
+//   3. Thêm vào .env:
+//        GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
+//        GITHUB_REPO=kedep2004/youth-memories-backup
+//        GITHUB_BRANCH=main   (tùy chọn, mặc định là main)
+// ════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Gọi GitHub API qua HTTPS thuần (không dùng SDK).
+ * @param {string} method  - 'GET' | 'PUT'
+ * @param {string} apiPath - vd: '/repos/user/repo/contents/path'
+ * @param {Object|null} bodyObj - object sẽ JSON.stringify, hoặc null
+ * @returns {Promise<{ok, status, data, error}>}
+ */
+function _ghRequestOnce(method, apiPath, bodyObj = null) {
+    return new Promise((resolve) => {
+        try {
+            const bodyStr    = bodyObj ? JSON.stringify(bodyObj) : null;
+            const bodyBuf    = bodyStr ? Buffer.from(bodyStr, 'utf8') : null;
+            const headers    = {
+                'Authorization': `token ${GITHUB_TOKEN}`,
+                'Accept':        'application/vnd.github.v3+json',
+                'User-Agent':    'YouthMemoriesApp/2.0',
+            };
+            if (bodyBuf) {
+                headers['Content-Type']   = 'application/json';
+                headers['Content-Length'] = bodyBuf.length;
+            }
+            const reqOpts = {
+                hostname: 'api.github.com',
+                path:     apiPath,
+                method,
+                headers,
+                timeout: 20000,
+            };
+            const req = https.request(reqOpts, (res) => {
+                let body = '';
+                res.on('data', c => body += c);
+                res.on('end', () => {
+                    const isOk = res.statusCode >= 200 && res.statusCode < 300;
+                    const isHard = res.statusCode === 401 || res.statusCode === 403
+                                || res.statusCode === 404;
+                    let data = null;
+                    try { data = JSON.parse(body); } catch {}
+                    resolve({ ok: isOk, status: res.statusCode, data, hard: isHard, raw: body });
+                });
+            });
+            req.on('error', (err) => resolve({ ok: false, status: 0, data: null, hard: false, error: err.message }));
+            req.setTimeout(20000, () => req.destroy(new Error('GitHub API timeout 20s')));
+            if (bodyBuf) req.write(bodyBuf);
+            req.end();
+        } catch (e) {
+            resolve({ ok: false, status: 0, data: null, hard: false, error: e.message });
+        }
+    });
+}
+
+/**
+ * Lấy SHA hiện tại của file trong GitHub repo (cần để overwrite file).
+ * Trả về null nếu file chưa tồn tại (lần đầu tạo).
+ */
+async function _ghGetFileSha() {
+    const apiPath = `/repos/${GITHUB_REPO}/contents/${GITHUB_FILE_PATH}?ref=${GITHUB_BRANCH}`;
+    const res = await _ghRequestOnce('GET', apiPath);
+    if (res.ok && res.data && res.data.sha) return res.data.sha;
+    if (res.status === 404) return null; // file chưa tồn tại — OK
+    return null;
+}
+
+/**
+ * Backup DB lên GitHub (PUT /repos/:owner/:repo/contents/:path).
+ * Throttle: không push quá 1 lần/phút để tránh abuse GitHub API rate limit.
+ */
+const GHB_THROTTLE_MS = 60 * 1000; // 1 phút
+
+async function backupToGitHub(data) {
+    if (!GITHUB_ENABLED) return false;
+    if (!_isAvailable(ghbState, 'GitHub')) return false;
+
+    // Throttle — bỏ qua nếu mới backup < 1 phút trước
+    const now = Date.now();
+    if (ghbState.lastBackupAt && (now - ghbState.lastBackupAt) < GHB_THROTTLE_MS) return false;
+
+    const MAX_ATTEMPTS = 3;
+    let lastRes = null;
+
+    try {
+        // Lấy SHA hiện tại (cần để cập nhật file, không cần nếu tạo mới)
+        const currentSha = ghbState.lastBackupSha || await _ghGetFileSha();
+
+        const jsonContent = JSON.stringify(data, null, 2);
+        const contentBase64 = Buffer.from(jsonContent, 'utf8').toString('base64');
+
+        const commitMessage = `backup: auto-save ${new Date().toISOString().slice(0, 19).replace('T', ' ')} UTC (${_countDBRecords(data)} records)`;
+
+        const bodyObj = {
+            message: commitMessage,
+            content: contentBase64,
+            branch:  GITHUB_BRANCH,
+        };
+        if (currentSha) bodyObj.sha = currentSha; // cần sha để overwrite
+
+        const apiPath = `/repos/${GITHUB_REPO}/contents/${GITHUB_FILE_PATH}`;
+
+        for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+            if (attempt > 1) {
+                const waitMs = _ghbCooldownMs(attempt - 2);
+                console.log(`  🔁 [GitHub] Thử lại lần ${attempt}/${MAX_ATTEMPTS} — chờ ${waitMs}ms...`);
+                await _sleep(waitMs);
+            }
+            lastRes = await _ghRequestOnce('PUT', apiPath, bodyObj);
+
+            if (lastRes.ok) {
+                const newSha = lastRes.data?.content?.sha || lastRes.data?.commit?.sha || '';
+                ghbState.lastBackupAt  = Date.now();
+                ghbState.lastBackupSha = newSha || currentSha || '';
+                const sizeKB = (Buffer.byteLength(jsonContent, 'utf8') / 1024).toFixed(1);
+                console.log(`  🐙 [GitHub] ✅ Backup thành công (${sizeKB} KB, ${_countDBRecords(data)} records) — commit: ${commitMessage.slice(0, 60)}`);
+                return true;
+            }
+
+            if (lastRes.hard) {
+                let reason = `PUT contents trả về HTTP ${lastRes.status}`;
+                if (lastRes.status === 401) reason += ' → GITHUB_TOKEN không hợp lệ hoặc đã hết hạn';
+                if (lastRes.status === 403) reason += ' → Token thiếu scope "repo" hoặc bị revoke';
+                if (lastRes.status === 404) reason += ` → Repo "${GITHUB_REPO}" không tồn tại hoặc token không có quyền truy cập`;
+                if (lastRes.data?.message) reason += ` — GitHub: ${lastRes.data.message}`;
+                _disableHard(ghbState, 'GitHub', reason);
+                return false;
+            }
+
+            // Xử lý 409 Conflict (SHA lỗi — file bị thay đổi giữa chừng) → lấy lại SHA
+            if (lastRes.status === 409) {
+                console.warn('  ⚠️  [GitHub] 409 Conflict — SHA cũ, đang lấy SHA mới...');
+                const freshSha = await _ghGetFileSha();
+                if (freshSha) bodyObj.sha = freshSha;
+                continue; // thử lại với SHA mới
+            }
+
+            console.warn(`  ⚠️  [GitHub] Lần ${attempt}/${MAX_ATTEMPTS} thất bại: HTTP ${lastRes.status} — ${lastRes.error || (lastRes.data?.message || lastRes.raw?.slice(0, 100))}`);
+        }
+
+        _softFailCooldown(ghbState, 'GitHub', `backupToGitHub thất bại ${MAX_ATTEMPTS} lần: ${lastRes?.error || `HTTP ${lastRes?.status}`}`);
+        return false;
+    } catch (e) {
+        console.error('  ⚠️  [GitHub] Exception backupToGitHub:', e.message);
+        return false;
+    }
+}
+
+/**
+ * Restore DB từ GitHub về local khi startup (Render đã wipe filesystem).
+ * Trả về true nếu restore thành công.
+ */
+async function restoreFromGitHub() {
+    if (!GITHUB_ENABLED) return false;
+    if (!_isAvailable(ghbState, 'GitHub')) return false;
+
+    try {
+        console.log('  🐙 [GitHub] Đang tải DB từ GitHub...');
+        const apiPath = `/repos/${GITHUB_REPO}/contents/${GITHUB_FILE_PATH}?ref=${GITHUB_BRANCH}`;
+        const res = await _ghRequestOnce('GET', apiPath);
+
+        if (!res.ok) {
+            if (res.status === 404) {
+                console.log('  🐙 [GitHub] File chưa tồn tại trong repo (lần đầu deploy). Sẽ tạo backup mới sau.');
+                return false;
+            }
+            if (res.hard) {
+                let reason = `GET contents trả về HTTP ${res.status}`;
+                if (res.status === 401) reason += ' → GITHUB_TOKEN không hợp lệ';
+                if (res.status === 403) reason += ' → Token thiếu scope "repo"';
+                if (res.data?.message) reason += ` — ${res.data.message}`;
+                _disableHard(ghbState, 'GitHub', reason);
+                return false;
+            }
+            console.warn(`  ⚠️  [GitHub] Không thể tải từ GitHub: HTTP ${res.status}`);
+            return false;
+        }
+
+        if (!res.data || !res.data.content) {
+            console.warn('  ⚠️  [GitHub] Response không có content field.');
+            return false;
+        }
+
+        const jsonContent = Buffer.from(res.data.content.replace(/\n/g, ''), 'base64').toString('utf8');
+        const cloudData = JSON.parse(jsonContent);
+
+        if (!cloudData || typeof cloudData !== 'object') {
+            console.warn('  ⚠️  [GitHub] Dữ liệu từ GitHub không hợp lệ.');
+            return false;
+        }
+
+        const cloudCount = _countDBRecords(cloudData);
+        if (cloudCount === 0) {
+            console.log('  🐙 [GitHub] File trong repo rỗng (0 records). Bỏ qua restore.');
+            return false;
+        }
+
+        // Lưu SHA để dùng cho backup sau
+        ghbState.lastBackupSha = res.data.sha || '';
+
+        // SMART MERGE với dữ liệu local hiện tại (nếu có)
+        const localData = _loadDBFromDisk();
+        const localCount = _countDBRecords(localData);
+
+        let finalData;
+        if (localCount === 0) {
+            // Local hoàn toàn rỗng → dùng thẳng GitHub data
+            finalData = cloudData;
+            console.log(`  🐙 [GitHub] ✅ Restore thành công! ${cloudCount} records từ GitHub → ghi vào local.`);
+        } else {
+            // Merge: giữ local làm gốc, cộng thêm gì GitHub có mà local thiếu
+            const mergeResult = _smartMergeDB(localData, cloudData);
+            finalData = mergeResult.data;
+            console.log(`  🐙 [GitHub] ✅ Smart Merge: Local=${mergeResult.localCount}, GitHub=${mergeResult.cloudCount} → Merged=${mergeResult.mergedCount} records`);
+        }
+
+        // Ghi vào disk
+        const jsonStr = JSON.stringify(finalData, null, 2);
+        fs.writeFileSync(DB_FILE, jsonStr, 'utf8');
+        try { fs.writeFileSync(path.join(__dirname, 'db.json'), jsonStr, 'utf8'); } catch {}
+        _dbCache = null;
+
+        return true;
+    } catch (e) {
+        console.error('  ⚠️  [GitHub] Exception restoreFromGitHub:', e.message);
+        return false;
+    }
+}
+
+// ── Unified Cloud Backup: GitHub first, JSONBin fallback ────────────────────
+async function saveToCloud(data) {
+    // Ưu tiên 1: GitHub (không giới hạn dung lượng)
+    if (GITHUB_ENABLED && _isAvailable(ghbState, 'GitHub')) {
+        await backupToGitHub(data);
+        return; // Không cần JSONBin nếu GitHub hoạt động
+    }
+    // Fallback 2: JSONBin (nếu GitHub chưa cấu hình hoặc đang cooldown)
+    if (JSONBIN_BIN_ID && JSONBIN_API_KEY && _isAvailable(jbnState, 'JSONBin')) {
+        await saveToCloudDB(data);
+    }
+}
+
 let writeQueue = Promise.resolve();
 
 // ── In-Memory DB Cache — tránh đọc file mỗi request ─────────────────────────
@@ -919,19 +1371,89 @@ function getDB() {
     return _dbCache;
 }
 
+function _cleanupOldBase64InDB(data) {
+    if (!data || typeof data !== 'object') return { cleaned: 0, cleanedBytes: 0 };
+    let cleaned = 0;
+    let cleanedBytes = 0;
+    if (Array.isArray(data.anonymousMessages)) {
+        data.anonymousMessages.forEach(msg => {
+            if (msg.mediaUrl && msg.mediaData && typeof msg.mediaData === 'string' && msg.mediaData.startsWith('data:')) {
+                cleanedBytes += Math.round(msg.mediaData.length * 0.75);
+                msg.mediaData = null;
+                cleaned++;
+            }
+        });
+    }
+    return { cleaned, cleanedBytes };
+}
+
+function _getDBSizeKB(data) {
+    try {
+        const json = JSON.stringify(data || {});
+        return Buffer.byteLength(json, 'utf8') / 1024;
+    } catch { return 0; }
+}
+
+function _reportDBSafety(data) {
+    const kb = _getDBSizeKB(data);
+    const cleanup = _cleanupOldBase64InDB(data);
+    if (cleanup.cleaned > 0) {
+        console.log(`  🧹 [DB Safety] Tự động dọn dẹp ${cleanup.cleaned} tin nhắn ẩn danh có base64 thừa → tiết kiệm ~${(cleanup.cleanedBytes/1024).toFixed(1)} KB.`);
+        _dbCache = data;
+    }
+    const JSONBIN_FREE_LIMIT = 100;
+    const WARN_THRESHOLD = 80;
+    const DANGER_THRESHOLD = 95;
+    if (kb >= DANGER_THRESHOLD) {
+        console.error('');
+        console.error(`  🔴🔴🔴  [DB SAFETY - CỰC KỲ NGUY HIỂM] DB SIZE = ${kb.toFixed(1)} KB  🔴🔴🔴`);
+        console.error(`     → Sắp vượt giới hạn 100KB của JSONBin Free Plan!`);
+        console.error(`     → Lưu ý: Nếu DB > 100KB, backup lên Cloud sẽ TẮT (Circuit Breaker) → nguy cơ mất dữ liệu khi server restart!`);
+        console.error(`     💡 LÀM NGAY BÂY GIỜ:`);
+        console.error(`        1. Vào Admin → Xóa bớt tin nhắn ẩn danh / lời chúc cũ có ảnh/video lớn`);
+        console.error(`        2. Đảm bảo mọi file upload đều qua Cloudinary (lưu URL), không lưu base64 vào DB`);
+        console.error(`        3. Export backup db.json về máy (nếu redeploy)`);
+        console.error(`        4. Nếu cần nhiều hơn 100KB: Nâng cấp JSONBin Pro ($10/tháng = 10MB/bin) hoặc bỏ JSONBin chỉ dùng local`);
+        console.error('');
+    } else if (kb >= WARN_THRESHOLD) {
+        console.warn('');
+        console.warn(`  🟡🟡🟡  [DB SAFETY - CẢNH BÁO] DB SIZE = ${kb.toFixed(1)} KB  🟡🟡🟡`);
+        console.warn(`     → Đã đạt ${((kb/JSONBIN_FREE_LIMIT)*100).toFixed(0)}% giới hạn 100KB của JSONBin Free Plan`);
+        console.warn(`     💡 Hãy xóa bớt dữ liệu cũ hoặc đảm bảo media lưu URL thay vì base64 trong tuần tới!`);
+        console.warn('');
+    } else {
+        console.log(`  💚 [DB Safety] DB size: ${kb.toFixed(1)} KB — An toàn (${((kb/JSONBIN_FREE_LIMIT)*100).toFixed(0)}% / 100KB JSONBin limit).`);
+    }
+    return kb;
+}
+
 // Hàm ghi DB async với queue — cập nhật cache rồi ghi disk bất đồng bộ
 function saveDB(data) {
-    // Cập nhật cache ngay lập tức để các request tiếp theo thấy data mới
+    const cleanup = _cleanupOldBase64InDB(data);
+    if (cleanup.cleaned > 0) {
+        console.log(`  🧹 [saveDB] Tự động dọn ${cleanup.cleaned} base64 thừa (~${(cleanup.cleanedBytes/1024).toFixed(1)} KB).`);
+    }
     _dbCache = data;
+    const kbBefore = _getDBSizeKB(data);
 
     writeQueue = writeQueue.then(() => new Promise((resolve) => {
         try {
-            // Ghi đồng thời vào /data/db.json VÀ root db.json
-            fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
+            _snapshotDB('before-write', 10);
+            const jsonStr = JSON.stringify(data, null, 2);
+            fs.writeFileSync(DB_FILE, jsonStr, 'utf8');
             const legacyDB = path.join(__dirname, 'db.json');
-            fs.writeFileSync(legacyDB, JSON.stringify(data, null, 2), 'utf8');
-            // Fire & forget (không await, không block UI ghi vào disk)
-            (async () => { try { await saveToCloudDB(data); } catch (e) { /* logged inside */ } })();
+            fs.writeFileSync(legacyDB, jsonStr, 'utf8');
+            const kbAfter = Buffer.byteLength(jsonStr, 'utf8') / 1024;
+            // Chỉ báo cáo safety mỗi khi ghi, nhưng limit log mức INFO để tránh spam
+            if (kbAfter >= 80) {
+                _reportDBSafety(data);
+            } else {
+                // Với DB nhỏ, chỉ log ở mức verbose nếu muốn; để giảm log, chỉ show khi >60KB
+                if (kbAfter >= 60 && Math.random() < 0.2) {
+                    console.log(`  💚 [DB] Size = ${kbAfter.toFixed(1)} KB (OK, an toàn).`);
+                }
+            }
+            (async () => { try { await saveToCloud(data); } catch (e) { /* logged inside */ } })();
         } catch (e) {
             console.error('Lỗi ghi db.json:', e);
         }
@@ -1178,7 +1700,7 @@ const server = http.createServer(async (req, res) => {
                 id:        Date.now(),
                 message:   message || '',
                 mediaUrl:  savedMediaUrl,
-                mediaData: mediaData || null,
+                mediaData: savedMediaUrl ? null : (mediaData || null),
                 mediaType: (savedMediaUrl || mediaData) ? (mediaType || 'file') : null,
                 createdAt: new Date().toISOString(),
             });
@@ -1757,6 +2279,272 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
+    // ── POST /api/admin/wipe-cloud-bin — XÓA SẠCH Cloud JSONBin (Admin only) ──
+    // Ghi đè bin bằng object rỗng {} → xóa sạch cloud, restart server sẽ không auto-pull dữ liệu cũ nữa
+    if (pathname === '/api/admin/wipe-cloud-bin' && req.method === 'POST') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) {
+            jsonResponse(res, 401, { success: false, message: 'Yêu cầu đăng nhập Admin' });
+            return;
+        }
+        try {
+            if (!JSONBIN_BIN_ID || !JSONBIN_API_KEY) {
+                jsonResponse(res, 400, { success: false, message: 'JSONBin chưa được cấu hình trong file .env' });
+                return;
+            }
+            const emptyDB = { config: {}, wishes: [], hearts: 0, reactions: {}, anonymousMessages: [], visitors: [] };
+            const payloadBuf = Buffer.from(JSON.stringify(emptyDB), 'utf8');
+            const result = await _jbnRequestOnce('PUT', '', payloadBuf);
+            if (result.ok) {
+                jsonResponse(res, 200, {
+                    success: true,
+                    message: '✅ Đã XÓA SẠCH dữ liệu trên Cloud JSONBin! Restart server để đảm bảo cache RAM cũng được làm mới.',
+                    cloudStatus: 'Đã ghi đè bằng {} (empty DB)'
+                });
+            } else {
+                jsonResponse(res, 500, {
+                    success: false,
+                    message: `❌ Không thể xóa Cloud Bin: HTTP ${result.status} — ${result.error || (result.body || '').slice(0, 120) || 'Lỗi không xác định'}`
+                });
+            }
+        } catch (e) {
+            jsonResponse(res, 500, { success: false, message: 'Lỗi khi wipe cloud bin: ' + e.message });
+        }
+        return;
+    }
+
+    // ── POST /api/admin/reset-everything — RESET TẤT CẢ (Admin only) ⛔ CỰC NGUY HIỂM ──
+    // Xóa: Local DB (data/db.json + root db.json) + All Snapshot Backups + Cloud JSONBin
+    // Sau khi gọi xong → restart server, DB sẽ hoàn toàn TRẮNG như mới cài
+    if (pathname === '/api/admin/reset-everything' && req.method === 'POST') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) {
+            jsonResponse(res, 401, { success: false, message: 'Yêu cầu đăng nhập Admin' });
+            return;
+        }
+        try {
+            const body = await readBody(req, 2048);
+            const payload = JSON.parse(body || '{}');
+            const confirm1 = payload.confirm1 === 'I_UNDERSTAND_THIS_WILL_DELETE_ALL_DATA';
+            const confirm2 = payload.confirm2 === 'YES_DELETE_EVERYTHING_PERMANENTLY';
+            if (!confirm1 || !confirm2) {
+                jsonResponse(res, 400, {
+                    success: false,
+                    message: '⚠️ Cần xác nhận 2 bước để reset hoàn toàn. Thiếu payload confirm1 hoặc confirm2.'
+                });
+                return;
+            }
+
+            const report = {
+                backupsDeleted: 0,
+                dbFilesDeleted: [],
+                cloudWiped: false,
+                cloudError: null,
+            };
+
+            try {
+                if (fs.existsSync(BACKUPS_DIR)) {
+                    const files = fs.readdirSync(BACKUPS_DIR);
+                    for (const f of files) {
+                        if (f.startsWith('db_snapshot_') && f.endsWith('.json')) {
+                            try { fs.unlinkSync(path.join(BACKUPS_DIR, f)); report.backupsDeleted++; } catch {}
+                        }
+                    }
+                }
+            } catch (e) { report.backupsError = e.message; }
+
+            function safeDelete(p) {
+                try {
+                    if (fs.existsSync(p)) { fs.unlinkSync(p); report.dbFilesDeleted.push(p); return true; }
+                } catch {}
+                return false;
+            }
+            safeDelete(DB_FILE);
+            safeDelete(path.join(__dirname, 'db.json'));
+            _dbCache = null;
+
+            if (JSONBIN_BIN_ID && JSONBIN_API_KEY) {
+                try {
+                    const emptyDB = { config: {}, wishes: [], hearts: 0, reactions: {}, anonymousMessages: [], visitors: [] };
+                    const payloadBuf = Buffer.from(JSON.stringify(emptyDB), 'utf8');
+                    const r = await _jbnRequestOnce('PUT', '', payloadBuf);
+                    if (r.ok) report.cloudWiped = true;
+                    else report.cloudError = `HTTP ${r.status} ${r.error || (r.body||'').slice(0,100)}`;
+                } catch (e) { report.cloudError = e.message; }
+            }
+
+            jsonResponse(res, 200, {
+                success: true,
+                message: '✅ ĐÃ RESET HOÀN TOÀN! Hãy RESTART SERVER ngay bây giờ (tắt mở lại) để áp dụng DB trắng.',
+                report
+            });
+        } catch (e) {
+            jsonResponse(res, 500, { success: false, message: 'Lỗi reset: ' + e.message });
+        }
+        return;
+    }
+
+    // ── GET /api/admin/backup/github-status — Trạng thái GitHub Backup (Admin) ──
+    if (pathname === '/api/admin/backup/github-status' && req.method === 'GET') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) {
+            jsonResponse(res, 401, { success: false, message: 'Yêu cầu đăng nhập Admin' });
+            return;
+        }
+        try {
+            const db = getDB();
+            const dbKB = Number(_getDBSizeKB(db).toFixed(1));
+            const records = _countDBRecords(db);
+
+            let repoInfo = null;
+            if (GITHUB_ENABLED && _isAvailable(ghbState, 'GitHub')) {
+                // Lấy thông tin file hiện tại trong repo
+                try {
+                    const apiPath = `/repos/${GITHUB_REPO}/contents/${GITHUB_FILE_PATH}?ref=${GITHUB_BRANCH}`;
+                    const res2 = await _ghRequestOnce('GET', apiPath);
+                    if (res2.ok && res2.data) {
+                        repoInfo = {
+                            sha:         res2.data.sha?.slice(0, 12) || '',
+                            sizeKB:      Number((res2.data.size / 1024).toFixed(1)),
+                            downloadUrl: res2.data.html_url || '',
+                            encodedSize: res2.data.size || 0,
+                        };
+                    }
+                } catch {}
+            }
+
+            const lastBackupAgo = ghbState.lastBackupAt
+                ? Math.round((Date.now() - ghbState.lastBackupAt) / 1000)
+                : null;
+
+            jsonResponse(res, 200, {
+                success: true,
+                github: {
+                    enabled:        GITHUB_ENABLED,
+                    mode:           ghbState.mode,
+                    repo:           GITHUB_REPO || '',
+                    branch:         GITHUB_BRANCH,
+                    filePath:       GITHUB_FILE_PATH,
+                    lastBackupAt:   ghbState.lastBackupAt ? new Date(ghbState.lastBackupAt).toISOString() : null,
+                    lastBackupAgoSeconds: lastBackupAgo,
+                    lastSha:        ghbState.lastBackupSha?.slice(0, 12) || '',
+                    repoFileInfo:   repoInfo,
+                    reason:         ghbState.reason || null,
+                },
+                jsonbin: {
+                    enabled:  !!(JSONBIN_BIN_ID && JSONBIN_API_KEY),
+                    mode:     jbnState.mode,
+                    reason:   jbnState.reason || null,
+                },
+                db: {
+                    sizeKB:  dbKB,
+                    records,
+                    counts: {
+                        wishes:            (db.wishes || []).length,
+                        anonymousMessages: (db.anonymousMessages || []).length,
+                        visitors:          (db.visitors || []).length,
+                    },
+                },
+                suggestion: !GITHUB_ENABLED
+                    ? '⚠️ Chưa cấu hình GitHub Backup. Thêm GITHUB_TOKEN + GITHUB_REPO vào Render Environment Variables để bảo vệ dữ liệu.'
+                    : ghbState.mode === 'hard-off'
+                    ? `🔴 GitHub Backup bị tắt vĩnh viễn: ${ghbState.reason}`
+                    : ghbState.mode === 'cooldown'
+                    ? '⏸️ GitHub Backup đang tạm dừng do lỗi mạng. Sẽ tự thử lại sau.'
+                    : '✅ GitHub Backup hoạt động bình thường.',
+            });
+        } catch (e) {
+            jsonResponse(res, 500, { success: false, message: e.message });
+        }
+        return;
+    }
+
+    // ── POST /api/admin/backup/github-now — Force backup lên GitHub ngay (Admin) ──
+    if (pathname === '/api/admin/backup/github-now' && req.method === 'POST') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) {
+            jsonResponse(res, 401, { success: false, message: 'Yêu cầu đăng nhập Admin' });
+            return;
+        }
+        if (!GITHUB_ENABLED) {
+            jsonResponse(res, 400, { success: false, message: 'GitHub Backup chưa được cấu hình. Thêm GITHUB_TOKEN + GITHUB_REPO vào .env' });
+            return;
+        }
+        try {
+            // Reset throttle để cho phép backup ngay lập tức
+            ghbState.lastBackupAt = 0;
+            const db = getDB();
+            const ok = await backupToGitHub(db);
+            if (ok) {
+                jsonResponse(res, 200, {
+                    success: true,
+                    message: `✅ Đã backup ${_countDBRecords(db)} records lên GitHub thành công!`,
+                    repo: GITHUB_REPO,
+                    filePath: GITHUB_FILE_PATH,
+                });
+            } else {
+                jsonResponse(res, 500, {
+                    success: false,
+                    message: `❌ Backup thất bại. Kiểm tra GITHUB_TOKEN và GITHUB_REPO trong .env — ${ghbState.reason || 'Lỗi không xác định'}`,
+                });
+            }
+        } catch (e) {
+            jsonResponse(res, 500, { success: false, message: 'Lỗi: ' + e.message });
+        }
+        return;
+    }
+
+    // ── GET /api/admin/db-status — Trạng thái DB (size, an toàn) để Admin dashboard (Admin) ──
+    if (pathname === '/api/admin/db-status' && req.method === 'GET') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) {
+            jsonResponse(res, 401, { success: false, message: 'Yêu cầu đăng nhập Admin' });
+            return;
+        }
+        try {
+            const db = getDB();
+            const kb = _getDBSizeKB(db);
+            const recordCount = _countDBRecords(db);
+            // GitHub không có giới hạn 100KB nên chỉ warning ở mức rất lớn
+            const EFFECTIVE_LIMIT = GITHUB_ENABLED ? 10240 : 100; // 10MB với GitHub, 100KB với JSONBin
+            let level = 'safe';
+            if (!GITHUB_ENABLED && kb >= 95) level = 'danger';
+            else if (!GITHUB_ENABLED && kb >= 80) level = 'warning';
+            const anonCount = Array.isArray(db.anonymousMessages) ? db.anonymousMessages.length : 0;
+            const wishCount = Array.isArray(db.wishes) ? db.wishes.length : 0;
+            const visitorCount = Array.isArray(db.visitors) ? db.visitors.length : 0;
+            jsonResponse(res, 200, {
+                success: true,
+                sizeKB: Number(kb.toFixed(1)),
+                limitKB: EFFECTIVE_LIMIT,
+                percentUsed: Number((kb / EFFECTIVE_LIMIT * 100).toFixed(1)),
+                level,
+                records: recordCount,
+                counts: { wishes: wishCount, anonymousMessages: anonCount, visitors: visitorCount },
+                backupMode: GITHUB_ENABLED ? 'github' : (JSONBIN_BIN_ID && JSONBIN_API_KEY) ? 'jsonbin' : 'local-only',
+                backupSnapshots: (() => {
+                    try {
+                        const files = fs.readdirSync(BACKUPS_DIR)
+                            .filter(f => f.startsWith('db_snapshot_') && f.endsWith('.json'))
+                            .sort()
+                            .reverse();
+                        return files.slice(0, 10).map(f => ({ name: f, createdAt: f.slice(12, 31), reason: f.split('__')[1]?.replace('.json','') || 'auto' }));
+                    } catch { return []; }
+                })(),
+                suggestion: GITHUB_ENABLED
+                    ? (level === 'safe' ? '✅ DB an toàn. GitHub Backup đang bảo vệ dữ liệu.' : '💚 DB đang trong giới hạn an toàn với GitHub Backup.')
+                    : level === 'danger'
+                    ? '🔴 DB sắp đầy 100KB JSONBin! Hãy cấu hình GitHub Backup ngay để không bị giới hạn.'
+                    : level === 'warning'
+                    ? '🟡 DB đã dùng 80%+ giới hạn JSONBin. Hãy cấu hình GitHub Backup để tránh vấn đề.'
+                    : '💚 DB an toàn, nhưng hãy cấu hình GitHub Backup để dữ liệu không mất khi Render restart.'
+            });
+        } catch (e) {
+            jsonResponse(res, 500, { success: false, message: e.message });
+        }
+        return;
+    }
+
     // ── GET /api/resolve-tiktok — Giải mã URL TikTok rút gọn (public) ─────────
     if (pathname === '/api/resolve-tiktok' && req.method === 'GET') {
         const targetUrl = parsedUrl.query.url;
@@ -2085,8 +2873,72 @@ const server = http.createServer(async (req, res) => {
 });
 
 (async () => {
-    // 1. Tải và khôi phục 100% dữ liệu từ Cloud DB trước khi mở Cổng Server
-    await syncFromCloudDB();
+    console.log('===================================================');
+    console.log('  🛡️  INITIALIZING ANTI-DATA LOSS SYSTEM...');
+    console.log('===================================================');
+
+    // ── Bước 0: Snapshot DB hiện tại (trước khi làm bất cứ điều gì) ──────────
+    const restored0 = _restoreFromLatestBackupIfDBEmpty();
+    if (!restored0) {
+        const snapCheck = _snapshotDB('startup-first-run');
+        if (snapCheck) console.log(`  📸 Đã snapshot DB ban đầu: ${path.basename(snapCheck)}`);
+    }
+
+    // ── Bước 1: Restore từ GitHub (ưu tiên cao nhất, không giới hạn size) ────
+    // Render Free wipe filesystem mỗi lần restart → GitHub là backup bền vững duy nhất
+    let githubRestored = false;
+    if (GITHUB_ENABLED) {
+        const localCount = _countDBRecords(_loadDBFromDisk());
+        if (localCount < 10) {
+            // Local rỗng hoặc quá ít → đây là lần đầu deploy / sau Render wipe
+            console.log(`  🐙 [Startup] DB local có ${localCount} records → thử restore từ GitHub...`);
+            githubRestored = await restoreFromGitHub();
+            if (githubRestored) {
+                const snapAfterGh = _snapshotDB('after-github-restore');
+                if (snapAfterGh) console.log(`  📸 Đã snapshot sau khi restore GitHub: ${path.basename(snapAfterGh)}`);
+            }
+        } else {
+            console.log(`  🐙 [Startup] DB local có ${localCount} records → đủ dữ liệu, bỏ qua GitHub restore.`);
+            // Tuy nhiên vẫn lấy SHA hiện tại từ GitHub để backup sau không bị 409 Conflict
+            _ghGetFileSha().then(sha => { if (sha) ghbState.lastBackupSha = sha; }).catch(() => {});
+        }
+    }
+
+    // ── Bước 2: SMART MERGE từ JSONBin (fallback nếu GitHub chưa cấu hình) ───
+    if (!GITHUB_ENABLED || !githubRestored) {
+        await syncFromCloudDB();
+    }
+
+    // ── Bước 3: Snapshot sau khi sync cloud để có bản cuối cùng ──────────────
+    const finalSnap = _snapshotDB('after-cloud-sync');
+    if (finalSnap) console.log(`  📸 Đã snapshot DB sau khi sync Cloud: ${path.basename(finalSnap)}`);
+
+    // ── Bước 4: Báo cáo DB Safety & dọn dẹp base64 thừa ─────────────────────
+    const dbAfter = getDB();
+    _reportDBSafety(dbAfter);
+    try {
+        const jsonStr = JSON.stringify(dbAfter, null, 2);
+        fs.writeFileSync(DB_FILE, jsonStr, 'utf8');
+        const legacyDB = path.join(__dirname, 'db.json');
+        fs.writeFileSync(legacyDB, jsonStr, 'utf8');
+    } catch (e) { console.warn('  ⚠️  Không thể ghi lại DB sau cleanup:', e.message); }
+
+    // ── Bước 5: Backup ngay lên GitHub nếu local có dữ liệu mới hơn ─────────
+    if (GITHUB_ENABLED && !githubRestored) {
+        const localCountAfter = _countDBRecords(dbAfter);
+        if (localCountAfter > 0) {
+            console.log(`  🐙 [Startup] Đồng bộ ${localCountAfter} records lên GitHub...`);
+            await backupToGitHub(dbAfter);
+        }
+    }
+
+    console.log('  ✅ Anti-DataLoss System: SẴN SÀNG');
+    console.log(`     → Thư mục backup local: ${BACKUPS_DIR}`);
+    console.log(`     → Tối đa 30 bản snapshot tự động xoay vòng`);
+    console.log(`     → 🐙 GitHub Backup: ${GITHUB_ENABLED ? `✅ ${GITHUB_REPO}/${GITHUB_FILE_PATH}` : '❌ Chưa cấu hình'}`);
+    console.log(`     → 🗃️  JSONBin Fallback: ${(JSONBIN_BIN_ID && JSONBIN_API_KEY) ? '✅ Đã cấu hình' : '❌ Chưa cấu hình'}`);
+    console.log(`     → 🛡️ Anti-Corruption Guard: KHÔNG BAO GIỜ ghi đè nếu Cloud ít data hơn Local`);
+    console.log('===================================================');
 
     function _statusLine(name, iconOK, state, enabledFlag) {
         if (!enabledFlag) return `  🔘 ${name}: ❌ Chưa cấu hình (local-only)`;
@@ -2111,7 +2963,8 @@ const server = http.createServer(async (req, res) => {
         console.log('');
         console.log('  ⚙️  TRẠNG THÁI TÍCH HỢP:');
         console.log(_statusLine('Cloudinary (ảnh/audio/video) ', '🟢', cldState, CLOUDINARY_ENABLED));
-        console.log(_statusLine('JSONBin    (backup DB cloud)', '🟢', jbnState, !!(JSONBIN_BIN_ID && JSONBIN_API_KEY)));
+        console.log(_statusLine('GitHub     (backup DB chính) ', '🟢', ghbState, GITHUB_ENABLED));
+        console.log(_statusLine('JSONBin    (backup DB phụ)  ', '🟢', jbnState, !!(JSONBIN_BIN_ID && JSONBIN_API_KEY)));
         console.log('');
         console.log('  🛡️  Smart Circuit Breaker:');
         console.log('     HARD-lỗi 401/403/404 → TẮT VĨNH VIỄN cho đến restart');

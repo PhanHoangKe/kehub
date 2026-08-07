@@ -399,6 +399,8 @@ const RATE_LIMITS = {
     '/api/wordchain/challenge': { max: 5,  windowMs: 60 * 1000 },  // 5 lượt tạo bàn / phút
     '/api/wordchain/turn':      { max: 20, windowMs: 60 * 1000 },  // 20 lượt đi / phút
     '/api/wordchain/state':     { max: 60, windowMs: 60 * 1000 },  // poll state
+    '/api/wordchain/pending':   { max: 60, windowMs: 60 * 1000 },  // poll bàn đang chờ
+    '/api/wordchain/decline':   { max: 20, windowMs: 60 * 1000 },  // đóng bàn
 };
 
 // ── Game Nối Từ (in-memory) ─────────────────────────────────────────────────────
@@ -1774,6 +1776,37 @@ const server = http.createServer(async (req, res) => {
         }
         return;
     }
+    // ── POST /api/wordchain/:id/forfeit / decline (chủ từ chối) ──────────────
+    if (pathname === '/api/wordchain/decline' && req.method === 'POST') {
+        try {
+            const raw = await readBody(req, 8 * 1024);
+            const payload = JSON.parse(raw || '{}');
+            const id = sanitizeString(payload.id || '', 60);
+            const g = wordchainGames.get(id);
+            if (!g) { jsonResponse(res, 200, { success: false, message: 'Bàn không tồn tại.' }); return; }
+            wordchainGames.delete(id);
+            jsonResponse(res, 200, { success: true, message: 'Đã đóng bàn.' });
+        } catch (e) {
+            jsonResponse(res, 400, { success: false, message: 'Lỗi.' });
+        }
+        return;
+    }
+
+    // ── GET /api/wordchain/pending — bàn đang chờ chủ nhà tham gia ──────────
+    // Để trang chủ / trang giám sát của chủ biết có khách muốn chơi mà không cần email.
+    if (pathname === '/api/wordchain/pending' && req.method === 'GET') {
+        const list = [];
+        for (const g of wordchainGames.values()) {
+            if (g.status === 'waiting') {
+                list.push({ id: g.id, guest: g.player0, createdAt: g.createdAt });
+            }
+        }
+        // Mới nhất lên đầu
+        list.sort((a, b) => b.createdAt - a.createdAt);
+        jsonResponse(res, 200, { success: true, count: list.length, waiting: list.slice(0, 10) });
+        return;
+    }
+
     // ── /api/leaderboard ──────────────────────────────────────────────────────
     if (pathname === '/api/leaderboard' && req.method === 'GET') {
         const q = sanitizeString(parsedUrl.query.kind || '', 20);

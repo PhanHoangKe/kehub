@@ -83,6 +83,19 @@
             </button>
         </div>
 
+        <!-- Banner thông báo: có người muốn chơi Nối Từ -->
+        <div id="wcBanner" class="wc-banner" style="display:none">
+          <div class="wc-banner-icon"><i class="fa-solid fa-link"></i></div>
+          <div class="wc-banner-text">
+            <div class="wc-banner-title">Ai đó muốn chơi <b>Nối Từ</b> với bạn!</div>
+            <div class="wc-banner-sub"><span id="wcBannerGuest"></span> đang chờ ở sân. Vào ngay nha?</div>
+          </div>
+          <div class="wc-banner-actions">
+            <button id="wcBannerJoin" class="wc-banner-btn wc-join">Vào chơi</button>
+            <button id="wcBannerClose" class="wc-banner-btn wc-close"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        </div>
+
         <!-- Speed dial container thời tiết -->
         <div class="mood-speed-dial" id="moodSpeedDial">
             <!-- Các nút con hiện ra dạng vòng cung -->
@@ -1741,6 +1754,57 @@ var aiSpeedDial = document.getElementById('aiSpeedDial');
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') closeDial();
     });
+})();
+
+/* ═══ Banner Nối Từ — có khách muốn chơi ═══ */
+(function () {
+    const banner = document.getElementById('wcBanner');
+    const guestEl = document.getElementById('wcBannerGuest');
+    const btnJoin = document.getElementById('wcBannerJoin');
+    const btnClose = document.getElementById('wcBannerClose');
+    if (!banner || !guestEl || !btnJoin || !btnClose) return;
+
+    let seen = {};             // map id -> true (đã từng nhận, không báo lại)
+    let currentWaiting = null;
+
+    function fetchPending() {
+        // tránh ồn khi đang ở tab khác
+        if (document.hidden) return;
+        fetch('/api/wordchain/pending')
+            .then(r => r.json())
+            .then(d => {
+                if (!d.success) return;
+                const fresh = (d.waiting || []).filter(w => !seen[w.id]);
+                if (fresh.length === 0) { hideBanner(); return; }
+                const latest = fresh[0];
+                currentWaiting = latest;
+                guestEl.textContent = latest.guest || 'Một người bạn';
+                banner.style.display = 'flex';
+            })
+            .catch(() => {});
+    }
+
+    function hideBanner() {
+        banner.style.display = 'none';
+        currentWaiting = null;
+    }
+
+    btnJoin.addEventListener('click', () => {
+        if (currentWaiting) {
+            seen[currentWaiting.id] = true;
+            window.open('word-chain.html?id=' + encodeURIComponent(currentWaiting.id) + '&join=1', '_blank');
+        }
+        hideBanner();
+    });
+
+    btnClose.addEventListener('click', () => {
+        if (currentWaiting) seen[currentWaiting.id] = true;
+        hideBanner();
+    });
+
+    // poll mỗi 6 giây
+    setInterval(fetchPending, 6000);
+    fetchPending();
 })();
 </script>
 

@@ -12,11 +12,18 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
+    "@langchain/core": "^1.2.5",
+    "@langchain/google-genai": "^2.2.0",
+    "@langchain/openai": "^1.5.6",
+    "@pinecone-database/pinecone": "^8.2.0",
+    "@upstash/vector": "^1.2.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-rate-limit": "^8.6.2",
+    "langchain": "^1.5.5",
     "multer": "^2.2.0",
-    "nodemailer": "^9.0.4"
+    "nodemailer": "^9.0.4",
+    "zod": "^4.4.3"
   }
 }

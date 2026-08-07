@@ -131,8 +131,55 @@ async function sendWarningEmail({ to, caseCode, debtor, amount, currency, reason
     }
 }
 
+/**
+ * Gửi email mời chơi "Nối từ" — thông báo cho chủ trang khi có người vào muốn chơi cùng.
+ * Gửi tới email chủ (EMAIL_USER) kèm link để chủ mở bàn chơi ngay.
+ * @returns {Promise<{ok:boolean,error?:string}>}
+ */
+async function sendGameInvite({ playerName, gameLink, message }) {
+    if (!emailConfigured()) {
+        return { ok: false, error: 'Server chưa cấu hình EMAIL_USER / EMAIL_APP_PASS.' };
+    }
+    const name = esc(playerName || 'Một người bạn');
+    const msg = esc(message || 'Ai đó muốn chơi đấu từ vựng cùng bạn!');
+    const link = esc(gameLink || '#');
+    const subject = `🎮 ${name} muốn chơi Nối từ với bạn!`;
+    const html = `
+<div style="max-width:600px;margin:0 auto;font-family:'Nunito',Arial,sans-serif;background:#fffdf8;border-radius:12px;overflow:hidden;border:1px solid #eee0c8;">
+  <div style="background:linear-gradient(135deg,#7cc6ff,#3d9bff);color:#fff;padding:20px 22px;">
+    <div style="font-size:24px;font-weight:800;">🎮 Có người muốn chơi Nối từ cùng bạn!</div>
+    <div style="font-size:14px;margin-top:6px;opacity:.92;">Thanh Xuân của Kế · Game Nối từ</div>
+  </div>
+  <div style="padding:24px 22px;color:#3b3a55;font-size:15px;line-height:1.7;">
+    <p>Chào bạn 👋</p>
+    <p><strong>${name}</strong> vừa vào trang và bấm <strong>"Chơi với tôi"</strong>. Họ đang háo hức đọ nội nối từ với bạn đấy!</p>
+    <p style="margin-top:16px;">Bấm nút bên dưới để vào bàn chơi — nếu người chơi còn online thì kịp luôn:</p>
+    <div style="margin:22px 0;">
+      <a href="${link}" style="text-decoration:none;background:linear-gradient(135deg,#ff8fa3,#ff5d8f);color:#fff;padding:14px 30px;border-radius:999px;font-weight:800;font-size:15px;display:inline-block;">🎮 Vào chơi ngay</a>
+    </div>
+    <p style="font-size:13px;color:#8a87a8;">Nếu nút không bấm được, copy link này vào trình duyệt:<br>
+      <span style="color:#3d9bff;word-break:break-all;">${link}</span></p>
+    <p style="margin-top:18px;color:#b8b3cf;font-size:12px;">Đây là thông báo tự động từ web Thanh Xuân của Kế.</p>
+  </div>
+</div>`;
+    try {
+        await getTransporter().sendMail({
+            from: `"Thanh Xuân của Kế" <${EMAIL_USER}>`,
+            to: EMAIL_USER,
+            subject,
+            html,
+            text: `${name} muốn chơi Nối từ cùng bạn!\nMở bàn tại: ${gameLink}\n${message || ''}`,
+        });
+        return { ok: true };
+    } catch (err) {
+        console.error('  [Email] Gửi lời mời Nối từ lỗi:', err.message);
+        return { ok: false, error: err.message };
+    }
+}
+
 module.exports = {
     emailConfigured,
     buildAlertEmail,
     sendWarningEmail,
+    sendGameInvite,
 };

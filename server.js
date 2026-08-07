@@ -396,7 +396,35 @@ const RATE_LIMITS = {
     '/api/admin/backup/github-now': { max: 5, windowMs: 60 * 1000 }, // 5 req / phút
     '/api/debt-agent/ask':  { max: 10, windowMs: 60 * 1000 },       // 10 req / phút (LLM nên giới hạn nhẹ)
     '/api/ai-image':        { max: 10, windowMs: 60 * 1000 },       // (unused) để dành nếu quay lại proxy
+    '/api/wordchain/challenge': { max: 5,  windowMs: 60 * 1000 },  // 5 lượt tạo bàn / phút
+    '/api/wordchain/turn':      { max: 20, windowMs: 60 * 1000 },  // 20 lượt đi / phút
+    '/api/wordchain/state':     { max: 60, windowMs: 60 * 1000 },  // poll state
 };
+
+// ── Game Nối Từ (in-memory) ─────────────────────────────────────────────────────
+// Không cần persist lâu dài: chỉ cần giữ trong RAM trong vài phút người chơi online.
+// Luật: người trước nói 1 từ, người sau phải nói từ bắt đầu bằng CHỮ CÁI CUỐI của từ trước.
+// Map: gameId -> { id, players: [guest, host|null], words:[], turn: 0/1, winner, startedAt, lastActivity }
+const wordchainGames = new Map();
+
+function normalizeWord(w) {
+    return (w || '').trim().toLowerCase().replace(/[^\p{L}\u0061-\u024F\u00C0-\u024F]/gu, '');
+}
+function lastLetter(w) {
+    const t = (w || '').trim();
+    return t ? t.charAt(t.length - 1).toLowerCase() : '';
+}
+function firstLetter(w) {
+    const t = (w || '').trim();
+    return t ? t.charAt(0).toLowerCase() : '';
+}
+
+function sanitizeWord(raw, maxLen = 60) {
+    const t = String(raw ?? '').trim().slice(0, maxLen);
+    // Giữ toàn bộ chữ cái Latin + tiếng Việt có dấu (mọi tổ hợp) + khoảng trắng + gạch nối + nháy.
+    // Dùng u flag + loại trừ ký tự không mong muốn để giữ dấu.
+    return t.replace(/[^a-zA-Z\p{L}0-9\s'-]/gu, '');
+}
 
 // ── Helper parse User-Agent ───────────────────────────────────────────────────
 function parseUserAgent(uaString = '') {
@@ -1605,6 +1633,153 @@ const server = http.createServer(async (req, res) => {
     // ── Reverse Proxy: AI Gia Sư Toán → ai-tutor Express ─────────────────────
     if (pathname.startsWith('/api/ai-tutor/') || pathname === '/api/ai-tutor') {
         return proxyToAiTutor(req, res, pathname);
+    }
+
+    // ── Game Nối Từ ──────────────────────────────────────────────────────────
+    // 1) POST /api/wordchain/challenge — người chơi tạo bàn, gửi email mời chủ
+    // 2) GET  /api/wordchain/state?id=... — poll trạng thái bàn (cả 2 phía)
+    // 3) POST /api/wordchain/turn — đi một từ (cả người chơi lẫn chủ)
+    if (pathname === '/api/wordchain/challenge' && req.method === 'POST') {
+        const startedAt = Date.now();
+        try {
+            const raw = await readBody(req, 16 * 1024);
+            const payload = JSON.parse(raw || '{}');
+            let name = sanitizeString(payload.name, 40).trim().slice(0, 30);
+            if (!name) name = 'Người chơi';
+
+            const id = 'wc_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
+            const game = {
+                id,
+                status: 'waiting',          // waiting → playing → done
+                player0: name,              // người chơi (tạo bàn)
+                player1: null,              // chủ (join sau)
+                hostName: null,
+                words: [],
+                current: 0,
+                winner: null,
+                createdAt: Date.now(),
+                lastActivity: Date.now(),
+            };
+            wordchainGames.set(id, game);
+
+            // Dọn bàn cũ quá 30 phút để RAM không phình
+            for (const [gid, g] of wordchainGames) {
+                if (Date.now() - g.lastActivity > 30 * 60 * 1000) wordchainGames.delete(gid);
+            }
+
+            // Gửi email thông báo cho chủ (nếu cấu hình) — không làm fail nếu lỗi email
+            let emailStatus = { requested: false, sent: false };
+            if (typeof emailService.emailConfigured === 'function' && emailService.emailConfigured()) {
+                emailStatus.requested = true;
+                const host = req.headers['host'] || (req.headers['x-forwarded-host']) || 'localhost';
+                const base = `${req.headers['x-forwarded-proto'] || 'http'}://${host}`;
+                const gameLink = `${base}/word-chain.html?id=${encodeURIComponent(id)}&join=1`;
+                const guestName = name;
+                const emailResult = await emailService.sendGameInvite({
+                    playerName: guestName,
+                    gameLink,
+                    message: 'Nhấn "Chơi với tôi" để vào bàn nối từ.',
+                });
+                emailStatus.sent = emailResult.ok;
+                if (!emailResult.ok) emailStatus.error = emailResult.error;
+            }
+
+            jsonResponse(res, 200, {
+                success: true, id, myIndex: 0, status: 'waiting',
+                email: emailStatus, latencyMs: Date.now() - startedAt,
+            });
+        } catch (err) {
+            console.error('  [WordChain] challenge lỗi:', err.message);
+            jsonResponse(res, 400, { success: false, message: 'Không tạo được bàn. ' + err.message });
+        }
+        return;
+    }
+
+    if (pathname === '/api/wordchain/state' && req.method === 'GET') {
+        const id = sanitizeString(parsedUrl.query.id || '', 60);
+        const myName = sanitizeString(parsedUrl.query.name || '', 40).trim().slice(0, 30);
+        if (!id) { jsonResponse(res, 400, { success: false, message: 'Thiếu id bàn.' }); return; }
+        const game = wordchainGames.get(id);
+        if (!game) { jsonResponse(res, 200, { success: false, message: 'Bàn không tồn tại hoặc đã hết hạn.' }); return; }
+        game.lastActivity = Date.now();
+
+        const me = (myName && game.player1 && myName === game.hostName) ? 1 : 0;
+        const publicGame = {
+            id: game.id,
+            status: game.status,
+            player0: game.player0,
+            player1: game.player1,
+            hostName: game.hostName,
+            words: game.words.map(w => ({ text: w.text, player: w.player, seq: w.seq })),
+            current: game.current,
+            winner: game.winner,
+            myIndex: me,
+        };
+        jsonResponse(res, 200, { success: true, game: publicGame });
+        return;
+    }
+
+    if (pathname === '/api/wordchain/turn' && req.method === 'POST') {
+        const startedAt = Date.now();
+        try {
+            const raw = await readBody(req, 16 * 1024);
+            const payload = JSON.parse(raw || '{}');
+            const id = sanitizeString(payload.id || '', 60);
+            const word = sanitizeWord(payload.word);
+            const who = (payload.who === 'host') ? 1 : 0;
+            const game = wordchainGames.get(id);
+            if (!game) { jsonResponse(res, 200, { success: false, message: 'Bàn không tồn tại hoặc đã hết hạn.' }); return; }
+
+            // Nếu chủ chưa join → host chỉ join (không cần từ), game chuyển sang playing
+            if (game.status === 'waiting' && who === 1) {
+                game.hostName = sanitizeString(payload.hostName || 'Chủ nhà', 40).trim().slice(0, 30) || 'Chủ nhà';
+                game.player1 = game.hostName;
+                game.status = 'playing';
+                game.lastActivity = Date.now();
+                jsonResponse(res, 200, { success: true, joined: true, current: game.current });
+                return;
+            }
+            if (game.status === 'waiting' && who === 0) {
+                jsonResponse(res, 200, { success: false, message: 'Chủ nhà chưa vào bàn. Hãy chờ một lát!' });
+                return;
+            }
+            if (game.status === 'done') { jsonResponse(res, 200, { success: false, message: 'Trò chơi đã kết thúc.' }); return; }
+
+            const clean = sanitizeWord(word);
+            if (!clean) { jsonResponse(res, 200, { success: false, message: 'Từ không hợp lệ.' }); return; }
+
+            // Kiểm tra lượt
+            if (game.current !== who) { jsonResponse(res, 200, { success: false, message: 'Chưa đến lượt bạn!' }); return; }
+
+            // Kiểm tra luật nối từ
+            const last = game.words.length ? normalizeWord(game.words[game.words.length - 1].text) : '';
+            if (last && firstLetter(clean) !== lastLetter(last)) {
+                jsonResponse(res, 200, {
+                    success: false,
+                    message: 'Từ phải bắt đầu bằng chữ "' + lastLetter(last) + '".',
+                });
+                return;
+            }
+
+            game.words.push({ text: clean, player: who, seq: game.words.length, ts: Date.now() });
+            game.lastActivity = Date.now();
+            game.current = 1 - who;
+            game.status = 'playing';
+
+            // Nếu bắt đầu nhà mở cả là game bắt đầu giữa 2 người (chỉ sau khi host join)
+            jsonResponse(res, 200, { success: true, current: game.current });
+        } catch (err) {
+            console.error('  [WordChain] turn lỗi:', err.message);
+            jsonResponse(res, 400, { success: false, message: 'Lỗi khi đi từ.' });
+        }
+        return;
+    }
+    // ── /api/leaderboard ──────────────────────────────────────────────────────
+    if (pathname === '/api/leaderboard' && req.method === 'GET') {
+        const q = sanitizeString(parsedUrl.query.kind || '', 20);
+        // placeholder nhẹ — có thể mở rộng sau, tạm trả trạng thái nối từ gần nhất và điểm biểu tượng
+        jsonResponse(res, 200, { success: true, data: [] });
+        return;
     }
 
     // ── GET /api/health — Render Health Check / Keep-Alive (tránh render cold start liên tục)

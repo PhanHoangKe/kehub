@@ -192,6 +192,21 @@ input[type=range] { width:100%; accent-color:var(--coral-deep); }
 }
 .result-actions .act:hover { border-color:var(--coral); color:var(--coral-deep); transform:translateY(-1px); }
 .result-actions .act:disabled { opacity:.5; cursor:not-allowed; }
+
+/* ── CHIP: preset nhanh ───────────────────────────── */
+.chip-block { display:flex; flex-wrap:wrap; gap:7px; }
+.chip {
+  cursor:pointer; border:1.5px solid #eadcc2; background:#fbf6ec; color:var(--ink-soft);
+  padding:7px 13px; border-radius:var(--r-full); font-family:var(--font-body);
+  font-size:.8rem; font-weight:800; transition:.15s; display:inline-flex; align-items:center; gap:6px;
+}
+.chip:hover { border-color:var(--sky); color:var(--sky-deep); transform:translateY(-1px); }
+.chip.active {
+  background:linear-gradient(135deg,var(--sky),var(--sky-deep)); color:#fff;
+  border-color:transparent; box-shadow:0 4px 12px rgba(61,155,255,.35);
+}
+.chip-ratio { font-size:.78rem; }
+.chip-preset { font-family:var(--font-head); }
 .meta { margin-top:12px; font-size:.76rem; color:var(--ink-soft); line-height:1.7; font-weight:700; }
 .meta b { color:var(--coral-deep); }
 
@@ -270,6 +285,30 @@ details.guide a { color:var(--coral-deep); text-decoration:underline; font-weigh
 
     <div class="panel">
       <h2>2. Cấu hình ảnh</h2>
+
+      <div>
+        <label>Tỉ lệ ảnh nhanh</label>
+        <div class="chip-block" id="ratioChips">
+          <button type="button" class="chip chip-ratio active" data-w="1024" data-h="1024">✓ Vuông</button>
+          <button type="button" class="chip chip-ratio" data-w="832" data-h="1216">Dọc (TikTok)</button>
+          <button type="button" class="chip chip-ratio" data-w="1216" data-h="832">Ngang</button>
+          <button type="button" class="chip chip-ratio" data-w="1152" data-h="896">Gần vuông</button>
+        </div>
+        <div class="hint" style="margin-top:6px">Bấm để đổi <b>width × height</b> phía dưới ngay lập tức.</div>
+      </div>
+
+      <div>
+        <label>Phong cách nhanh (không cần biết prompt)</label>
+        <div class="chip-block" id="styleChips">
+          <button type="button" class="chip chip-preset active" data-style="0">✨ Mặc định</button>
+          <button type="button" class="chip chip-preset" data-style="1">🛍 Sản phẩm bán hàng</button>
+          <button type="button" class="chip chip-preset" data-style="2">👗 Thời trang</button>
+          <button type="button" class="chip chip-preset" data-style="3">☕ F&B / Cafe</button>
+          <button type="button" class="chip chip-preset" data-style="4">🧸 Đồ chơi / đồ quà</button>
+          <button type="button" class="chip chip-preset" data-style="5">🌟 Mỹ phẩm</button>
+        </div>
+        <div class="hint" style="margin-top:6px">Bấm chọn sẽ tự ghép prompt phù hợp; có thể bấm lại "<b>Mặc định</b>" để bỏ.</div>
+      </div>
 
       <div>
         <label>Thông điệp tạo ảnh (Prompt)</label>
@@ -407,6 +446,40 @@ const metaEl     = document.getElementById('meta');
 
 let lastImageDataUrl = '';
 let lastSeed = null;
+
+// Preset phong cách: bổ sung hậu tả sau prompt của người dùng (không cần key).
+// Mỗi preset đẩy ảnh về đúng mood kiểu chụp chuyên nghiệp cho tựa nội dung.
+const STYLE_PRESETS = {
+  0: '',
+  1: 'studio product photography, clean white background, soft shadows, commercial product shot, high detail, crisp, vignette, ecommerce photo, vibrant, layered depth',
+  2: 'fashion editorial photography, boutique product display, soft diffused lighting, stylish composition, model outfit, premium apparel, chic color palette',
+  3: 'food photography, cozy cafe atmosphere, warm ambient light, steam, appetizing, shallow depth of field, artisanal coffee, rustic wooden table, inviting',
+  4: 'cute collectible toy photography, adorable character, pastel studio backdrop, soft lighting, gift box, charming, playful, high detail collectible',
+  5: 'cosmetic product photography, dewy skin beauty, sleek bottle, glass reflections, spa-like soft light, elegant minimal, premium skincare',
+};
+
+let activeStyle = 0;
+
+const ratioChips = document.getElementById('ratioChips');
+const styleChips  = document.getElementById('styleChips');
+
+ratioChips.addEventListener('click', (e) => {
+  const btn = e.target.closest('.chip-ratio');
+  if (!btn) return;
+  widthEl.value = btn.dataset.w;
+  heightEl.value = btn.dataset.h;
+  ratioChips.querySelectorAll('.chip-ratio').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  flash('Đã đặt khung ' + btn.dataset.w + '×' + btn.dataset.h);
+});
+
+styleChips.addEventListener('click', (e) => {
+  const btn = e.target.closest('.chip-preset');
+  if (!btn) return;
+  activeStyle = parseInt(btn.dataset.style, 10);
+  styleChips.querySelectorAll('.chip-preset').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+});
 
 function normalizeBaseUrl(raw) { return (raw || '').trim().replace(/\/+$/, ''); }
 function getSdBaseUrl() { return normalizeBaseUrl(seqUrlEl.value); }
@@ -559,7 +632,10 @@ async function generate(){
     const useHires = document.getElementById('hires').checked;
     const batch = Math.min(Math.max(parseInt(document.getElementById('batch').value,10) || 1, 1), 4);
 
-    const basePrompt = promptText + ', professional photography, ultra detailed, sharp focus, realistic, photorealistic, masterpiece, natural lighting, depth of field';
+    const styleTag = STYLE_PRESETS[activeStyle] || '';
+    const basePrompt = (promptText.trim() ? promptText.trim() + ', ' : '')
+      + (styleTag ? styleTag + ', ' : '')
+      + 'professional photography, ultra detailed, sharp focus, realistic, photorealistic, masterpiece, natural lighting, depth of field';
     const baseNeg = (negEl.value || 'blurry, lowres, text, watermark, deformed')
       + ', anime, cartoon, illustration, drawing, painting, 3d render, cg, digital art, wallpaper, flat design';
 

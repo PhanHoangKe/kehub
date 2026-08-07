@@ -15,6 +15,20 @@
 const path = require('path');
 const fs = require('fs');
 
+// Load .env root (nếu server.js chưa load — đảm bảo không có GOOGLE_API_KEY khi module này được dùng độc lập)
+const envFile = path.join(__dirname, '.env');
+if (fs.existsSync(envFile)) {
+  fs.readFileSync(envFile, 'utf8').split('\n').forEach(line => {
+    line = line.trim();
+    if (!line || line.startsWith('#')) return;
+    const eq = line.indexOf('=');
+    if (eq < 1) return;
+    const key = line.slice(0, eq).trim();
+    const val = line.slice(eq + 1).trim();
+    if (!process.env[key]) process.env[key] = val;
+  });
+}
+
 const DATA_FILE = path.join(__dirname, 'debtRibData.json');
 const CACHE_FILE = path.join(__dirname, 'data', 'debtRibCache.json');
 const MODEL = process.env.DEBT_EMBEDDING_MODEL || 'gemini-embedding-001';

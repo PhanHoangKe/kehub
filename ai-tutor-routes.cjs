@@ -11,8 +11,8 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 const fs = require('fs');
 
-// Load .env của ai-tutor (nằm ở root project)
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+// Load .env từ root project (file này nằm ở root, nên dùng ./ không cần ../
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 // Import services (ESM -> dùng dynamic import hoặc require nếu đã chuyển)
 // Vì ai-tutor services là ESM, ta dùng dynamic import bất đồng bộ.

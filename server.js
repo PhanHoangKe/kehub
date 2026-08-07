@@ -421,6 +421,36 @@ function firstLetter(w) {
     return t ? t.charAt(0).toLowerCase() : '';
 }
 
+// Luật "nối từ" tiếng Việt chuẩn: nối theo TIẾNG (từ đơn) cuối, không phải chữ cái.
+// VD: "cuộc sống" → từ kế phải bắt đầu bằng "sống", không phải chữ "g".
+function splitSyllables(w) {
+    // Tách cụm từ thành các tiếng bằng khoảng trắng (bỏ ký tự rỗng)
+    return (w || '').trim().toLowerCase().split(/\s+/).filter(Boolean);
+}
+function lastSyllable(w) {
+    const s = splitSyllables(w);
+    return s.length ? s[s.length - 1] : '';
+}
+function firstSyllable(w) {
+    const s = splitSyllables(w);
+    return s.length ? s[0] : '';
+}
+// Bỏ dấu tiếng Việt để so sánh: "sống" ≈ "song", "yêu" ≈ "yeu"
+function stripDiacritics(s) {
+    return String(s || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+}
+function startsWithSyllable(word, prefixSyllable) {
+    // Từ mới hợp lệ nếu TIẾNG ĐẦU của nó KHỚP với tiếng cuối của từ trước (bỏ dấu, không phân biệt hoa/thường).
+    // VD: "cuộc sống" → bắt buộc tiếng đầu = "sống" (sống động, sống xa...).
+    const first = stripDiacritics(firstSyllable(word));
+    const prefix = stripDiacritics(prefixSyllable);
+    if (!first || !prefix) return false;
+    return first === prefix;
+}
+
 function sanitizeWord(raw, maxLen = 60) {
     const t = String(raw ?? '').trim().slice(0, maxLen);
     // Giữ toàn bộ chữ cái Latin + tiếng Việt có dấu (mọi tổ hợp) + khoảng trắng + gạch nối + nháy.
@@ -1753,14 +1783,17 @@ const server = http.createServer(async (req, res) => {
             // Kiểm tra lượt
             if (game.current !== who) { jsonResponse(res, 200, { success: false, message: 'Chưa đến lượt bạn!' }); return; }
 
-            // Kiểm tra luật nối từ
-            const last = game.words.length ? normalizeWord(game.words[game.words.length - 1].text) : '';
-            if (last && firstLetter(clean) !== lastLetter(last)) {
-                jsonResponse(res, 200, {
-                    success: false,
-                    message: 'Từ phải bắt đầu bằng chữ "' + lastLetter(last) + '".',
-                });
-                return;
+            // Kiểm tra luật nối từ: từ mới phải bắt đầu bằng TIẾNG cuối của từ trước
+            const last = game.words.length ? game.words[game.words.length - 1].text : '';
+            if (last) {
+                const need = lastSyllable(last);
+                if (!startsWithSyllable(clean, need)) {
+                    jsonResponse(res, 200, {
+                        success: false,
+                        message: 'Từ phải bắt đầu bằng "' + need + '".',
+                    });
+                    return;
+                }
             }
 
             game.words.push({ text: clean, player: who, seq: game.words.length, ts: Date.now() });

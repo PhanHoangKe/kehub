@@ -208,7 +208,7 @@ let lastWordCount = -1;
 function notice(el, kind, msg) { el.className = 'notice ' + kind + ' show'; el.textContent = msg; }
 function clearNotice(el) { el.className = 'notice'; el.textContent = ''; }
 function escHtml(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
-function lastLetter(w) { const t = (w || '').trim(); return t ? t[t.length - 1].toLowerCase() : ''; }
+function lastSyllable(w) { const s = (w || '').trim().toLowerCase().split(/\s+/).filter(Boolean); return s[s.length - 1] || ''; }
 
 // ── Guest: tạo bàn (gửi thông báo email cho chủ) ───
 async function createGame() {
@@ -338,9 +338,9 @@ function render(g) {
     wordInput.disabled = true; btnSend.disabled = true;
     return;
   } else {
-    const need = words.length ? lastLetter(words[words.length - 1].text) : 'bất kỳ (bắt đầu bàn)';
+    const need = words.length ? lastSyllable(words[words.length - 1].text) : 'bất kỳ (bắt đầu bàn)';
     helpHint.innerHTML = g.current === myIndex
-      ? 'Đến lượt <b style="color:var(--coral-deep)">BẠN</b>. Từ phải bắt đầu bằng chữ <b style="color:var(--coral-deep)">' + escHtml(need) + '</b>'
+      ? 'Đến lượt <b style="color:var(--coral-deep)">BẠN</b>. Từ phải bắt đầu bằng <b style="color:var(--coral-deep)">"' + escHtml(need) + '"</b>'
       : 'Đến lượt <b style="color:var(--sky-deep)">' + (g.current === 0 ? (g.player0 || 'Người chơi') : (g.player1 || 'Chủ nhà')) + '</b>. Bạn chờ xíu nhé.';
     helpHint.style.display = 'block';
     statusLine.textContent = '';

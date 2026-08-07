@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 
 <head>
@@ -58,13 +58,28 @@
 
     <!-- Speed Dial Mood FAB (Góc Phải Màn Hình) -->
     <div class="mood-fab-wrap" id="moodFabWrap">
-        <!-- Nút chatbox riêng, phía trên -->
-        <button class="mood-fab-chatbox" id="btnOpenChatbox" data-tooltip="Chatbox (Sắp Ra Mắt)" disabled>
-            <i class="fa-solid fa-message"></i>
-            <span class="mood-fab-chatbox-beta">Beta</span>
-        </button>
+        <!-- AI Speed Dial — nút con: Chatbox giải toán & Đòi nợ thuê -->
+        <div class="ai-speed-dial" id="aiSpeedDial">
+            <!-- Nút con 1: Chatbox giải toán -->
+            <button class="ai-dial-item" id="aiDialChat" data-tooltip="AI Giải Toán THPT" style="--i:0">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </button>
+            <!-- Nút con 2: Đòi nợ thuê -->
+            <button class="ai-dial-item" id="aiDialDebt" data-tooltip="Đòi Nợ Thuê" style="--i:1">
+                <i class="fa-solid fa-sack-dollar"></i>
+            </button>
+            <!-- Nút con 3: AI Ảnh/Video Affiliate (sắp ra mắt) -->
+            <button class="ai-dial-item" id="aiDialAffil" data-tooltip="AI Ảnh/Video Affiliate" style="--i:2">
+                <i class="fa-solid fa-film"></i>
+            </button>
 
-        <!-- Speed dial container -->
+            <!-- Nút chính (trigger) -->
+            <button class="ai-dial-main" id="aiDialMain" data-tooltip="AI Trợ Lý">
+                <i class="fa-solid fa-robot" id="aiDialMainIcon"></i>
+            </button>
+        </div>
+
+        <!-- Speed dial container thời tiết -->
         <div class="mood-speed-dial" id="moodSpeedDial">
             <!-- Các nút con hiện ra dạng vòng cung -->
             <button class="mood-dial-item" data-mood="space" data-tooltip="Ngàn Sao & Vũ Trụ" style="--i:0">
@@ -1662,6 +1677,60 @@ function selectDropdown(ddId, value, text, inputId) {
     document.getElementById(inputId).value = value;
 }
 </script>
-</body>
 
-</html>
+<script>
+/* AI Speed Dial — click nút Giải Toán mở trang chat đầy đủ */
+(function () {
+    'use strict';
+
+    var aiDialMain  = document.getElementById('aiDialMain');
+    var aiDialChat  = document.getElementById('aiDialChat');
+    var aiDialDebt  = document.getElementById('aiDialDebt');
+    var aiDialAffil = document.getElementById('aiDialAffil');
+    var aiSpeedDial = document.getElementById('aiSpeedDial');
+    var isDialOpen  = false;
+
+    function openDial() {
+        isDialOpen = true;
+        aiSpeedDial.classList.add('open');
+        if (typeof window.__closeMoodDial === 'function') window.__closeMoodDial();
+    }
+    function closeDial() {
+        isDialOpen = false;
+        aiSpeedDial.classList.remove('open');
+    }
+    window.__closeAiDial = closeDial;
+
+    aiDialMain.addEventListener('click', function (e) {
+        e.stopPropagation();
+        isDialOpen ? closeDial() : openDial();
+    });
+
+    aiDialChat.addEventListener('click', function (e) {
+        e.stopPropagation();
+        closeDial();
+        window.open('ai-tutor-chat.html', '_blank');
+    });
+
+    aiDialDebt.addEventListener('click', function (e) {
+        e.stopPropagation();
+        closeDial();
+        window.open('debt-agent.html', '_blank');
+    });
+
+    aiDialAffil.addEventListener('click', function (e) {
+        e.stopPropagation();
+        closeDial();
+        window.open('ai-affiliate.html', '_blank');
+    });
+
+    document.addEventListener('click', function (e) {
+        if (isDialOpen && !aiSpeedDial.contains(e.target)) closeDial();
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeDial();
+    });
+})();
+</script>
+
+

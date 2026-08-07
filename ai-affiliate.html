@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AI Ảnh/Video Affiliate | Youth Memories</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root {
+  --sky: #7cc6ff;
+  --sky-deep: #3d9bff;
+  --cream: #fff7ea;
+  --paper: #ffffff;
+  --ink: #3b3a55;
+  --ink-soft: #8a87a8;
+  --coral: #ff8fa3;
+  --coral-deep: #ff5d8f;
+  --mint: #7ee8c2;
+  --sunny: #ffd166;
+  --grape: #b18cff;
+  --good: #2ec98f;
+  --bad: #ff6b7a;
+  --font-head: 'Baloo 2', cursive;
+  --font-body: 'Nunito', sans-serif;
+  --r-sm: 2px;
+  --r-md: 4px;
+  --r-full: 999px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { min-height:100%; background:var(--cream); color:var(--ink); font-family:var(--font-body); }
+::-webkit-scrollbar { width:8px; }
+::-webkit-scrollbar-thumb { background:#e3d7c0; border-radius:var(--r-full); }
+
+body {
+  background-image:
+    radial-gradient(circle at 12% 8%, rgba(124,198,255,.25) 0, transparent 28%),
+    radial-gradient(circle at 88% 14%, rgba(255,143,163,.22) 0, transparent 30%),
+    radial-gradient(circle at 80% 92%, rgba(177,140,255,.2) 0, transparent 32%),
+    radial-gradient(circle at 6% 88%, rgba(255,209,102,.22) 0, transparent 26%);
+  background-attachment: fixed;
+}
+
+.wrap { max-width:1500px; margin:0 auto; padding:26px 20px 70px; display:flex; flex-direction:column; gap:20px; min-height:100vh; }
+
+/* ── HEADER — bảng học sinh ───────────────────────── */
+.top {
+  display:flex; align-items:center; gap:16px;
+  background:var(--paper);
+  border:1px solid #f0e4cf;
+  border-radius:var(--r-md);
+  padding:14px 18px;
+  box-shadow:0 8px 24px rgba(255,150,120,.12);
+  position:relative; overflow:hidden;
+}
+.top::before {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(90deg, rgba(124,198,255,.14), rgba(255,143,163,.14), rgba(177,140,255,.14));
+}
+.top > * { position:relative; }
+.top .logo {
+  width:48px;height:48px;border-radius:var(--r-full);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:1.3rem;
+  background:linear-gradient(135deg,var(--sky),var(--coral-deep));
+  color:#fff; box-shadow:0 6px 16px rgba(255,93,143,.35);
+}
+.top .titles h1 {
+  font-family:var(--font-head); font-size:1.2rem; font-weight:800;
+  color:var(--ink); letter-spacing:.2px;
+}
+.top .titles p { color:var(--ink-soft); font-size:.84rem; margin-top:2px; font-weight:600; }
+.top .actions { margin-left:auto; display:flex; gap:10px; align-items:center; }
+
+.link-btn {
+  display:inline-flex; align-items:center; gap:7px; cursor:pointer;
+  background:#f6efe1; color:var(--ink-soft); border:1px solid #eadcc2;
+  padding:8px 14px; border-radius:var(--r-full); text-decoration:none; font-size:.82rem;
+  font-weight:700; transition:.18s;
+}
+.link-btn:hover { color:var(--coral-deep); border-color:var(--coral); transform:translateY(-1px); }
+
+.status-pill {
+  display:inline-flex; align-items:center; gap:8px; font-size:.78rem; font-weight:800;
+  padding:7px 14px; border-radius:var(--r-full);
+  background:#f6efe1; border:1px solid #eadcc2; color:var(--ink-soft);
+}
+.status-pill .dot { width:9px;height:9px;border-radius:50%;background:#c9c2ae; }
+.status-pill.online { color:var(--good); border-color:rgba(46,201,143,.4); background:rgba(46,201,143,.08); }
+.status-pill.online .dot { background:var(--good); box-shadow:0 0 8px var(--good); }
+.status-pill.offline { color:var(--bad); border-color:rgba(255,107,122,.4); background:rgba(255,107,122,.08); }
+.status-pill.offline .dot { background:var(--bad); box-shadow:0 0 8px var(--bad); }
+.status-pill.checking { color:var(--sky-deep); border-color:rgba(61,155,255,.4); background:rgba(124,198,255,.15); }
+.status-pill.checking .dot { background:var(--sky-deep); animation:blink 1s infinite; }
+@keyframes blink { 50% { opacity:.3; } }
+
+/* ── LAYOUT ─────────────────────────────────────────── */
+.grid { display:grid; grid-template-columns: 1.2fr 2.0fr 1.2fr; gap:16px; align-items:start; }
+@media (max-width: 900px) {
+  .grid { grid-template-columns:1fr; }
+  .grid .panel, .grid .canvas-area { grid-column:1; grid-row:auto; }
+}
+
+/* ── PANEL ──────────────────────────────────────────── */
+.panel {
+  background:var(--paper); border:1px solid #f0e4cf; border-radius:var(--r-md);
+  padding:18px; display:flex; flex-direction:column; gap:15px;
+  box-shadow:0 8px 24px rgba(255,150,120,.1);
+}
+.panel h2 {
+  font-family:var(--font-head); font-size:.88rem; font-weight:800;
+  color:var(--sky-deep); text-transform:uppercase; letter-spacing:.6px;
+  display:flex; align-items:center; gap:8px;
+}
+.panel h2::before { content:''; width:8px; height:8px; border-radius:50%; background:var(--coral); }
+label { font-size:.8rem; color:var(--ink-soft); display:block; margin-bottom:6px; font-weight:700; }
+
+input[type=text], input[type=number], textarea, select {
+  width:100%; background:#fbf6ec; border:1.5px solid #eadcc2;
+  color:var(--ink); padding:10px 13px; border-radius:var(--r-sm);
+  font-family:var(--font-body); font-size:.9rem; font-weight:600; outline:none;
+  transition:border-color .18s, box-shadow .18s; resize:vertical;
+}
+input:focus, textarea:focus, select:focus { border-color:var(--sky-deep); box-shadow:0 0 0 3px rgba(124,198,255,.25); }
+
+.row { display:flex; gap:10px; }
+.row > div { flex:1; }
+.hint { font-size:.72rem; color:var(--ink-soft); line-height:1.55; font-weight:600; }
+.hint b { color:var(--ink); }
+
+.range-label { display:flex; justify-content:space-between; font-size:.8rem; color:var(--ink-soft); font-weight:700; }
+.range-label b { color:var(--coral-deep); font-family:var(--font-head); }
+input[type=range] { width:100%; accent-color:var(--coral-deep); }
+
+/* ── NÚT ────────────────────────────────────────────── */
+.gen-btn {
+  width:100%; padding:13px; border:none; border-radius:var(--r-full); cursor:pointer;
+  font-family:var(--font-head); font-weight:800; font-size:1.02rem; color:#fff;
+  background:linear-gradient(135deg, var(--coral), var(--coral-deep));
+  transition:transform .12s, box-shadow .2s; display:flex; align-items:center; justify-content:center; gap:8px;
+  box-shadow:0 6px 18px rgba(255,93,143,.35);
+}
+.gen-btn:hover { transform:translateY(-2px); box-shadow:0 10px 26px rgba(255,93,143,.45); }
+.gen-btn:disabled { opacity:.55; cursor:not-allowed; transform:none; box-shadow:none; }
+.gen-btn.loading i { animation:spin 1s linear infinite; }
+.gen-btn.ghost {
+  background:#f6efe1; color:var(--sky-deep); border:1.5px solid var(--sky);
+  box-shadow:none; font-weight:800;
+}
+.gen-btn.ghost:hover { background:rgba(124,198,255,.12); box-shadow:none; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ── NÚT DỊCH ───────────────────────────────────────── */
+.translate-row { display:flex; gap:8px; align-items:stretch; }
+.translate-row textarea { flex:1; }
+.btn-translate {
+  flex-shrink:0; width:44px; border:none; cursor:pointer; border-radius:var(--r-sm);
+  background:linear-gradient(135deg, var(--grape), var(--sky-deep)); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-size:.95rem;
+  transition:.18s;
+}
+.btn-translate:hover { transform:translateY(-1px); box-shadow:0 6px 14px rgba(177,140,255,.4); }
+.btn-translate:disabled { opacity:.5; cursor:wait; transform:none; }
+
+/* ── OUTPUT ─────────────────────────────────────────── */
+.canvas-area {
+  background:var(--paper); border:1px solid #f0e4cf; border-radius:var(--r-md);
+  min-height:480px; display:flex; align-items:center; justify-content:center;
+  padding:18px; position:relative; overflow:hidden;
+  box-shadow:0 8px 24px rgba(255,150,120,.1);
+}
+.placeholder { text-align:center; color:var(--ink-soft); padding:40px; }
+.placeholder .big {
+  font-size:3rem; margin-bottom:16px;
+  background:linear-gradient(135deg,var(--sky),var(--coral),var(--grape));
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 4px 10px rgba(255,93,143,.25));
+}
+.placeholder h3 { font-family:var(--font-head); color:var(--ink); font-size:1.1rem; margin-bottom:6px; font-weight:800; }
+.placeholder p { font-size:.86rem; font-weight:600; }
+.result-img {
+  max-width:100%; max-height: calc(100vh - 260px); border-radius:var(--r-sm);
+  box-shadow:0 12px 40px rgba(120,90,60,.25); display:none;
+}
+.result-actions { margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; }
+.result-actions .act {
+  flex:1; min-width:140px; padding:11px; border-radius:var(--r-full); cursor:pointer;
+  border:1.5px solid #eadcc2; background:#f6efe1; color:var(--ink);
+  font-family:var(--font-body); font-size:.84rem; font-weight:800;
+  display:flex; align-items:center; justify-content:center; gap:7px; transition:.15s;
+}
+.result-actions .act:hover { border-color:var(--coral); color:var(--coral-deep); transform:translateY(-1px); }
+.result-actions .act:disabled { opacity:.5; cursor:not-allowed; }
+.meta { margin-top:12px; font-size:.76rem; color:var(--ink-soft); line-height:1.7; font-weight:700; }
+.meta b { color:var(--coral-deep); }
+
+.loading-box { display:none; flex-direction:column; align-items:center; gap:16px; color:var(--ink-soft); }
+.loading-box .ring {
+  width:56px;height:56px;border-radius:50%;
+  border:4px solid #f3e7d4; border-top-color:var(--coral-deep); border-right-color:var(--sky);
+  animation:spin .8s linear infinite;
+}
+.loading-box p { font-size:.86rem; font-weight:700; }
+.notice-error {
+  color:#c2253f; background:rgba(255,93,143,.08); border:1px solid rgba(255,93,143,.35);
+  padding:11px 13px; border-radius:var(--r-sm); font-size:.83rem; display:none; font-weight:700;
+}
+
+/* details hướng dẫn */
+details.guide { margin-top:4px; border:1.5px dashed #eadcc2; border-radius:var(--r-sm); padding:10px 12px; }
+details.guide summary { cursor:pointer; color:var(--sky-deep); font-size:.82rem; font-weight:800; }
+details.guide[open] summary { margin-bottom:8px; }
+details.guide a { color:var(--coral-deep); text-decoration:underline; font-weight:800; }
+
+/* toggle switch */
+.switch { position:relative; display:inline-block; width:42px; height:22px; }
+.switch input { opacity:0; width:0; height:0; }
+.switch .slider {
+  position:absolute; inset:0; border-radius:999px; background:#d9cbae; transition:.2s; cursor:pointer;
+}
+.switch .slider:before {
+  content:""; position:absolute; height:16px; width:16px; left:3px; top:3px; border-radius:50%;
+  background:#fff; transition:.2s;
+}
+.switch input:checked + .slider { background:linear-gradient(135deg,var(--coral),var(--coral-deep)); }
+.switch input:checked + .slider:before { transform:translateX(20px); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- HEADER -->
+  <div class="top">
+    <div class="logo"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+    <div class="titles">
+      <h1>AI Ảnh / Video Affiliate</h1>
+      <p>Vẽ ảnh bán hàng xinh xắn bằng ComfyUI — ghi điểm mỗi bài đăng ✨</p>
+    </div>
+    <div class="actions">
+      <span class="status-pill offline" id="statusPill"><span class="dot"></span><span id="statusTxt">Đang kiểm tra…</span></span>
+      <a class="link-btn" href="index.html"><i class="fa-solid fa-arrow-left"></i> Trang chủ</a>
+    </div>
+  </div>
+
+  <!-- ERROR -->
+  <div class="notice-error" id="errBox"></div>
+
+  <div class="grid">
+
+    <!-- CONTROL -->
+    <div class="panel">
+      <h2>1. Kết nối Colab của bạn</h2>
+      <div>
+        <label>ComfyUI URL (từ Colab / ngrok)</label>
+        <input type="text" id="sdUrl" placeholder="https://xxx.ngrok-free.app">
+        <div class="hint" style="margin-top:6px">Dán <b>URL công khai</b> notebook in ra. Mỗi người dùng tự chạy Colab của riêng mình.</div>
+      </div>
+      <button class="gen-btn ghost" id="btnConnect"><i class="fa-solid fa-plug"></i> Kết nối</button>
+      <details class="guide" open>
+        <summary><i class="fa-solid fa-circle-question"></i> Chưa có URL? Xem cách chạy (5 phút)</summary>
+        <div class="hint" style="margin-top:6px">
+          <b>1.</b> Tải notebook: <a href="sd-colab-generator.ipynb" download>sd-colab-generator.ipynb</a><br>
+          <b>2.</b> Mở <a href="https://colab.research.google.com">colab.research.google.com</a> → Upload.<br>
+          <b>3.</b> Vào <a href="https://dashboard.ngrok.com">dashboard.ngrok.com</a> (đăng ký free) → copy Authtoken.<br>
+          <b>4.</b> Dán token vào ô trong notebook → bấm <b>▶ chạy 1 lần</b> (~7-10 phút lần đầu).<br>
+          <b>5.</b> Copy <b>PUBLIC API URL</b> in ra → dán vào ô trên → <b>Kết nối</b>. Done!
+        </div>
+      </details>
+    </div>
+
+    <div class="panel">
+      <h2>2. Cấu hình ảnh</h2>
+
+      <div>
+        <label>Thông điệp tạo ảnh (Prompt)</label>
+        <div class="translate-row">
+          <textarea id="prompt" rows="3" placeholder="VD: chú mèo nhồi bông trên bàn học, ánh sáng studio..."></textarea>
+          <button class="btn-translate" id="btnTranslate" title="Dịch sang tiếng Anh"><i class="fa-solid fa-language"></i></button>
+        </div>
+        <div class="hint" style="margin-top:6px">Gõ tiếng Việt rồi bấm <b>nút dịch</b> ➜ tự chuyển sang tiếng Anh cho ảnh đẹp hơn.</div>
+      </div>
+
+      <div>
+        <label>Loại bỏ (Negative prompt)</label>
+        <input type="text" id="negative" value="blurry, lowres, text, watermark, deformed">
+      </div>
+
+      <div class="row">
+          <div>
+            <label>Bước (Steps)</label>
+            <input type="number" id="steps" value="30" min="1" max="60">
+          </div>
+        <div>
+          <label>Seed</label>
+          <input type="number" id="seed" value="-1" placeholder="-1 = ngẫu nhiên">
+        </div>
+      </div>
+
+      <div>
+        <div class="range-label"><span>Kích thước</span></div>
+        <div class="row">
+          <div><label>Ngang</label><input type="number" id="width" value="1024" min="512" max="1536" step="64"></div>
+          <div><label>Cao</label><input type="number" id="height" value="1024" min="512" max="1536" step="64"></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="range-label"><span>Độ bám mô tả</span><b id="cfgVal">6.0</b></div>
+        <input type="range" id="cfg" min="1" max="20" step="0.5" value="6">
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Sampler</label>
+          <select id="sampler">
+            <option value="euler">Euler</option>
+            <option value="dpmpp_2m" selected>DPM++ 2M</option>
+            <option value="dpmpp_2m_sde">DPM++ 2M SDE</option>
+            <option value="heun">Heun</option>
+            <option value="lcm">LCM</option>
+          </select>
+        </div>
+        <div>
+          <label>Scheduler</label>
+          <select id="scheduler">
+            <option value="normal" selected>Normal</option>
+            <option value="karras">Karras</option>
+            <option value="exponential">Exponential</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="hint">
+        <b>Dùng chuẩn nhất:</b> để nguyên <b>Steps 30</b>, <b>Độ bám 6</b>, <b>DPM++ 2M</b> — chỉ cần gõ prompt rồi bấm <b>Tạo ảnh</b>. Muốn ảnh dọc đăng TikTok đổi thành 832×1216.
+      </div>
+
+      <div class="row">
+        <div>
+          <div class="range-label"><span>Chất lượng cao (Hires fix)</span></div>
+          <div class="row" style="gap:6px">
+            <label class="switch">
+              <input type="checkbox" id="hires" checked>
+              <!-- mặc định bật: ảnh đẹp nhất với 2 lượt + upscale 2x -->
+              <span class="slider"></span>
+            </label>
+            <span class="hint" style="margin:0">2 lượt, nét hơn (hơi lâu hơn)</span>
+          </div>
+        </div>
+        <div>
+          <label>Số ảnh</label>
+          <input type="number" id="batch" value="1" min="1" max="4">
+        </div>
+      </div>
+
+      <button class="gen-btn" id="btnGen"><i class="fa-solid fa-wand-magic-sparkles"></i> Tạo ảnh</button>
+    </div>
+
+    <!-- OUTPUT -->
+    <div class="canvas-area" id="canvas">
+      <div class="canvas" id="canvasInner">
+        <div class="placeholder" id="placeholder">
+          <div class="big"><i class="fa-solid fa-image"></i></div>
+          <h3>Ảnh sẽ xuất hiện ở đây</h3>
+          <p>Điền prompt và bấm "Tạo ảnh".</p>
+        </div>
+        <div class="loading-box" id="loadingBox">
+          <div class="ring"></div>
+          <p>Đang để ComfyUI vẽ ảnh… có thể mất vài chục giây.</p>
+        </div>
+        <img class="result-img" id="resultImg" alt="AI ảnh">
+        <div class="result-actions" id="resultActions" style="display:none">
+          <button class="act" id="btnDownload"><i class="fa-solid fa-download"></i> Tải ảnh</button>
+          <button class="act" id="btnCopy"><i class="fa-solid fa-copy"></i> Copy prompt</button>
+          <button class="act" id="btnAgain"><i class="fa-solid fa-rotate-right"></i> Làm mới seed</button>
+        </div>
+        <div class="meta" id="meta"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SD_URL_KEY  = 'ai_affil_sd_url';
+const NGROK_HEADERS = { 'ngrok-skip-browser-warning': 'true' };
+const promptEl   = document.getElementById('prompt');
+const negEl      = document.getElementById('negative');
+const stepsEl    = document.getElementById('steps');
+const seedEl     = document.getElementById('seed');
+const widthEl    = document.getElementById('width');
+const heightEl   = document.getElementById('height');
+const cfgEl      = document.getElementById('cfg');
+const cfgVal     = document.getElementById('cfgVal');
+const samplerEl  = document.getElementById('sampler');
+const schedulerEl = document.getElementById('scheduler');
+const btnGen     = document.getElementById('btnGen');
+const btnTranslate = document.getElementById('btnTranslate');
+const seqUrlEl   = document.getElementById('sdUrl');
+const btnConnect = document.getElementById('btnConnect');
+const statusPill = document.getElementById('statusPill');
+const statusTxt  = document.getElementById('statusTxt');
+const errBox     = document.getElementById('errBox');
+const placeholder= document.getElementById('placeholder');
+const loadingBox = document.getElementById('loadingBox');
+const resultImg  = document.getElementById('resultImg');
+const resultActions = document.getElementById('resultActions');
+const metaEl     = document.getElementById('meta');
+
+let lastImageDataUrl = '';
+let lastSeed = null;
+
+function normalizeBaseUrl(raw) { return (raw || '').trim().replace(/\/+$/, ''); }
+function getSdBaseUrl() { return normalizeBaseUrl(seqUrlEl.value); }
+function setStatus(kind, txt){ statusPill.className='status-pill '+kind; statusTxt.textContent=txt; }
+function showErr(m){ errBox.textContent = m; errBox.style.display = 'block'; }
+function hideErr(){ errBox.style.display='none'; }
+
+// Chuyển lỗi ComfyUI (có thể là object) thành chuỗi dễ đọc
+function errText(e){
+  if (e == null) return '';
+  if (typeof e === 'string') return e;
+  if (e instanceof Error) return e.message;
+  try { return JSON.stringify(e); } catch { return String(e); }
+}
+function flash(m){ const t=document.createElement('div'); t.style.cssText='margin-top:14px;text-align:center;color:var(--good);font-size:.82rem;font-weight:800;'; t.textContent=m; const box=document.getElementById('resultActions'); box.parentNode.insertBefore(t, box.nextSibling); setTimeout(()=>t.remove(),2200); }
+
+cfgEl.addEventListener('input', () => cfgVal.textContent = parseFloat(cfgEl.value).toFixed(1));
+document.getElementById('btnAgain').addEventListener('click', () => { seedEl.value = -1; generate(); });
+document.getElementById('btnCopy').addEventListener('click', () => {
+  navigator.clipboard.writeText(promptEl.value).then(() => flash('Đã copy prompt')).catch(()=>{});
+});
+document.getElementById('btnDownload').addEventListener('click', () => {
+  if (!lastImageDataUrl) return;
+  const a = document.createElement('a');
+  a.href = lastImageDataUrl; a.download = 'ai-affiliate-' + Date.now() + '.png'; a.click();
+});
+
+// ── DỊCH TIẾNG VIỆT → ANH (không cần API key) ──────────────────────────────
+async function translateViToEn(text){
+  const url = 'https://translate.googleapis.com/translate_a/single'
+    + '?client=gtx&sl=vi&tl=en&dt=t&q=' + encodeURIComponent(text);
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('Dịch thất bại (HTTP ' + r.status + ')');
+  const d = await r.json();
+  return (d[0] || []).map(seg => seg[0]).join('').trim() || text;
+}
+
+btnTranslate.addEventListener('click', async () => {
+  const text = promptEl.value.trim();
+  if (!text) { showErr('Hãy gõ nội dung prompt trước khi dịch.'); return; }
+  hideErr();
+  btnTranslate.disabled = true;
+  btnTranslate.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+  try {
+    promptEl.value = await translateViToEn(text);
+    flash('Đã dịch sang tiếng Anh');
+  } catch (e) {
+    showErr('Lỗi dịch: ' + e.message);
+  } finally {
+    btnTranslate.disabled = false;
+    btnTranslate.innerHTML = '<i class="fa-solid fa-language"></i>';
+  }
+});
+
+// ── Kết nối: lưu URL + ping thử ────────────────────────────────────────────
+async function connect(){
+  hideErr();
+  const base = getSdBaseUrl();
+  if (!base) { showErr('Hãy dán URL Colab của bạn trước.'); return; }
+  localStorage.setItem(SD_URL_KEY, base);
+  setStatus('checking', 'Đang ping…');
+  try {
+    await pingSd(base);
+    setStatus('online', 'ComfyUI sẵn sàng');
+  } catch (e) {
+    setStatus('offline', 'Chưa phản hồi');
+  }
+}
+
+async function pingSd(base){
+  const ctrl = new AbortController(); const t = setTimeout(()=>ctrl.abort(), 8000);
+  try {
+    const r = await fetch(base + '/system_stats', { signal: ctrl.signal, headers: NGROK_HEADERS });
+    return r.status === 200;
+  } finally { clearTimeout(t); }
+}
+
+async function fetchCheckpoints(base){
+  const r = await fetch(base + '/object_info/CheckpointLoaderSimple', { signal: AbortSignal.timeout(10000), headers: NGROK_HEADERS });
+  if (!r.ok) throw new Error('Không đọc được danh sách model (HTTP ' + r.status + ')');
+  const d = await r.json();
+  const list = (d.CheckpointLoaderSimple?.input?.required?.ckpt_name?.[0]) || [];
+  return list;
+}
+
+function buildWorkflow(p){
+  return {
+    "prompt": {
+      "1": { "class_type": "CheckpointLoaderSimple", "inputs": { "ckpt_name": p.ckpt } },
+      "2": { "class_type": "EmptyLatentImage", "inputs": { "width": p.width, "height": p.height, "batch_size": p.batch || 1 } },
+      "3": { "class_type": "CLIPTextEncode", "inputs": { "text": p.prompt, "clip": ["1", 1] } },
+      "4": { "class_type": "CLIPTextEncode", "inputs": { "text": p.negative, "clip": ["1", 1] } },
+      "5": { "class_type": "KSampler", "inputs": {
+          "seed": p.seed, "steps": p.steps, "cfg": p.cfg,
+          "sampler_name": p.sampler, "scheduler": p.scheduler, "denoise": 1,
+          "model": ["1", 0], "positive": ["3", 0], "negative": ["4", 0], "latent_image": ["2", 0]
+      } },
+      "6": { "class_type": "VAEDecode", "inputs": { "samples": ["5", 0], "vae": ["1", 2] } },
+      "7": { "class_type": "SaveImage", "inputs": { "filename_prefix": "ai-affiliate", "images": ["6", 0] } }
+    }
+  };
+}
+
+// Workflow tạo ảnh có Hires fix (2 lượt): lượt 1 ở kích thước gốc, lượt 2 lên gấp đôi chi tiết
+function buildHiresWorkflow(p){
+  const wf = {
+    "prompt": {
+      "1": { "class_type": "CheckpointLoaderSimple", "inputs": { "ckpt_name": p.ckpt } },
+      "2": { "class_type": "EmptyLatentImage", "inputs": { "width": p.width, "height": p.height, "batch_size": p.batch } },
+      "3": { "class_type": "CLIPTextEncode", "inputs": { "text": p.prompt, "clip": ["1", 1] } },
+      "4": { "class_type": "CLIPTextEncode", "inputs": { "text": p.negative, "clip": ["1", 1] } },
+      "5": { "class_type": "KSampler", "inputs": {
+          "seed": p.seed, "steps": p.steps, "cfg": p.cfg,
+          "sampler_name": p.sampler, "scheduler": p.scheduler, "denoise": 1,
+          "model": ["1", 0], "positive": ["3", 0], "negative": ["4", 0], "latent_image": ["2", 0]
+      } },
+      "6": { "class_type": "LatentUpscale", "inputs": { "samples": ["5", 0], "upscale_method": "bislerp", "width": p.width*2, "height": p.height*2, "crop": "disabled" } },
+      "7": { "class_type": "KSampler", "inputs": {
+          "seed": p.seed, "steps": p.steps, "cfg": p.cfg,
+          "sampler_name": p.sampler, "scheduler": p.scheduler, "denoise": p.hiresDenoise,
+          "model": ["1", 0], "positive": ["3", 0], "negative": ["4", 0], "latent_image": ["6", 0]
+      } },
+      "8": { "class_type": "VAEDecode", "inputs": { "samples": ["7", 0], "vae": ["1", 2] } },
+      "9": { "class_type": "SaveImage", "inputs": { "filename_prefix": "ai-affiliate", "images": ["8", 0] } }
+    }
+  };
+  return wf;
+}
+
+async function generate(){
+  hideErr();
+  const base = getSdBaseUrl();
+  if (!base) { showErr('Bạn cần dán URL Colab (xem hướng dẫn bên cạnh) rồi bấm Kết nối.'); return; }
+  const promptText = promptEl.value.trim();
+  if (!promptText) { showErr('Hãy nhập mô tả (prompt) trước khi tạo ảnh.'); return; }
+
+  let seed = parseInt(seedEl.value,10);
+  if (isNaN(seed) || seed < 0) seed = Math.floor(Math.random() * 1e9);
+
+  setLoading(true);
+  try {
+    let ckpt = null;
+    try {
+      const list = await fetchCheckpoints(base);
+      ckpt = list[0];
+    } catch {}
+    if (!ckpt) throw new Error('Không thấy model trong ComfyUI — kiểm tra cell "Tải model" đã chạy xong.');
+
+    const saveNode = '9';
+    const useHires = document.getElementById('hires').checked;
+    const batch = Math.min(Math.max(parseInt(document.getElementById('batch').value,10) || 1, 1), 4);
+
+    const basePrompt = promptText + ', professional photography, ultra detailed, sharp focus, realistic, photorealistic, masterpiece, natural lighting, depth of field';
+    const baseNeg = (negEl.value || 'blurry, lowres, text, watermark, deformed')
+      + ', anime, cartoon, illustration, drawing, painting, 3d render, cg, digital art, wallpaper, flat design';
+
+    const common = {
+      prompt: basePrompt,
+      negative: baseNeg,
+      steps: parseInt(stepsEl.value,10) || 30,
+      seed: seed,
+      cfg: parseFloat(cfgEl.value) || 6,
+      sampler: samplerEl.value,
+      scheduler: schedulerEl.value,
+      batch: batch,
+      ckpt: ckpt
+    };
+
+    let wf;
+    if (useHires) {
+      wf = buildHiresWorkflow({
+        ...common,
+        width: parseInt(widthEl.value,10) || 1024,
+        height: parseInt(heightEl.value,10) || 1024,
+        hiresDenoise: 0.5
+      });
+    } else {
+      wf = buildWorkflow({
+        ...common,
+        width: parseInt(widthEl.value,10) || 1024,
+        height: parseInt(heightEl.value,10) || 1024
+      });
+    }
+
+    const ctrl = new AbortController(); const t = setTimeout(()=>ctrl.abort(), 3*60*1000);
+    const r = await fetch(base + '/prompt', { method:'POST',
+      headers:{'Content-Type':'application/json', ...NGROK_HEADERS}, body: JSON.stringify(wf), signal: ctrl.signal });
+    clearTimeout(t);
+    const d = await r.json();
+    if (!r.ok) throw new Error(errText(d.error) || 'ComfyUI lỗi ' + r.status);
+    if (d.node_errors && Object.keys(d.node_errors).length) {
+      const first = Object.values(d.node_errors)[0];
+      const m = errText(first) || first?.errors?.[0]?.message || '';
+      throw new Error(m ? 'Workflow lỗi: ' + m : 'Workflow không hợp lệ');
+    }
+    const pid = d.prompt_id;
+    if (!pid) throw new Error('ComfyUI không trả prompt_id');
+
+    let imgRef = null;
+    const deadline = Date.now() + 5*60*1000;
+    while (Date.now() < deadline) {
+      await new Promise(res => setTimeout(res, 1500));
+      const h = await fetch(base + '/history/' + pid, { headers: NGROK_HEADERS }).then(res => res.json());
+      const entry = h[pid];
+      if (entry && entry.outputs) {
+        const imgs = entry.outputs[saveNode]?.images || [];
+        if (imgs.length) { imgRef = imgs[0]; break; }
+      }
+      if (entry && entry.status && entry.status.completed === false) {
+        const msgs = entry.status.messages || [];
+        const execErr = msgs.find(m => Array.isArray(m) && m[0] === 'execution_error' && m[1]);
+        const detail = execErr ? errText(execErr[1].exception_message || execErr[1].message || '') : '';
+        throw new Error('Workflow lỗi khi chạy: ' + (detail || 'xem Console để rõ'));
+      }
+    }
+    if (!imgRef) throw new Error('Hết thời gian chờ 5 phút — Colab có thể bị ngắt hoặc quá chậm.');
+
+    const q = new URLSearchParams({ filename: imgRef.filename, subfolder: imgRef.subfolder || '', type: imgRef.type || 'output' });
+    const imgR = await fetch(base + '/view?' + q.toString(), { headers: NGROK_HEADERS });
+    if (!imgR.ok) throw new Error('Không tải được ảnh kết quả (HTTP ' + imgR.status + ')');
+    const blob = await imgR.blob();
+
+    lastImageDataUrl = await new Promise((res, rej) => {
+      const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob);
+    });
+    lastSeed = seed;
+    resultImg.src = lastImageDataUrl;
+    resultImg.style.display='block';
+    resultActions.style.display='flex';
+    placeholder.style.display='none';
+    metaEl.textContent = 'Seed: ' + seed + ' · ' + ckpt + ' · ' + stepsEl.value + ' bước' + (document.getElementById('hires').checked ? ' · Hires 2x' : '') + (document.getElementById('batch').value > 1 ? ' · ' + document.getElementById('batch').value + ' ảnh' : '');
+  } catch (e) {
+    const msg = e.name === 'AbortError' ? 'Quá lâu. Giảm steps hoặc kiểm tra Colab của bạn vẫn mở.' : e.message;
+    showErr(msg);
+    placeholder.style.display='block';
+  } finally {
+    setLoading(false);
+  }
+}
+
+function setLoading(on){
+  btnGen.disabled = on; btnGen.classList.toggle('loading', on);
+  placeholder.style.display = on?'none':'block';
+  loadingBox.style.display = on?'flex':'none';
+  if (on) { resultImg.style.display='none'; resultActions.style.display='none'; metaEl.textContent=''; }
+}
+
+btnGen.addEventListener('click', generate);
+btnConnect.addEventListener('click', connect);
+promptEl.addEventListener('keydown', e => { if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); generate(); }});
+
+seqUrlEl.value = localStorage.getItem(SD_URL_KEY) || '';
+if (seqUrlEl.value) {
+  setStatus('checking', 'Đang kiểm tra…');
+  pingSd(normalizeBaseUrl(seqUrlEl.value)).then(ok => setStatus(ok?'online':'offline', ok?'ComfyUI sẵn sàng':'Chưa phản hồi'));
+} else {
+  setStatus('offline', 'Chưa kết nối');
+}
+</script>
+</body>
+</html>

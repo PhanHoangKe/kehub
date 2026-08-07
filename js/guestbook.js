@@ -16,42 +16,89 @@ export function initGuestbookEngine() {
 
     // ── Emoji Reactions — map xây động từ reactionsConfig (không hardcode) ───
     // Được cập nhật bởi updateReactionsConfig() mỗi khi app.js apply state
-    let _reactionsConfig = [];   // [{emoji, title, countId, imgUrl}, ...]
+    let _reactionsConfig = [];   // [{emoji, title, countId, imgUrl, idx}, ...]
 
-    // Build lookup nhanh: emoji → countId và countId → imgUrl
-    let EMOJI_MAP     = {};  // emoji → countId
-    let COUNTID_MAP   = {};  // countId → {emoji, title, imgUrl}
+    // ⚠️ Quan trọng: DÙNG INDEX (0-based) LÀM ID CHÍNH, không còn phụ thuộc vào emoji unicode.
+    //   Lý do: User dùng ảnh meme (không dùng text emoji ❤️😂) → cfg.emoji bị rỗng → map sai toàn bộ.
+    //   Giải pháp: reactionKey = `r${idx}`  (ví dụ "r0", "r1", ..., "r4")
+    // Build lookup nhanh:
+    let EMOJI_MAP     = {};   // emoji → countId (dùng nếu có emoji)
+    let KEY_MAP       = {};   // idx-based "r${idx}" → countId (CHÍNH, dùng cho cả ảnh & emoji)
+    let COUNTID_MAP   = {};   // countId → {emoji, title, imgUrl, idx, reactionKey}
+    let IDX_COUNTID   = [];   // [idx] → countId (lookup trực tiếp theo button index)
 
     function _rebuildMaps(config) {
         _reactionsConfig = config || [];
         EMOJI_MAP   = {};
+        KEY_MAP     = {};
         COUNTID_MAP = {};
-        _reactionsConfig.forEach(cfg => {
+        IDX_COUNTID = [];
+        _reactionsConfig.forEach((cfg, idx) => {
+            const reactionKey = `r${idx}`;
+            // Đảm bảo countId luôn tồn tại & stable (dùng idx-based)
+            const countId = cfg.countId && cfg.countId.startsWith('reactionCount-')
+                ? cfg.countId
+                : `reactionCount-r${idx}`;
+
             if (cfg.emoji && cfg.countId) {
-                EMOJI_MAP[cfg.emoji]   = cfg.countId;
-                COUNTID_MAP[cfg.countId] = cfg;
+                EMOJI_MAP[cfg.emoji] = countId;
             }
+            KEY_MAP[reactionKey] = countId;
+            COUNTID_MAP[countId] = { ...cfg, idx, reactionKey, countId };
+            IDX_COUNTID[idx]     = countId;
         });
     }
 
-    // LocalStorage key lưu emoji nào user đã react (để bật active state)
+    // LocalStorage key lưu reactionKey nào user đã react (để bật active state)
     const LS_KEY = 'youth_my_reactions';
 
     function getMyReactions() {
         try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch { return {}; }
     }
-    function saveMyReaction(emoji) {
+    function saveMyReaction(key) {
         const mine = getMyReactions();
-        mine[emoji] = (mine[emoji] || 0) + 1;
+        mine[key] = (mine[key] || 0) + 1;
         localStorage.setItem(LS_KEY, JSON.stringify(mine));
     }
 
-    // Cập nhật số đếm từ object reactions
+    // Cập nhật số đếm từ object reactions — SỬ DỤNG IDX_COUNTID (index-based) làm chính
     function applyReactionCounts(reactions) {
         if (!reactions || typeof reactions !== 'object') return;
         let total = 0;
-        Object.entries(EMOJI_MAP).forEach(([emoji, countId]) => {
-            const count = reactions[emoji] || 0;
+
+        // 🔒 Phòng tránh emoji trùng = tách emoji bị trùng ra trước (2 nút có cùng emoji sẽ
+        //    KHÔNG dùng key emoji làm fallback nữa — chỉ dùng reactionKey/countId)
+        const emojiCounts = {};
+        IDX_COUNTID.forEach((countId) => {
+            if (!countId) return;
+            const cfg = COUNTID_MAP[countId];
+            const em = cfg?.emoji;
+            if (em && typeof em === 'string' && em.length > 0) {
+                emojiCounts[em] = (emojiCounts[em] || 0) + 1;
+            }
+        });
+
+        // 1. Duyệt qua INDEX (button DOM vị trí) để đảm bảo chính xác 100%
+        IDX_COUNTID.forEach((countId, idx) => {
+            if (!countId) return;
+            const reactionKey = `r${idx}`;
+            const cfg = COUNTID_MAP[countId];
+            const emoji = cfg?.emoji || '';
+
+            // 🔑 ƯU TIÊN ĐỌC (quan trọng nhất → ít quan trọng):
+            //    1) reactionKey (r0, r1...) — KHÔNG BAO GIỜ bị trùng (vị trí nút)
+            //    2) countId (reactionCount-r${idx}) — cũng KHÔNG BAO GIỜ bị trùng
+            //    3) EMOJI KEY → CHỈ khi emoji khác rỗng VÀ không bị trùng giữa các nút
+            //       (vì nếu 2 nút cùng emoji thì đọc chung key = click 1 tăng 2)
+            let count = reactions[reactionKey];
+            if (typeof count !== 'number' && countId && countId !== reactionKey) {
+                count = reactions[countId];
+            }
+            if (typeof count !== 'number' && emoji && emoji.length > 0 && (emojiCounts[emoji] || 0) === 1) {
+                count = reactions[emoji];
+            }
+            if (typeof count !== 'number') count = 0;
+
             total += count;
             const el = document.getElementById(countId);
             if (el) el.textContent = count >= 1000
@@ -62,33 +109,44 @@ export function initGuestbookEngine() {
         if (totalEl) totalEl.textContent = total >= 1000
             ? `${(total / 1000).toFixed(1)}k`
             : String(total);
-        // backward compat
-        if (heartCounterNumber) heartCounterNumber.textContent = reactions['❤️'] || 0;
+        // backward compat — ưu tiên r0 rồi mới ❤️
+        if (heartCounterNumber) heartCounterNumber.textContent = reactions.r0 || reactions['❤️'] || 0;
     }
 
-    // Đánh dấu emoji user đã react — gọi SAU khi dataset.emoji đã được gán
+    // Đánh dấu button user đã react — gọi SAU khi data-* đã được gán
+    //   Giờ dùng reactionKey (r0, r1, r2...) — KHÔNG phụ thuộc emoji rỗng
     function applyActiveStates() {
         const mine = getMyReactions();
-        document.querySelectorAll('.reaction-btn').forEach(btn => {
-            const emoji = btn.dataset.emoji;
-            // Chỉ đánh dấu reacted nếu emoji đã được gán (khác rỗng) VÀ user đã react emoji đó
-            if (emoji && emoji.length > 0) {
-                btn.classList.toggle('reacted', !!(mine[emoji] && mine[emoji] > 0));
-            } else {
-                btn.classList.remove('reacted');
-            }
+        document.querySelectorAll('.reaction-btn').forEach((btn, idx) => {
+            const reactionKey = btn.dataset.reactionKey || `r${idx}`;
+            const emoji       = btn.dataset.emoji;
+            // Đã reacted nếu có reactionKey mới HOẶC nếu có emoji cũ
+            const wasReacted = (mine[reactionKey] && mine[reactionKey] > 0)
+                || (emoji && mine[emoji] && mine[emoji] > 0);
+            btn.classList.toggle('reacted', !!wasReacted);
         });
     }
 
-    // Floating emoji nổi lên khi click
-    function createFloatingEmoji(emoji, x, y) {
+    // Floating emoji nổi lên khi click — dùng cả reactionKey & emoji & idx
+    function createFloatingEmoji(emoji, x, y, idx = -1) {
         const el = document.createElement('div');
         el.className = 'floating-emoji-pop';
-        const btnImg = document.querySelector(`.reaction-btn[data-emoji="${emoji}"] img`);
-        const imgUrl = btnImg?.getAttribute('src') || COUNTID_MAP[EMOJI_MAP[emoji]]?.imgUrl || '';
+        // Ưu tiên: tìm img bằng selector theo idx (chính xác nhất)
+        const btnImg = idx >= 0
+            ? document.querySelectorAll('.reaction-btn .reaction-emoji-img')[idx]
+            : (emoji ? document.querySelector(`.reaction-btn[data-emoji="${emoji}"] img`) : null);
+        let imgUrl = btnImg?.getAttribute('src');
+        if (!imgUrl && idx >= 0) {
+            const cid = IDX_COUNTID[idx];
+            if (cid && COUNTID_MAP[cid]) imgUrl = COUNTID_MAP[cid].imgUrl || '';
+        }
+        if (!imgUrl && emoji) {
+            const cid = EMOJI_MAP[emoji];
+            if (cid && COUNTID_MAP[cid]) imgUrl = COUNTID_MAP[cid].imgUrl || '';
+        }
         if (imgUrl) {
             el.innerHTML = `<img src="${imgUrl}" style="width:48px;height:48px;object-fit:cover;border-radius:50%;border:2px solid #f59e0b;box-shadow:0 6px 16px rgba(245,158,11,0.5);">`;
-        } else {
+        } else if (emoji) {
             el.textContent = emoji;
         }
         el.style.left = `${x - 24}px`;
@@ -257,7 +315,12 @@ export function initGuestbookEngine() {
     }
 
     // ── Khởi tạo reaction buttons (Hold-to-Zoom & Glass Shatter) ────────────
-    document.querySelectorAll('.reaction-btn').forEach(btn => {
+    document.querySelectorAll('.reaction-btn').forEach((btn, btnIdx) => {
+        // ✅ Gán BỀN VỮNG data-idx (index trong DOM) và data-reactionKey (r0, r1, r2...)
+        //    => KHÔNG bao giờ bị lệch index nữa dù emoji / countId thay đổi
+        btn.dataset.idx         = String(btnIdx);
+        btn.dataset.reactionKey = `r${btnIdx}`;
+
         const imgEl = btn.querySelector('.reaction-emoji-img');
 
         let animFrame = null;
@@ -267,28 +330,43 @@ export function initGuestbookEngine() {
         const HOLD_DURATION = 1300; // 1.3 giây đè nút để vỡ kính
 
         async function triggerReactionSubmit(clientX, clientY, customMsg = null) {
-            const emoji = btn.dataset.emoji;
-            if (!emoji) return;
-            const countId = EMOJI_MAP[emoji];
+            // ✅ Lấy identifier CHÍNH từ data-idx — KHÔNG còn phụ thuộc emoji nữa
+            const idxStr      = btn.dataset.idx;
+            const idx         = idxStr !== undefined && idxStr !== null ? parseInt(idxStr) : btnIdx;
+            const reactionKey = `r${idx}`;
+            const countId     = IDX_COUNTID[idx] || (KEY_MAP || {})[reactionKey];
+            const emoji       = btn.dataset.emoji || '';
+
+            // 1. Cập nhật số đếm TẠM LÚC (optimistic UI) — dùng countId lấy theo INDEX (chính xác 100%)
             const countEl = countId ? document.getElementById(countId) : null;
             if (countEl) {
                 const cur = parseInt(countEl.textContent.replace('k','')) || 0;
                 countEl.textContent = String(cur + 1);
             }
 
-            createFloatingEmoji(emoji, clientX, clientY);
+            // 2. Floating emoji - truyền cả btnIdx vào để tìm ảnh đúng nút
+            createFloatingEmoji(emoji, clientX, clientY, idx);
 
+            // 3. Pulse animation
             btn.classList.add('reaction-pulse');
             setTimeout(() => btn.classList.remove('reaction-pulse'), 500);
 
-            saveMyReaction(emoji);
+            // 4. Save user's own reacted state — dùng reactionKey làm khóa
+            saveMyReaction(reactionKey);
+            // Backward compat: cũng lưu theo emoji cũ nếu có
+            if (emoji && emoji.length > 0 && emoji !== reactionKey) {
+                saveMyReaction(emoji);
+            }
             applyActiveStates();
 
+            // 5. Send to backend — GỬI CẢ 2 TRƯỜNG để server xử lý tối ưu:
+            //    - reactionKey (r0, r1...): CHÍNH — tương ứng VỊ TRÍ NÚT
+            //    - emoji: PHỤ — nếu có (nếu user chỉ dùng text emoji)
             try {
                 const res = await fetch('/api/reactions', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ emoji }),
+                    body: JSON.stringify({ reactionKey, emoji, idx }),
                 });
                 const data = await res.json();
                 if (data.success && data.reactions) {
@@ -296,7 +374,11 @@ export function initGuestbookEngine() {
                 }
             } catch { /* offline */ }
 
-            showToast(customMsg || `Bạn đã gửi ${emoji} đến Kế!`);
+            // 6. Toast message — nếu có emoji thì hiện, không có thì hiện generic
+            const displayEmoji = (emoji && emoji.length > 0)
+                ? emoji
+                : ((COUNTID_MAP[countId]?.emoji) || '💖');
+            showToast(customMsg || `Bạn đã gửi ${displayEmoji} đến Kế!`);
         }
 
         function updateZoomLevel(timestamp) {

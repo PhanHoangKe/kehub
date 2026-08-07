@@ -19,6 +19,10 @@ const path = require('path');
 const url = require('url');
 const crypto = require('crypto');
 
+// ── Đặc Vụ Đòi Nợ AI (tạo tin nhắn nhắc nợ hài hước qua LLM) ──────────────────
+const debtAgentService = require('./debtAgentService.js');
+const emailService = require('./emailService.js');
+
 // ── Tự đọc file .env nếu có (không cần cài dotenv) ──────────────────────────
 const envFile = path.join(__dirname, '.env');
 if (fs.existsSync(envFile)) {
@@ -314,11 +318,37 @@ async function saveFile(buffer, mime, folder = 'youth-memories') {
 }
 
 // ── Cấu hình Admin ───────────────────────────────────────────────────────────
-// Đặt password qua env var ADMIN_PASSWORD, mặc định là chuỗi ngẫu nhiên
-// để buộc người dùng phải tự đặt password rõ ràng.
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'youth2026!@#secure';
+// Password admin phải được đặt rõ ràng qua env var ADMIN_PASSWORD (hoặc .env).
+// KHÔNG dùng password cố định nào làm mặc định. Nếu thiếu, tạo password ngẫu
+// nhiên mỗi lần khởi động + in to console để đăng nhập lần đầu, đồng thời cảnh
+// báo lớn — tránh trạng thái admin mặc định dễ đoán.
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || (function () {
+    const tmp = crypto.randomBytes(6).toString('base64url');
+    console.error('\n' + '='.repeat(70));
+    console.error('  ⚠️  CHƯA ĐẶT ADMIN_PASSWORD!');
+    console.error('  Mật khẩu admin lần này (ngẫu nhiên, chỉ áp dụng phiên này): ' + tmp);
+    console.error('  Đặt ADMIN_PASSWORD trong .env để có mật khẩu ổn định.');
+    console.error('='.repeat(70) + '\n');
+    return tmp;
+})();
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 const SESSION_TTL_MS = 8 * 60 * 60 * 1000; // 8 giờ
+
+// ── Kho câu hài Đặc Vụ Đòi Nợ (RAG) ─────────────────────────────────────────
+const RIB_DATA_FILE = path.join(__dirname, 'debtRibData.json');
+const RIB_CACHE_FILE = path.join(DATA_DIR, 'debtRibCache.json');
+
+function readRibData() {
+    try { return JSON.parse(fs.readFileSync(RIB_DATA_FILE, 'utf8')); }
+    catch { return { items: [] }; }
+}
+function writeRibData(data) {
+    fs.writeFileSync(RIB_DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
+}
+// Kho đổi → xóa cache vector để retrieval embed lại khi lần chạy tới
+function invalidateRibCache() {
+    try { if (fs.existsSync(RIB_CACHE_FILE)) fs.unlinkSync(RIB_CACHE_FILE); } catch (e) { /* noop */ }
+}
 
 // ── Session Store (in-memory, đủ dùng cho single-instance) ──────────────────
 const sessions = new Map(); // token -> { createdAt }
@@ -364,6 +394,8 @@ const RATE_LIMITS = {
     '/api/track/ping':   { max: 30,  windowMs: 60 * 1000 },       // 30 req / phút
     '/api/track/event':  { max: 60,  windowMs: 60 * 1000 },       // 60 req / phút
     '/api/admin/backup/github-now': { max: 5, windowMs: 60 * 1000 }, // 5 req / phút
+    '/api/debt-agent/ask':  { max: 10, windowMs: 60 * 1000 },       // 10 req / phút (LLM nên giới hạn nhẹ)
+    '/api/ai-image':        { max: 10, windowMs: 60 * 1000 },       // (unused) để dành nếu quay lại proxy
 };
 
 // ── Helper parse User-Agent ───────────────────────────────────────────────────
@@ -1477,6 +1509,7 @@ const MIME_TYPES = {
     '.mp4':  'video/mp4',
     '.ico':  'image/x-icon',
     '.woff2':'font/woff2',
+    '.ipynb':'application/x-ipynb+json; charset=utf-8',
 };
 
 // ── Helper: đọc request body ─────────────────────────────────────────────────
@@ -1508,6 +1541,50 @@ function getClientIP(req) {
     return (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
 }
 
+// ── Reverse Proxy: AI Gia Sư Toán (Express, port AI_TUTOR_PORT) ──────────────
+// server.js là cổng vào duy nhất (port 3000). Mọi request /api/ai-tutor/* được
+// dẫn chuyển sang tiến trình ai-tutor/index.js đang chạy trên port nội bộ.
+// Lợi ích: 1 URL công khai, 1 domain, không lộ thêm cổng, đơn giản CORS.
+const AI_TUTOR_PROXY_PORT = parseInt(process.env.AI_TUTOR_PORT || '3001', 10);
+
+function proxyToAiTutor(req, res, pathname) {
+    const isUpload = (pathname === '/api/ai-tutor/ask-file') || (pathname === '/api/admin/extract-file');
+    const maxBody = isUpload ? 20 * 1024 * 1024 : 1024 * 1024;
+
+    readBody(req, maxBody).then(body => {
+        const options = {
+            hostname: '127.0.0.1',
+            port: AI_TUTOR_PROXY_PORT,
+            path: req.url,
+            method: req.method,
+            headers: {
+                'Content-Type': req.headers['content-type'] || 'application/json',
+                'Content-Length': Buffer.byteLength(body),
+                'Accept': req.headers['accept'] || 'application/json',
+                'Origin': req.headers['origin'] || '',
+            },
+            timeout: isUpload ? 120000 : 60000,
+        };
+
+        const proxyReq = http.request(options, (proxyRes) => {
+            res.writeHead(proxyRes.statusCode || 502, proxyRes.headers);
+            proxyRes.pipe(res);
+        });
+        proxyReq.on('error', (err) => {
+            console.error('  🔁 [AI-Tutor Proxy] Lỗi nối tới ai-tutor:', err.message);
+            jsonResponse(res, 502, {
+                success: false,
+                message: 'AI Gia sư chưa chạy. Hãy khởi động ai-tutor/index.js (port ' + AI_TUTOR_PROXY_PORT + ') trước.',
+            });
+        });
+        proxyReq.setTimeout(options.timeout, () => proxyReq.destroy(new Error('Proxy timeout')));
+        if (body) proxyReq.write(body);
+        proxyReq.end();
+    }).catch(err => {
+        jsonResponse(res, 413, { success: false, message: err.message || 'Request body quá lớn' });
+    });
+}
+
 // ── HTTP Server ──────────────────────────────────────────────────────────────
 const server = http.createServer(async (req, res) => {
     // CORS Headers
@@ -1525,9 +1602,266 @@ const server = http.createServer(async (req, res) => {
     const pathname = parsedUrl.pathname;
     const clientIP = getClientIP(req);
 
+    // ── Reverse Proxy: AI Gia Sư Toán → ai-tutor Express ─────────────────────
+    if (pathname.startsWith('/api/ai-tutor/') || pathname === '/api/ai-tutor') {
+        return proxyToAiTutor(req, res, pathname);
+    }
+
+    // ── GET /api/health — Render Health Check / Keep-Alive (tránh render cold start liên tục)
+    // Render gọi endpoint này định kỳ → đảm bảo server luôn awake + có log để xác nhận server đang chạy
+    if (pathname === '/api/health' && req.method === 'GET') {
+        try {
+            const db = getDB();
+            const recordCount = _countDBRecords(db);
+            const visitorsCount = (db.visitors && Array.isArray(db.visitors)) ? db.visitors.length : 0;
+            const uptimeSec = Math.floor(process.uptime());
+            const memoryMB = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 10) / 10;
+            jsonResponse(res, 200, {
+                ok: true,
+                status: 'awake',
+                server: 'youth-memories-hub',
+                uptime_s: uptimeSec,
+                memory_mb: memoryMB,
+                db_records: recordCount,
+                visitors_count: visitorsCount,
+                ts: new Date().toISOString()
+            });
+        } catch (e) {
+            jsonResponse(res, 200, { ok: true, status: 'awake', error: e.message });
+        }
+        return;
+    }
+
     // ── Rate Limit check ─────────────────────────────────────────────────────
     if (!checkRateLimit(pathname, clientIP)) {
         jsonResponse(res, 429, { success: false, message: 'Quá nhiều yêu cầu. Vui lòng thử lại sau.' });
+        return;
+    }
+
+    // ── POST /api/debt-agent/ask — Đặc Vụ Đòi Nợ AI ──────────────────────────
+    if (pathname === '/api/debt-agent/ask' && req.method === 'POST') {
+        const startedAt = Date.now();
+        try {
+            const raw = await readBody(req, 64 * 1024);
+            const payload = JSON.parse(raw || '{}');
+
+            // Sanitize từng trường để prompt không bị tiêm
+            const debtor = sanitizeString(payload.debtor, 120);
+            const amount = sanitizeString(payload.amount, 30);
+            const currency = sanitizeString(payload.currency, 20);
+            const reason = sanitizeString(payload.reason, 300);
+            const relationship = sanitizeString(payload.relationship, 100);
+            const style = sanitizeString(payload.style, 40);
+            const money = sanitizeString(payload.money || '', 60);
+
+            // Email ủy quyền cảnh báo (không bắt buộc)
+            const notifyEmail = sanitizeString(payload.notifyEmail || '', 200);
+            const authorizedSend = payload.authorizeEmail === true || payload.authorizeEmail === 'true';
+
+            if (!debtor) {
+                jsonResponse(res, 400, { success: false, message: 'Thiếu tên con nợ rồi đặc vụ ơi!' });
+                return;
+            }
+
+            const kit = await debtAgentService.generateDebtKit({
+                debtor, amount, currency, reason, relationship, style, money,
+            });
+
+            // ── Ủy quyền gửi email cảnh báo (nodemailer → Gmail) ────────────────
+            let emailStatus = { requested: false, sent: false };
+            if (authorizedSend && notifyEmail) {
+                emailStatus = { requested: true, sent: false, ...emailStatus };
+                const emailResult = await emailService.sendWarningEmail({
+                    to: notifyEmail,
+                    caseCode: kit.case_code || 'CASE-' + Date.now().toString(36).toUpperCase(),
+                    debtor,
+                    amount,
+                    currency,
+                    reason,
+                    relationship,
+                    agent: kit.agent_name,
+                    messages: Array.isArray(kit.message) ? kit.message : [],
+                });
+                emailStatus.sent = emailResult.ok;
+                if (!emailResult.ok) emailStatus.error = emailResult.error;
+            } else if (authorizedSend && !notifyEmail) {
+                emailStatus = { requested: true, sent: false, error: 'Thiếu email người nhận.' };
+            }
+
+            jsonResponse(res, 200, {
+                success: true,
+                agent_name: kit.agent_name,
+                risk_assessment: kit.risk_assessment,
+                messages: kit.message,
+                case_code: kit.case_code || 'CASE-' + Date.now().toString(36).toUpperCase(),
+                email: emailStatus,
+                fallback: kit.ok === false,
+                latencyMs: Date.now() - startedAt,
+            });
+        } catch (err) {
+            // LLM sập → vẫn trả 200 với fallback vui vẻ để UI không trắng trang
+            console.error('  [Debt-Agent] Lỗi endpoint:', err.message);
+            const fallback = debtAgentService.buildFallback && (() => {
+                try {
+                    return debtAgentService.buildFallback({});
+                } catch { return null; }
+            })();
+            jsonResponse(res, 200, {
+                success: true,
+                agent_name: 'Đặc Vụ Dự Bị',
+                risk_assessment: 'Mạng lỗi nên đặc vụ chính nghỉ phép — gửi bản nháp vui vẻ này tạm nhé.',
+                messages: fallback && Array.isArray(fallback) && fallback.length
+                    ? fallback
+                    : [{ title: 'Nhắc khéo', text: 'Bạn ơi, có khoản nhỏ mình vẫn đang trông ngóng. Chuyển khoản là mọi chuyện đẹp liền!' }],
+                fallback: true,
+                latencyMs: Date.now() - startedAt,
+            });
+        }
+        return;
+    }
+
+    // ── API quản lý kho câu hài (debtRibData.json) — yêu cầu Admin ────────────
+    if (pathname === '/api/debt-ribs/cache-info' && req.method === 'GET') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) { jsonResponse(res, 401, { success: false, message: 'Chưa đăng nhập Admin' }); return; }
+        try {
+            const c = JSON.parse(fs.readFileSync(RIB_CACHE_FILE, 'utf8'));
+            jsonResponse(res, 200, { success: true, count: (c.items || []).length });
+        } catch {
+            jsonResponse(res, 200, { success: true, count: 0 });
+        }
+        return;
+    }
+    if (pathname === '/api/debt-ribs' && req.method === 'GET') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) { jsonResponse(res, 401, { success: false, message: 'Chưa đăng nhập Admin' }); return; }
+        try {
+            const data = JSON.parse(fs.readFileSync(RIB_DATA_FILE, 'utf8'));
+            jsonResponse(res, 200, { success: true, items: data.items || [], count: (data.items || []).length });
+        } catch (err) {
+            jsonResponse(res, 200, { success: true, items: [], count: 0, error: 'Kho câu chưa tồn tại hoặc hỏng: ' + err.message });
+        }
+        return;
+    }
+
+    // POST /api/debt-ribs/preview — dán text, AI tách thành từng câu (không lưu)
+    if (pathname === '/api/debt-ribs/preview' && req.method === 'POST') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) { jsonResponse(res, 401, { success: false, message: 'Chưa đăng nhập Admin' }); return; }
+        try {
+            const body = JSON.parse(await readBody(req, 256 * 1024));
+            const text = String(body.text || '').trim();
+            if (!text) { jsonResponse(res, 400, { success: false, message: 'Chưa có văn bản để tách' }); return; }
+            const items = await debtAgentService.splitRibText(text);
+            jsonResponse(res, 200, { success: true, items: items || [] });
+        } catch (err) {
+            jsonResponse(res, 400, { success: false, message: err.message });
+        }
+        return;
+    }
+
+    // POST /api/debt-ribs/bulk — thêm hàng loạt (mảng items đã sẵn sàng)
+    if (pathname === '/api/debt-ribs/bulk' && req.method === 'POST') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) { jsonResponse(res, 401, { success: false, message: 'Chưa đăng nhập Admin' }); return; }
+        try {
+            const body = JSON.parse(await readBody(req, 256 * 1024));
+            const items = Array.isArray(body.items) ? body.items : [];
+            if (!items.length) { jsonResponse(res, 400, { success: false, message: 'Không có câu nào để thêm' }); return; }
+            const data = readRibData();
+            const added = [];
+            items.forEach(raw => {
+                const text = sanitizeString(raw.text, 500);
+                if (!text) return;
+                const item = {
+                    id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+                    text,
+                    tags: Array.isArray(raw.tags) ? raw.tags.map(t => sanitizeString(t, 40)).filter(Boolean).slice(0, 8) : [],
+                    topic: sanitizeString(raw.topic, 40),
+                    degree: ['Nhẹ', 'Vừa', 'Nặng'].includes(raw.degree) ? raw.degree : 'Vừa',
+                };
+                data.items.push(item);
+                added.push(item);
+            });
+            writeRibData(data);
+            invalidateRibCache();
+            jsonResponse(res, 200, { success: true, added, count: added.length });
+        } catch (err) {
+            jsonResponse(res, 400, { success: false, message: err.message });
+        }
+        return;
+    }
+
+    if (pathname === '/api/debt-ribs' && req.method === 'POST') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) { jsonResponse(res, 401, { success: false, message: 'Chưa đăng nhập Admin' }); return; }
+        try {
+            const body = JSON.parse(await readBody(req, 64 * 1024));
+            const text = sanitizeString(body.text, 500);
+            if (!text) { jsonResponse(res, 400, { success: false, message: 'Thiếu nội dung câu' }); return; }
+            const tags = Array.isArray(body.tags)
+                ? body.tags.map(t => sanitizeString(t, 40)).filter(Boolean).slice(0, 8)
+                : [];
+            const topic = sanitizeString(body.topic, 40);
+            const degree = ['Nhẹ', 'Vừa', 'Nặng'].includes(body.degree) ? body.degree : 'Vừa';
+            const data = readRibData();
+            const item = {
+                id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+                text,
+                tags,
+                topic,
+                degree,
+            };
+            data.items.push(item);
+            writeRibData(data);
+            invalidateRibCache();
+            jsonResponse(res, 200, { success: true, item });
+        } catch (err) {
+            jsonResponse(res, 400, { success: false, message: err.message });
+        }
+        return;
+    }
+
+    // PUT /api/debt-ribs/:id — sửa câu
+    let ribMatch = pathname.match(/^\/api\/debt-ribs\/([^/]+)$/);
+    if (ribMatch && req.method === 'PUT') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) { jsonResponse(res, 401, { success: false, message: 'Chưa đăng nhập Admin' }); return; }
+        try {
+            const id = decodeURIComponent(ribMatch[1]);
+            const body = JSON.parse(await readBody(req, 64 * 1024));
+            const data = readRibData();
+            const idx = data.items.findIndex(it => it.id === id);
+            if (idx < 0) { jsonResponse(res, 404, { success: false, message: 'Không tìm thấy câu' }); return; }
+            if (typeof body.text === 'string' && body.text.trim()) data.items[idx].text = sanitizeString(body.text, 500);
+            if (Array.isArray(body.tags)) data.items[idx].tags = body.tags.map(t => sanitizeString(t, 40)).filter(Boolean).slice(0, 8);
+            if (typeof body.topic === 'string') data.items[idx].topic = sanitizeString(body.topic, 40);
+            if (['Nhẹ', 'Vừa', 'Nặng'].includes(body.degree)) data.items[idx].degree = body.degree;
+            writeRibData(data);
+            invalidateRibCache();
+            jsonResponse(res, 200, { success: true, item: data.items[idx] });
+        } catch (err) {
+            jsonResponse(res, 400, { success: false, message: err.message });
+        }
+        return;
+    }
+
+    // DELETE /api/debt-ribs/:id — xóa câu
+    if (ribMatch && req.method === 'DELETE') {
+        const token = getTokenFromRequest(req);
+        if (!isValidSession(token)) { jsonResponse(res, 401, { success: false, message: 'Chưa đăng nhập Admin' }); return; }
+        try {
+            const id = decodeURIComponent(ribMatch[1]);
+            const data = readRibData();
+            const before = data.items.length;
+            data.items = data.items.filter(it => it.id !== id);
+            if (data.items.length === before) { jsonResponse(res, 404, { success: false, message: 'Không tìm thấy câu' }); return; }
+            writeRibData(data);
+            invalidateRibCache();
+            jsonResponse(res, 200, { success: true, count: data.items.length });
+        } catch (err) {
+            jsonResponse(res, 400, { success: false, message: err.message });
+        }
         return;
     }
 
@@ -1551,12 +1885,46 @@ const server = http.createServer(async (req, res) => {
 
             const token = createSession();
 
-            // Tự động xóa ngay IP Admin khỏi danh sách visitor khi đăng nhập thành công
+            // Tự động xóa CHÍNH XÁC record visitor CỦA ADMIN SESSION (tránh xóa nhầm toàn bộ nhà)
+            // Lý do: FPT Home WiFi (NAT) nhiều thiết bị cùng share 1 IP công cộng 42.114.x.x
+            // Logic cũ filter v.ip !== clientIP sẽ XÓA TẤT CẢ điện thoại/PC trong CÙNG NHÀ → sai!
+            // Logic mới: chỉ xóa visitor trùng khớp TOÀN BỘ: (sessionId cookie) HOẶC (UA + Browser + OS + gần đây < 5 phút)
             const db = getDB();
             if (db.visitors && Array.isArray(db.visitors)) {
                 const initialLen = db.visitors.length;
-                db.visitors = db.visitors.filter(v => v.ip !== clientIP && v.ip !== '127.0.0.1' && v.ip !== '::1');
+                const uaString = req.headers['user-agent'] || '';
+                const { os, browser: uaBrowser, device: uaDevice } = parseUserAgent(uaString);
+                const adminServerSessionId = _getCookie(req, 'v_server_sess_id');
+                const FIVE_MIN_MS = 5 * 60 * 1000;
+                const nowTs = Date.now();
+
+                db.visitors = db.visitors.filter(v => {
+                    // 1. Localhost / loopback luôn xóa
+                    if (v.ip === '127.0.0.1' || v.ip === '::1') return false;
+
+                    // 2. TRÙNG sessionId server-side cookie (chính xác 100%) → xóa
+                    if (adminServerSessionId && v.sessionId === adminServerSessionId) return false;
+
+                    // 3. Fallback: Nếu không có cookie session → match theo IP + UA chi tiết + lastSeen gần đây
+                    //    (tránh xóa nhầm anh em khác trong cùng FPT WiFi online từ trước)
+                    if (v.ip === clientIP) {
+                        const isSameBrowser = v.browser === uaBrowser;
+                        const isSameOs = v.os === os;
+                        const isSameDevice = !v.device || !uaDevice || v.device === uaDevice;
+                        const lastSeenTs = new Date(v.lastSeen || v.firstSeen || 0).getTime();
+                        const isRecent = (nowTs - lastSeenTs) < FIVE_MIN_MS;
+                        if (isSameBrowser && isSameOs && isSameDevice && isRecent) {
+                            return false; // Xóa record admin đúng trình duyệt
+                        }
+                    }
+
+                    // Mọi trường hợp khác → GIỮ NGUYÊN (không xóa nhà bạn, không xóa khách bên ngoài)
+                    return true;
+                });
+
                 if (db.visitors.length !== initialLen) {
+                    const removed = initialLen - db.visitors.length;
+                    console.log(`  🧹 [Admin Login] Đã xóa ${removed} visitor record của ADMIN session (giữ nguyên ${db.visitors.length} record khác).`);
                     saveDB(db);
                 }
             }
@@ -1909,154 +2277,249 @@ const server = http.createServer(async (req, res) => {
     // ── POST /api/reactions — Emoji reaction (public, rate-limited) ──────────
     if (pathname === '/api/reactions' && req.method === 'POST') {
         try {
-            const body    = await readBody(req, 256);
-            const payload = JSON.parse(body);
-            const emoji   = payload.emoji;
-
-            if (!emoji || typeof emoji !== 'string' || emoji.length > 16) {
-                jsonResponse(res, 400, { success: false, message: 'Emoji không hợp lệ' });
-                return;
+            const body        = await readBody(req, 512);
+            const payload     = JSON.parse(body);
+            const emoji       = (typeof payload.emoji === 'string') ? payload.emoji : '';
+            const reactionKey = (typeof payload.reactionKey === 'string') ? payload.reactionKey : '';
+            let   idx         = Number.isInteger(payload.idx) ? payload.idx : -1;
+            if (idx < 0 && reactionKey && reactionKey.startsWith('r')) {
+                const parsed = parseInt(reactionKey.slice(1), 10);
+                if (!isNaN(parsed)) idx = parsed;
             }
 
             const db = getDB();
+            if (!db.reactions) db.reactions = {};
+            const configList = db.config?.reactionsConfig || [];
 
-            // Validate động từ reactionsConfig trong DB — không hardcode emoji nào cả
-            const allowedEmojis = (db.config?.reactionsConfig || [])
-                .map(r => r.emoji)
-                .filter(Boolean);
+            // Validate CHÍNH theo INDEX (reactionKey / idx) — KHÔNG phụ thuộc emoji nữa
+            let targetIdx = idx;
+            if (targetIdx < 0 || targetIdx >= configList.length) {
+                // Fallback cũ: tìm idx qua emoji (nếu người dùng dùng client cũ chưa gửi reactionKey)
+                const idxFromEmoji = configList.findIndex(r => r.emoji && emoji && r.emoji === emoji);
+                if (idxFromEmoji >= 0) targetIdx = idxFromEmoji;
+            }
 
-            // Fallback: nếu chưa cấu hình reaction thì từ chối
-            if (allowedEmojis.length > 0 && !allowedEmojis.includes(emoji)) {
-                jsonResponse(res, 400, { success: false, message: 'Emoji không hợp lệ' });
+            // Nếu có reactionsConfig rồi mà vẫn không tìm được index hợp lệ → từ chối
+            if (configList.length > 0 && (targetIdx < 0 || targetIdx >= configList.length)) {
+                jsonResponse(res, 400, { success: false, message: 'Reaction không hợp lệ' });
                 return;
             }
 
-            if (!db.reactions) db.reactions = {};
-            db.reactions[emoji] = (db.reactions[emoji] || 0) + 1;
+            // Xác định các key lưu vào db.reactions
+            const keyPrimary = targetIdx >= 0 ? `r${targetIdx}` : reactionKey || emoji;
+            const keyEmoji   = emoji; // backward compat key
+            const cfg        = (targetIdx >= 0 && configList[targetIdx]) ? configList[targetIdx] : null;
 
-            // Sync hearts cho backward compat
-            if (emoji === '❤️') db.hearts = db.reactions['❤️'];
+            if (!keyPrimary) {
+                jsonResponse(res, 400, { success: false, message: 'Reaction không hợp lệ' });
+                return;
+            }
+
+            // Tăng count cho key chính (r0, r1, r2...)
+            db.reactions[keyPrimary] = (db.reactions[keyPrimary] || 0) + 1;
+            const finalCount = db.reactions[keyPrimary];
+
+            // ⚠️ XÓA LUÔN key '' (emoji rỗng) nếu còn sót lại từ bug cũ — không cho phép
+            //    5 nút cùng chia sẻ 1 key rỗng = nguyên nhân chính "click 1 tăng 2"
+            if ('' in db.reactions) {
+                delete db.reactions[''];
+            }
+
+            // Đồng bộ count vào key emoji cũ — CHỈ KHI EMOJI KHÁC RỖNG & KHÔNG TRÙNG
+            if (keyEmoji && typeof keyEmoji === 'string' && keyEmoji.length > 0 && keyEmoji !== keyPrimary) {
+                // Kiểm tra tránh ghi đè emoji này sang nút khác (emoji phải unique)
+                const sameEmojiElsewhere = configList.some((r, i) =>
+                    i !== targetIdx && r.emoji === keyEmoji
+                );
+                if (!sameEmojiElsewhere) {
+                    db.reactions[keyEmoji] = finalCount;
+                }
+            }
+            // Đồng bộ count vào countId của config (nếu có) để guestbook.js lookup theo IDX_COUNTID
+            if (cfg?.countId && cfg.countId !== keyPrimary && cfg.countId !== keyEmoji) {
+                db.reactions[cfg.countId] = finalCount;
+            }
+
+            // Sync hearts cho backward compat (reaction index 0 HOẶC emoji ❤️)
+            const isHeart = (targetIdx === 0) || (emoji === '❤️') || (keyPrimary === 'r0');
+            if (isHeart) db.hearts = finalCount;
 
             await saveDB(db);
-            jsonResponse(res, 200, { success: true, emoji, count: db.reactions[emoji], reactions: db.reactions });
+            jsonResponse(res, 200, {
+                success: true,
+                emoji,
+                reactionKey: keyPrimary,
+                idx: targetIdx,
+                count: finalCount,
+                reactions: db.reactions,
+            });
         } catch (e) {
+            console.error('[POST /api/reactions] Error:', e);
             jsonResponse(res, 400, { success: false, message: 'Dữ liệu không hợp lệ' });
         }
         return;
     }
 
-    // ── POST /api/track/ping — Fingerprint & Ghé thăm web (public) ───────────
-    if (pathname === '/api/track/ping' && req.method === 'POST') {
-        try {
-            const body = await readBody(req, 4096);
-            const payload = JSON.parse(body || '{}');
-            const sessionId = payload.sessionId || `sess_${Date.now()}`;
-            const clientIp = extractClientIp(req);
-            const uaString = req.headers['user-agent'] || '';
-            const { os, device: parsedDevice, browser } = parseUserAgent(uaString);
-            const deviceModel = payload.deviceModel ? payload.deviceModel : parsedDevice;
-            const gpu = payload.gpu || null;
-            const cpuCores = payload.cpuCores || null;
-            const ramGB = payload.ramGB || null;
+// Helper: tạo hoặc cập nhật visitor record — dùng chung cho cả Server-Side Tracking (lớp 1)
+// và Client-Side Ping Enrichment (lớp 2). Tránh duplicate record cho cùng khách.
+// Trả về: { visitor, isNew, sessionIdFinal }
+async function _upsertVisitor(db, sessionId, clientIp, uaString, extraPayload = {}) {
+    if (!db.visitors) db.visitors = [];
+    const { os, device: parsedDevice, browser } = parseUserAgent(uaString);
 
-            let geo = await getIpLocation(clientIp);
+    // 1. Tìm visitor theo sessionId
+    let visitor = db.visitors.find(v => v.sessionId === sessionId);
 
-            // CHỈ reverseGeocode và coi là GPS chuẩn khi client gửi payload.isGps === true
-            const isRealGps = payload.isGps === true && Boolean(payload.lat && payload.lng);
-            let lat = isRealGps ? payload.lat : (geo.lat || null);
-            let lng = isRealGps ? payload.lng : (geo.lng || null);
-
-            if (isRealGps) {
-                const gpsAddr = await reverseGeocode(payload.lat, payload.lng);
-                if (gpsAddr && gpsAddr.city) {
-                    geo.city = gpsAddr.city;
-                    geo.region = gpsAddr.region;
-                }
-            }
-
-            const db = getDB();
-            if (!db.visitors) db.visitors = [];
-
-            let visitor = db.visitors.find(v => v.sessionId === sessionId);
-            const now = new Date().toISOString();
-            const timeStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-            if (!visitor) {
-                visitor = {
-                    id: `vis_${Date.now()}_${Math.random().toString(36).substr(2,4)}`,
-                    sessionId,
-                    ip: clientIp,
-                    city: geo.city,
-                    region: geo.region,
-                    country: geo.country,
-                    isp: geo.isp,
-                    lat: lat || null,
-                    lng: lng || null,
-                    accuracy: isRealGps ? (payload.accuracy || null) : null,
-                    isGps: isRealGps,
-                    os,
-                    device: deviceModel,
-                    gpu,
-                    cpuCores,
-                    ramGB,
-                    browser,
-                    referrer: payload.referrer || 'Trực tiếp / Bookmark',
-                    screen: payload.screen || '-',
-                    viewport: payload.viewport || '-',
-                    dpr: payload.dpr || 1,
-                    language: payload.language || 'vi-VN',
-                    timezone: payload.timezone || 'Asia/Ho_Chi_Minh',
-                    touchPoints: payload.touchPoints || 0,
-                    connection: payload.connection || '3G/4G/Wifi',
-                    battery: payload.battery || null,
-                    sectionsVisited: [payload.section || 'Trang chủ'],
-                    timelineLogs: [
-                        { time: timeStr, event: 'Truy cập trang web', detail: `Nguồn: ${payload.referrer || 'Trực tiếp'}` }
-                    ],
-                    clicks: 1,
-                    firstSeen: now,
-                    lastSeen: now,
-                    durationSeconds: 0,
-                    // UUID ổn định — nhận diện khách cũ quay lại
-                    visitorUuid:  payload.visitorUuid  || null,
-                    isReturning:  payload.isFirstVisit === false || payload.isFirstVisit === 'false' ? true : false,
-                    visitCount:   payload.isFirstVisit ? 1 : 2,
-                    lastVisitAt:  payload.lastVisit || null,
-                };
-                db.visitors.unshift(visitor);
-                // Giữ tối đa 200 bản ghi — trim bản cũ nhất
-                if (db.visitors.length > 200) db.visitors = db.visitors.slice(0, 200);
-                // Tự động xóa visitor offline > 30 ngày
-                const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
-                db.visitors = db.visitors.filter(v => (Date.now() - new Date(v.lastSeen).getTime()) < THIRTY_DAYS);
-            } else {
-                visitor.lastSeen = now;
-                visitor.ip = clientIp;
-                if (deviceModel && deviceModel !== parsedDevice) visitor.device = deviceModel;
-                if (gpu) visitor.gpu = gpu;
-                if (cpuCores) visitor.cpuCores = cpuCores;
-                if (ramGB) visitor.ramGB = ramGB;
-                if (lat) visitor.lat = lat;
-                if (lng) visitor.lng = lng;
-                if (payload.accuracy) visitor.accuracy = payload.accuracy;
-                if (payload.screen) visitor.screen = payload.screen;
-                if (payload.battery) visitor.battery = payload.battery;
-                if (payload.connection) visitor.connection = payload.connection;
-                if (payload.section && !visitor.sectionsVisited.includes(payload.section)) {
-                    visitor.sectionsVisited.push(payload.section);
-                }
-                const first = new Date(visitor.firstSeen).getTime();
-                const last = new Date(now).getTime();
-                visitor.durationSeconds = Math.max(0, Math.round((last - first) / 1000));
-            }
-
-            await saveDB(db);
-            jsonResponse(res, 200, { success: true, sessionId });
-        } catch (e) {
-            jsonResponse(res, 400, { success: false });
+    // 2. Fallback: nếu không thấy sessionId → tìm theo IP + UA gần giống (trong 30 phút)
+    // Để capture trường hợp: server tạo record nhưng JS client tạo sessionId khác (cookie disabled)
+    if (!visitor) {
+        const THIRTY_MIN_AGO = Date.now() - 30 * 60 * 1000;
+        visitor = db.visitors.find(v =>
+            v.ip === clientIp &&
+            v.browser === browser &&
+            v.os === os &&
+            new Date(v.lastSeen).getTime() > THIRTY_MIN_AGO
+        );
+        // Nếu tìm được → đồng bộ sessionId mới vào để client ping sau đó match đúng
+        if (visitor && sessionId) {
+            visitor.sessionId = sessionId;
         }
-        return;
     }
+
+    const now = new Date().toISOString();
+    const timeStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const isNew = !visitor;
+
+    if (isNew) {
+        const geo = await getIpLocation(clientIp);
+        const deviceModel = extraPayload.deviceModel ? extraPayload.deviceModel : parsedDevice;
+
+        visitor = {
+            id: `vis_${Date.now()}_${Math.random().toString(36).substr(2,4)}`,
+            sessionId,
+            ip: clientIp,
+            city: geo.city,
+            region: geo.region,
+            country: geo.country,
+            isp: geo.isp,
+            lat: geo.lat || null,
+            lng: geo.lng || null,
+            accuracy: null,
+            isGps: false,
+            os,
+            device: deviceModel,
+            gpu: extraPayload.gpu || null,
+            cpuCores: extraPayload.cpuCores || null,
+            ramGB: extraPayload.ramGB || null,
+            browser,
+            referrer: extraPayload.referrer || 'Trực tiếp / Bookmark',
+            screen: extraPayload.screen || '-',
+            viewport: extraPayload.viewport || '-',
+            dpr: extraPayload.dpr || 1,
+            language: extraPayload.language || 'vi-VN',
+            timezone: extraPayload.timezone || 'Asia/Ho_Chi_Minh',
+            touchPoints: extraPayload.touchPoints || 0,
+            connection: extraPayload.connection || '3G/4G/Wifi',
+            battery: extraPayload.battery || null,
+            sectionsVisited: [extraPayload.section || 'Trang chủ'],
+            timelineLogs: [
+                { time: timeStr, event: 'Truy cập trang web', detail: `Nguồn: ${extraPayload.referrer || 'Trực tiếp'}` }
+            ],
+            clicks: 1,
+            firstSeen: now,
+            lastSeen: now,
+            durationSeconds: 0,
+            visitorUuid: extraPayload.visitorUuid || null,
+            isReturning: extraPayload.isFirstVisit === false || extraPayload.isFirstVisit === 'false' ? true : false,
+            visitCount: extraPayload.isFirstVisit ? 1 : 2,
+            lastVisitAt: extraPayload.lastVisit || null,
+        };
+        db.visitors.unshift(visitor);
+        // Giữ tối đa 200 bản ghi — trim bản cũ nhất
+        if (db.visitors.length > 200) db.visitors = db.visitors.slice(0, 200);
+        // Tự động xóa visitor offline > 30 ngày
+        const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+        db.visitors = db.visitors.filter(v => (Date.now() - new Date(v.lastSeen).getTime()) < THIRTY_DAYS);
+    } else {
+        // CẬP NHẬT — Enrich dữ liệu từ client vào visitor đã có
+        visitor.lastSeen = now;
+        visitor.ip = clientIp;
+
+        const devMod = extraPayload.deviceModel ? extraPayload.deviceModel : parsedDevice;
+        if (devMod && devMod !== parsedDevice) visitor.device = devMod;
+
+        // Enrich hardware info (nếu client gửi lên)
+        if (extraPayload.gpu) visitor.gpu = extraPayload.gpu;
+        if (extraPayload.cpuCores) visitor.cpuCores = extraPayload.cpuCores;
+        if (extraPayload.ramGB) visitor.ramGB = extraPayload.ramGB;
+        if (extraPayload.screen) visitor.screen = extraPayload.screen;
+        if (extraPayload.viewport) visitor.viewport = extraPayload.viewport;
+        if (extraPayload.battery) visitor.battery = extraPayload.battery;
+        if (extraPayload.connection) visitor.connection = extraPayload.connection;
+        if (extraPayload.language) visitor.language = extraPayload.language;
+        if (extraPayload.timezone) visitor.timezone = extraPayload.timezone;
+        if (extraPayload.dpr) visitor.dpr = extraPayload.dpr;
+        if (extraPayload.touchPoints) visitor.touchPoints = extraPayload.touchPoints;
+
+        if (extraPayload.section && !visitor.sectionsVisited.includes(extraPayload.section)) {
+            visitor.sectionsVisited.push(extraPayload.section);
+        }
+        if (extraPayload.visitorUuid) visitor.visitorUuid = extraPayload.visitorUuid;
+
+        // GPS enrichment (nếu client gửi tọa độ thực)
+        const isRealGps = extraPayload.isGps === true && Boolean(extraPayload.lat && extraPayload.lng);
+        if (isRealGps) {
+            visitor.lat = extraPayload.lat;
+            visitor.lng = extraPayload.lng;
+            visitor.isGps = true;
+            if (extraPayload.accuracy) visitor.accuracy = extraPayload.accuracy;
+            const gpsAddr = await reverseGeocode(extraPayload.lat, extraPayload.lng);
+            if (gpsAddr && gpsAddr.city) {
+                visitor.city = gpsAddr.city;
+                visitor.region = gpsAddr.region;
+            }
+        } else if (extraPayload.lat || extraPayload.lng) {
+            if (!visitor.lat) visitor.lat = extraPayload.lat;
+            if (!visitor.lng) visitor.lng = extraPayload.lng;
+        }
+
+        const first = new Date(visitor.firstSeen).getTime();
+        const last = new Date(now).getTime();
+        visitor.durationSeconds = Math.max(0, Math.round((last - first) / 1000));
+    }
+
+    return { visitor, isNew, sessionIdFinal: visitor.sessionId };
+}
+
+// Helper đọc cookie từ request header
+function _getCookie(req, name) {
+    const cookieHeader = req.headers['cookie'] || '';
+    const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`));
+    return match ? decodeURIComponent(match[1]) : null;
+}
+
+// ── POST /api/track/ping — Fingerprint & Ghé thăm web (public) ───────────
+if (pathname === '/api/track/ping' && req.method === 'POST') {
+    try {
+        const body = await readBody(req, 4096);
+        const payload = JSON.parse(body || '{}');
+        const clientIp = extractClientIp(req);
+        const uaString = req.headers['user-agent'] || '';
+
+        // Lấy sessionId từ 2 nguồn: payload (client-side) HOẶC cookie (server-side set lúc truy cập đầu tiên)
+        // Ưu tiên payload sessionId, nếu không có thì dùng cookie
+        const cookieSessId = _getCookie(req, 'v_server_sess_id');
+        const sessionId = payload.sessionId || cookieSessId || `sess_${Date.now()}`;
+
+        const db = getDB();
+        await _upsertVisitor(db, sessionId, clientIp, uaString, payload);
+        await saveDB(db);
+        jsonResponse(res, 200, { success: true, sessionId });
+    } catch (e) {
+        jsonResponse(res, 400, { success: false });
+    }
+    return;
+}
 
     // ── POST /api/track/event — Sự kiện xem mục / click (public) ────────────
     if (pathname === '/api/track/event' && req.method === 'POST') {
@@ -2823,9 +3286,10 @@ const server = http.createServer(async (req, res) => {
         res.end();
         return;
     }
-    
+
+    const isHomePage = pathname === '/';
     let filePath;
-    if (pathname === '/') {
+    if (isHomePage) {
         filePath = path.join(__dirname, 'index.html');
     } else {
         filePath = path.join(__dirname, pathname);
@@ -2838,8 +3302,98 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    fs.stat(filePath, (err, stats) => {
-        if (err || !stats.isFile()) {
+    // ✅ LỚP 1 — SERVER-SIDE VISITOR TRACKING (NGAY LẬP TỨC, KHÔNG PHỤ THUỘC CLIENT JS)
+    // Đảm bảo 100% tạo được visitor record — ngay cả khi client:
+    //   • Tắt JavaScript
+    //   • JS lỗi (Battery/WebGL API không hỗ trợ → treo await)
+    //   • Render Free sleep → request đầu tiên fail sau HTML đã load xong
+    // Logic: chạy NGẦM (fire-and-forget) để KHÔNG block việc tải HTML
+    if (isHomePage) {
+        const clientIp = extractClientIp(req);
+        const uaString = req.headers['user-agent'] || '';
+        const uaShort = (uaString || '').slice(0, 80).replace(/\s+/g, ' ');
+
+        // Lấy hoặc tạo sessionId (ưu tiên cookie cũ để cập nhật chứ không tạo duplicate)
+        let sessionId = _getCookie(req, 'v_server_sess_id');
+        const isNewSession = !sessionId;
+        if (!sessionId) {
+            sessionId = 'srv_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+        }
+
+        // Set cookie session cho 8 tiếng — đảm bảo client ping sau đó dùng cùng session
+        const cookieVal = encodeURIComponent(sessionId);
+        const cookieOpts = [
+            `v_server_sess_id=${cookieVal}`,
+            'Path=/',
+            'Max-Age=28800',
+            'SameSite=Lax',
+            'HttpOnly'
+        ];
+        // Không set Secure trên localhost (HTTP)
+        if (req.headers['x-forwarded-proto'] === 'https' || req.connection.encrypted) {
+            cookieOpts.push('Secure');
+        }
+        res.setHeader('Set-Cookie', cookieOpts.join('; '));
+
+        // 🟢 LOG SÂU: biết chắc chắn là code SERVER-SIDE TRACKING ĐÃ CHẠY — xem trong Render Logs
+        const reqId = Math.random().toString(36).substr(2, 5);
+        console.log(`\n  👁️  [SV-TRACK #${reqId}] ⚡ NHẬN REQUEST TRANG CHỦ — IP=${clientIp} NewSess=${isNewSession}`);
+        console.log(`       UA: ${uaShort || '(rỗng - bot/crawler?)'}`);
+
+        // 🔥 Fire-and-forget: tạo visitor record NGẦM, không block response HTML
+        // Bọc try/catch + DEADLINE TIMEOUT 2500ms để Render cold start / geo API slow
+        // KHÔNG BAO GIỜ treo / mem leak
+        (async () => {
+            const DEADLINE_MS = 2500;
+            const deadlineTs = Date.now() + DEADLINE_MS;
+            // Lưu lại "timeline" để biết lỗi ở bước nào trong logs
+            let step = 'start';
+            try {
+                // 0. Bọc Race + Timeout cho TOÀN BỘ pipeline
+                const done = new Promise((resolve, reject) => {
+                    setTimeout(() => reject(new Error(`Timeout ${DEADLINE_MS}ms`)), DEADLINE_MS);
+                    (async () => {
+                        step = 'getDB';
+                        if (Date.now() > deadlineTs) throw new Error('Hết hạn trước getDB');
+                        const db = getDB();
+
+                        step = 'parse_referrer';
+                        const referrerRaw = req.headers['referer'] || '';
+                        const referrer = (referrerRaw && referrerRaw.length > 200)
+                            ? referrerRaw.slice(0, 200)
+                            : (referrerRaw || 'Trực tiếp / Bookmark');
+
+                        step = '_upsertVisitor';
+                        if (Date.now() > deadlineTs) throw new Error('Hết hạn trước upsert');
+                        const result = await _upsertVisitor(db, sessionId, clientIp, uaString, {
+                            section: 'Trang chủ',
+                            referrer,
+                        });
+
+                        step = 'saveDB';
+                        if (Date.now() > deadlineTs) throw new Error('Hết hạn trước saveDB');
+                        await saveDB(db);
+
+                        resolve(result);
+                    })().catch(reject);
+                });
+
+                const result = await done;
+                const cityPart = result?.visitor?.city ? ` - ${result.visitor.city}, ${result.visitor.region || ''}` : '';
+                const recId = result?.visitor?.id || '?';
+                console.log(`  ✅ [SV-TRACK #${reqId}] LƯU DB THÀNH CÔNG → VisitorID=${recId} Mới=${result?.isNew}${cityPart} (${Date.now() - (deadlineTs - DEADLINE_MS)}ms)`);
+
+            } catch (trackErr) {
+                const errMsg = trackErr && trackErr.message ? trackErr.message : String(trackErr);
+                console.error(`  ❌ [SV-TRACK #${reqId}] LỖI Ở BƯỚC [${step}] — ${errMsg}`);
+                console.error(`     → DỮ LIỆU VẪN CÓ (nếu là lỗi Geo): Fallback tạo record địa chỉ rỗng vẫn hoạt động.`);
+            }
+        })();
+    }
+
+    try {
+        const stats = await fs.promises.stat(filePath);
+        if (!stats.isFile()) {
             res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
             res.end('404 Not Found');
             return;
@@ -2849,12 +3403,9 @@ const server = http.createServer(async (req, res) => {
         const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
         // ── HTTP Cache Headers cho static assets ─────────────────────────────
-        // CSS/JS/fonts/images: cache 1 tuần phía trình duyệt (immutable nếu có hash)
-        // HTML: không cache để luôn lấy bản mới nhất
         const staticExts = new Set(['.css','.js','.png','.jpg','.jpeg','.gif','.svg','.webp','.ico','.woff2','.mp3','.mp4']);
         if (staticExts.has(ext)) {
             res.setHeader('Cache-Control', 'public, max-age=604800'); // 7 ngày
-            // ETag dựa trên mtime + size để browser biết khi nào file thay đổi
             const etag = `"${stats.mtime.getTime().toString(16)}-${stats.size.toString(16)}"`;
             res.setHeader('ETag', etag);
             if (req.headers['if-none-match'] === etag) {
@@ -2869,7 +3420,11 @@ const server = http.createServer(async (req, res) => {
 
         res.writeHead(200, { 'Content-Type': contentType });
         fs.createReadStream(filePath).pipe(res);
-    });
+    } catch (statErr) {
+        res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('404 Not Found');
+        return;
+    }
 });
 
 (async () => {

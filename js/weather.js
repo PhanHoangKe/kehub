@@ -143,6 +143,8 @@ export function initWeatherEngine(onMoodChange) {
         // Click / tap: toggle trên mọi thiết bị
         mainBtn.addEventListener('click', (e) => {
             e.stopPropagation();
+            // Cross-close: đóng AI dial trước khi mở chủ đề
+            if (typeof window.__closeAiDial === 'function') window.__closeAiDial();
             toggleDial();
         });
     }
@@ -170,4 +172,7 @@ export function initWeatherEngine(onMoodChange) {
     fetchRealtimeWeather();
     // Làm mới thời tiết mỗi 10 phút
     setInterval(fetchRealtimeWeather, 10 * 60 * 1000);
+
+    // ── Cross-close API: expose closeDial để AI dial gọi được ────────────────
+    window.__closeMoodDial = closeDial;
 }

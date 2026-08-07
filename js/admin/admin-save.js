@@ -262,10 +262,16 @@ async function _readReactionsInputs(state, getState) {
         } else if (!imgUrl) {
             imgUrl = current[i]?.imgUrl || '';
         }
+        // ✅ CountId STABLE TUYỆT ĐỐI theo VỊ TRÍ NÚT (index i), không bao giờ đổi dù user có
+        //    xóa/thay ảnh đi nữa. Ưu tiên giữ countId cũ nếu đã có, không thì tạo chuẩn mới.
+        const existingCountId = current[i]?.countId;
+        const countIdStable   = existingCountId && typeof existingCountId === 'string' && existingCountId.length > 0
+            ? existingCountId                                  // giữ nguyên countId đã có = stable
+            : `reactionCount-r${i}`;                          // chuẩn mới: r0, r1, r2... (đồng bộ FE+BE)
         list.push({
-            emoji:   current[i]?.emoji   || '',           // giữ nguyên emoji từ config hiện tại
+            emoji:   current[i]?.emoji   || '',
             title:   reactTitles[i]?.value.trim() || '',
-            countId: current[i]?.countId || `reactionCount-${i}`,
+            countId: countIdStable,
             imgUrl,
         });
     }

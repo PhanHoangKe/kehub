@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AI Giải Bài Tập Toán | Youth Memories</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- KaTeX for LaTeX rendering -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="window._katexReady = true"></script>
+<!-- Marked for Markdown parsing -->
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+<style>
+:root {
+  --bg-paper: #faf8ff;
+  --bg-card: #ffffff;
+  --accent-blue: #2563eb;
+  --accent-purple: #8b5cf6;
+  --accent-mint: #10b981;
+  --accent-rose: #ec4899;
+  --text-primary: #2d2836;
+  --text-secondary: #3f3f46;
+  --text-muted: #71717a;
+  --glass-bg: rgba(255,255,255,0.86);
+  --glass-border: #ece4f4;
+  --glass-shadow: 0 1px 2px rgba(139,92,246,0.05), 0 8px 24px rgba(236,72,153,0.10);
+  --radius-xs: 2px;
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-pill: 999px;
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+  --chat-user-bg: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+  --chat-user-text: #ffffff;
+  --chat-ai-bg: #ffffff;
+  --chat-ai-border: #ece4f4;
+  --sidebar-w: 264px;
+  --shadow-input: 0 1px 3px rgba(139,92,246,0.12);
+  --accent: #8b5cf6;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+  height: 100%; width: 100%;
+  font-family: var(--font-body);
+  background: var(--bg-paper);
+  color: var(--text-primary);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── AMBIENT GLOW ─────────────────────────────────────────────────────────── */
+.glow-orb {
+  position: fixed; border-radius: 50%;
+  filter: blur(120px); opacity: 0.14; pointer-events: none; z-index: 0;
+  animation: floatGlow 18s infinite alternate ease-in-out;
+}
+.orb-1 { width:480px; height:480px; background:radial-gradient(circle,#a78bfa,#ec4899); top:-140px; left:-100px; }
+.orb-2 { width:520px; height:520px; background:radial-gradient(circle,#7dd3fc,#f472b6); bottom:-160px; right:-100px; animation-delay:-9s; }
+@keyframes floatGlow {
+  0%   { transform: translate(0,0) scale(1); }
+  100% { transform: translate(60px,40px) scale(1.1); }
+}
+
+/* ── LAYOUT ───────────────────────────────────────────────────────────────── */
+.app-shell {
+  position: relative; z-index: 1;
+  display: flex; height: 100vh; width: 100vw;
+}
+
+/* ── SIDEBAR ─────────────────────────────────────────────────────────────── */
+.sidebar {
+  width: var(--sidebar-w); flex-shrink: 0;
+  background: var(--glass-bg);
+  border-right: 1px solid var(--glass-border);
+  backdrop-filter: blur(20px);
+  display: flex; flex-direction: column;
+  padding: 20px 14px;
+  gap: 10px;
+  transition: transform 0.3s ease;
+  z-index: 10;
+}
+
+.sidebar-brand {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 6px 14px;
+  border-bottom: 1px solid var(--glass-border);
+}
+.sidebar-brand .brand-icon {
+  width: 34px; height: 34px; border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 0.95rem; flex-shrink: 0;
+}
+.sidebar-brand .brand-text { line-height: 1.2; }
+.sidebar-brand .brand-text h2 { font-family: var(--font-heading); font-size: 0.92rem; font-weight: 700; color: var(--text-primary); }
+.sidebar-brand .brand-text span { font-size: 0.7rem; color: var(--text-muted); }
+
+/* ── SUBJECT SWITCHER (mở rộng nhiều môn) ───────────────────────────────── */
+.subject-label {
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text-muted);
+  padding: 8px 6px 2px;
+}
+.subject-list { display: flex; flex-direction: column; gap: 2px; }
+.subject-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: var(--radius-md);
+  background: transparent; border: none; cursor: pointer;
+  font-size: 0.82rem; font-weight: 500; color: var(--text-secondary);
+  text-align: left; transition: all 0.15s ease;
+}
+.subject-btn:hover { background: #f4f4f5; color: var(--text-primary); }
+.subject-btn.active { background: #f4f4f5; color: var(--text-primary); font-weight: 600; }
+.subject-btn .topic-icon {
+  width: 26px; height: 26px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.78rem; flex-shrink: 0; color: #fff;
+}
+.subject-btn.active .topic-icon { box-shadow: 0 2px 6px rgba(0,0,0,0.18); }
+
+/* Chủ đề trong môn */
+.topic-list { display: flex; flex-direction: column; gap: 2px; flex: 1; overflow-y: auto; min-height: 0; }
+.topic-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px; border-radius: var(--radius-md);
+  background: transparent; border: none; cursor: pointer;
+  font-size: 0.8rem; font-weight: 500; color: var(--text-secondary);
+  text-align: left; transition: all 0.15s ease;
+}
+.topic-btn:hover { background: #f4f4f5; color: var(--text-primary); }
+.topic-btn.active { background: #f4f4f5; color: var(--text-primary); font-weight: 600; }
+.topic-btn .topic-icon { font-size: 0.85rem; width: 18px; text-align: center; flex-shrink: 0; color: var(--text-muted); }
+.topic-btn.active .topic-icon { color: var(--accent); }
+
+.status-badge {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: var(--radius-md);
+  background: #f4f4f5; border: 1px solid var(--glass-border);
+  font-size: 0.76rem; color: var(--text-secondary); font-weight: 600;
+}
+.status-dot { width:7px; height:7px; border-radius:50%; background:#22c55e; animation: pulseDot 2s infinite; }
+@keyframes pulseDot { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+.status-badge.offline { background:#fafafa; border-color:#e4e4e7; color:#52525b; }
+.status-badge.offline .status-dot { background:#a1a1aa; animation:none; }
+</style>
+<style>
+/* ── MAIN CHAT AREA ─────────────────────────────────────────────────────── */
+.chat-main {
+  flex: 1; display: flex; flex-direction: column;
+  min-width: 0; position: relative;
+}
+
+/* ── CHAT HEADER ─────────────────────────────────────────────────────────── */
+.chat-header {
+  padding: 12px 20px; display: flex; align-items: center; gap: 12px;
+  background: var(--glass-bg); border-bottom: 1px solid var(--glass-border);
+  backdrop-filter: blur(20px); z-index: 5; flex-shrink: 0;
+}
+.chat-header .back-btn {
+  display: none; background: none; border: none; font-size: 1.1rem;
+  color: var(--text-muted); cursor: pointer; padding: 4px;
+}
+.chat-header .ai-avatar {
+  width: 34px; height: 34px; border-radius: var(--radius-lg); flex-shrink: 0;
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 0.9rem;
+}
+.chat-header .ai-info h3 { font-family: var(--font-heading); font-size: 0.95rem; font-weight: 700; }
+.chat-header .ai-info p { font-size: 0.74rem; color: var(--text-muted); }
+.chat-header .model-badge {
+  margin-left: auto;
+  padding: 5px 10px; border-radius: var(--radius-pill);
+  background: #f4f4f5; border: 1px solid var(--glass-border);
+  font-size: 0.7rem; font-weight: 600; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 5px;
+}
+.model-badge i { color: var(--accent); }
+
+/* Header actions (kết nối + Trạm + Về trang chủ) */
+.chat-header .header-actions {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+}
+.chat-header .header-actions .status-badge {
+  padding: 5px 10px; border-radius: var(--radius-pill);
+  background: #f4f4f5; border: 1px solid var(--glass-border);
+  font-size: 0.7rem; font-weight: 600; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+.chat-header .header-link {
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: var(--radius-md);
+  background: #f4f4f5; border: 1px solid var(--glass-border);
+  color: var(--text-secondary); text-decoration: none;
+  transition: all 0.15s ease;
+}
+.chat-header .header-link:hover { background: #e4e4e7; color: var(--text-primary); }
+.chat-header .header-link i { font-size: 0.78rem; }
+
+/* ── MESSAGES AREA ─────────────────────────────────────────────────────── */
+.messages-wrap {
+  flex: 1; overflow-y: auto; padding: 24px 28px;
+  display: flex; flex-direction: column; gap: 18px;
+  scroll-behavior: smooth;
+}
+.messages-wrap::-webkit-scrollbar { width: 5px; }
+.messages-wrap::-webkit-scrollbar-track { background: transparent; }
+.messages-wrap::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 99px; }
+
+/* ── WELCOME SCREEN ──────────────────────────────────────────────────────── */
+.welcome-screen {
+  margin: auto; text-align: center;
+  max-width: 600px; padding: 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 18px;
+}
+.welcome-screen .big-icon {
+  width: 56px; height: 56px; border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; color: #fff;
+  box-shadow: 0 8px 24px rgba(236,72,153,0.28);
+}
+.welcome-screen h1 { font-family:var(--font-heading); font-size: 1.4rem; font-weight: 700; }
+.welcome-screen p { font-size: 0.9rem; color:var(--text-muted); line-height:1.6; max-width: 460px; }
+
+.quick-chips {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+  width: 100%;
+}
+.chip {
+  padding: 7px 12px; border-radius: var(--radius-md);
+  background: #ffffff; border: 1px solid var(--glass-border);
+  font-size: 0.8rem; color: var(--text-secondary); cursor: pointer;
+  transition: all 0.18s ease; font-weight: 500;
+  display: flex; align-items: center; gap: 7px;
+  box-shadow: var(--shadow-input);
+}
+.chip:hover { border-color: #d4d4d8; background: #fafafa; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.chip i { color: var(--accent); font-size: 0.78rem; }
+
+/* ── MESSAGE BUBBLES ──────────────────────────────────────────────────────── */
+.msg-row { display: flex; gap: 10px; align-items: flex-end; max-width: 860px; width: 100%; }
+.msg-row.user { flex-direction: row-reverse; margin-left: auto; }
+.msg-row.ai   { margin-right: auto; }
+
+.msg-avatar {
+  width: 28px; height: 28px; border-radius: var(--radius-pill); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; flex-shrink: 0;
+}
+.msg-row.ai .msg-avatar    { background: linear-gradient(135deg, #8b5cf6, #ec4899); color:#fff; }
+.msg-row.user .msg-avatar  { background: #e4e4e7; color:#3f3f46; }
+
+.msg-bubble {
+  padding: 10px 14px; border-radius: var(--radius-lg); max-width: 100%;
+  line-height: 1.65; font-size: 0.9rem; word-break: break-word;
+  position: relative;
+}
+.msg-row.user .msg-bubble {
+  background: var(--chat-user-bg); color: var(--chat-user-text);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+.msg-row.ai .msg-bubble {
+  background: var(--chat-ai-bg);
+  border: 1px solid var(--chat-ai-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.msg-meta {
+  font-size: 0.7rem; color: var(--text-muted);
+  margin-top: 4px; display: flex; gap: 8px; align-items: center;
+}
+.msg-row.user .msg-meta { justify-content: flex-end; }
+
+.badge-cache {
+  padding: 2px 7px; border-radius: var(--radius-pill); font-size: 0.67rem; font-weight: 700;
+  background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0;
+  display: flex; align-items: center; gap: 3px;
+}
+.badge-llm {
+  padding: 2px 7px; border-radius: var(--radius-pill); font-size: 0.67rem; font-weight: 700;
+  background: #f4f4f5; color: var(--text-secondary); border: 1px solid var(--glass-border);
+  display: flex; align-items: center; gap: 3px;
+}
+.badge-verified {
+  padding: 3px 9px; border-radius: var(--radius-pill); font-size: 0.68rem; font-weight: 800;
+  background: #fefce8; color: #854d0e;
+  border: 1px solid #fde047;
+  display: flex; align-items: center; gap: 5px;
+}
+.badge-ai {
+  padding: 3px 9px; border-radius: var(--radius-pill); font-size: 0.68rem; font-weight: 700;
+  background: #f4f4f5; color: #52525b; border: 1px solid #e4e4e7;
+  display: flex; align-items: center; gap: 5px;
+}
+</style>
+<style>
+/* ── MARKDOWN IN AI BUBBLE ────────────────────────────────────────────────── */
+.msg-bubble.ai-content h1,.msg-bubble.ai-content h2,.msg-bubble.ai-content h3 {
+  font-family: var(--font-heading); margin: 14px 0 6px; color: var(--text-primary);
+}
+.msg-bubble.ai-content h3 { font-size: 0.95rem; }
+.msg-bubble.ai-content p  { margin-bottom: 10px; }
+.msg-bubble.ai-content p:last-child { margin-bottom: 0; }
+.msg-bubble.ai-content ul,.msg-bubble.ai-content ol { padding-left: 20px; margin-bottom:10px; }
+.msg-bubble.ai-content li { margin-bottom: 4px; }
+.msg-bubble.ai-content strong { color: var(--text-primary); font-weight: 700; }
+.msg-bubble.ai-content em    { color: #4f46e5; }
+.msg-bubble.ai-content hr    { border:none; border-top:1px solid var(--glass-border); margin:12px 0; }
+.msg-bubble.ai-content table { border-collapse:collapse; width:100%; margin:10px 0; font-size:0.82rem; }
+.msg-bubble.ai-content th,.msg-bubble.ai-content td { border:1px solid #e4e4e7; padding:6px 10px; text-align:center; }
+.msg-bubble.ai-content th    { background:#fafafa; font-weight:700; }
+.msg-bubble.ai-content code  { background:#f4f4f5; padding:2px 6px; border-radius:2px; font-size:0.82em; font-family:monospace; }
+.msg-bubble.ai-content .katex { font-size: 1.05em; }
+.msg-bubble.ai-content .katex-display { margin: 10px 0; overflow-x: auto; }
+
+/* ── TYPING INDICATOR ─────────────────────────────────────────────────────── */
+.typing-row { display:flex; gap:10px; align-items:flex-end; margin-right:auto; }
+.typing-bubble {
+  background: var(--chat-ai-bg); border:1px solid var(--chat-ai-border);
+  border-radius: var(--radius-lg);
+  padding: 12px 16px; box-shadow: var(--glass-shadow);
+  display: flex; align-items: center; gap: 6px;
+}
+.typing-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: #a1a1aa;
+  animation: typingBounce 1.2s infinite ease-in-out;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingBounce {
+  0%,60%,100% { transform:translateY(0); opacity:0.5; }
+  30%          { transform:translateY(-6px); opacity:1; }
+}
+.typing-label { font-size:0.78rem; color:var(--text-muted); margin-left:4px; }
+
+/* ── INPUT AREA ──────────────────────────────────────────────────────────── */
+.input-area {
+  padding: 14px 24px 18px;
+  background: var(--glass-bg); border-top: 1px solid var(--glass-border);
+  backdrop-filter: blur(20px); flex-shrink: 0;
+}
+
+/* ── COMPOSER ─────────────────────────────────────────────────────────────── */
+.input-box {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.composer {
+  display: flex; align-items: flex-end;
+  background: #ffffff;
+  border: 1px solid #d4d4d8;
+  border-radius: var(--radius-lg);
+  padding: 8px 10px;
+  gap: 6px;
+  box-shadow: var(--shadow-input);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.composer:focus-within {
+  border-color: #a1a1aa;
+  box-shadow: 0 0 0 3px rgba(161,161,170,0.15), var(--shadow-input);
+}
+.composer textarea {
+  flex: 1; border: none; outline: none; resize: none;
+  font-family: var(--font-body); font-size: 0.92rem; line-height: 1.5;
+  color: var(--text-primary); background: transparent; min-height: 24px; max-height: 160px;
+  padding: 4px 2px;
+}
+.composer textarea::placeholder { color: var(--text-muted); }
+
+/* Nút + mở bảng chọn đính kèm */
+.composer-attach { position: relative; flex-shrink: 0; }
+
+.attach-btn {
+  width: 32px; height: 32px; border-radius: var(--radius-md);
+  background: transparent; border: none;
+  color: var(--text-muted); font-size: 1rem; font-weight: 400;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s ease; position: relative;
+}
+.attach-btn:hover { background: #f4f4f5; color: var(--text-primary); }
+.attach-btn.has-image { color: var(--accent); }
+.attach-btn.has-image .fa-plus { display: none; }
+.attach-btn .state-check { display: none; }
+.attach-btn.has-image .state-check { display: block; }
+
+/* Bảng chọn ảnh/file */
+.composer-menu {
+  position: absolute; bottom: calc(100% + 8px); left: 0;
+  background: #ffffff; border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md); padding: 4px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+  display: flex; flex-direction: column; gap: 2px;
+  z-index: 30; min-width: 160px;
+  animation: fadeSlideIn 0.15s ease;
+}
+.composer-menu[hidden] { display: none; }
+.composer-menu-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border: none; border-radius: var(--radius-sm);
+  background: transparent; color: var(--text-primary);
+  font-size: 0.84rem; font-weight: 500; cursor: pointer;
+  transition: background 0.15s ease; text-align: left; width: 100%;
+}
+.composer-menu-item i { color: var(--text-muted); font-size: 0.95rem; width: 18px; text-align: center; }
+.composer-menu-item:hover { background: #f4f4f5; }
+.composer-menu-item:hover i { color: var(--accent); }
+
+/* Nút gửi kiểu ChatGPT — vòng tròn gradient, mũi tên lên */
+.send-btn {
+  width: 34px; height: 34px; border-radius: var(--radius-pill); flex-shrink: 0;
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  border: none; color: #fff; font-size: 0.85rem;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.18s ease;
+  box-shadow: 0 4px 12px rgba(236,72,153,0.30);
+}
+.send-btn:hover:not(:disabled) { background: linear-gradient(135deg, #7c3aed, #db2777); box-shadow: 0 6px 16px rgba(236,72,153,0.40); }
+.send-btn:active:not(:disabled) { transform: scale(0.94); }
+.send-btn:disabled { background: #e4e4e7; color: #a1a1aa; cursor: not-allowed; }
+
+.img-preview-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 10px;
+  background: #fafafa; border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm); animation: fadeSlideIn 0.2s ease;
+  cursor: pointer;
+}
+@keyframes fadeSlideIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
+.img-preview-bar img {
+  width: 42px; height: 42px; object-fit: cover;
+  border-radius: var(--radius-sm); border: 1px solid var(--glass-border); flex-shrink: 0;
+}
+.img-preview-name {
+  flex: 1; font-size: 0.78rem; color: var(--text-secondary);
+  font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.img-preview-remove {
+  width: 22px; height: 22px; border-radius: var(--radius-xs); flex-shrink: 0;
+  background: #f4f4f5; border: none; color: #71717a;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem; transition: all 0.15s ease;
+}
+.img-preview-remove:hover { background: #ef4444; color: #fff; }
+
+/* Trạng thái PDF trong preview bar — ẩn ảnh, hiện icon file */
+.img-preview-bar.pdf-attach::before {
+  content: '\f1c1';
+  font-family: 'Font Awesome 6 Free'; font-weight: 900;
+  font-size: 1.3rem; color: #ef4444;
+  display: flex; align-items: center; justify-content: center;
+  width: 42px; height: 42px; flex-shrink: 0;
+  background: #fef2f2; border: 1px solid #fecaca; border-radius: var(--radius-sm);
+}
+
+/* ── LIGHTBOX ─────────────────────────────────────────────────────────────── */
+.lightbox {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.8); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px; animation: fadeIn 0.2s ease;
+}
+.lightbox[hidden] { display: none; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.lightbox img {
+  max-width: 92vw; max-height: 88vh;
+  border-radius: var(--radius-md); box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  cursor: zoom-out;
+}
+.lightbox-close {
+  position: absolute; top: 18px; right: 18px;
+  width: 38px; height: 38px; border-radius: var(--radius-pill);
+  background: rgba(255,255,255,0.12); border: none; color: #fff;
+  font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s ease;
+}
+.lightbox-close:hover { background: rgba(255,255,255,0.25); }
+
+/* ── EXTRACTED QUESTION BLOCKQUOTE ───────────────────────────────────────── */
+.extract-card {
+  background: #fafafa;
+  border: 1px solid var(--glass-border); border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm); padding: 10px 12px; font-size: 0.82rem;
+  margin-bottom: 8px; line-height: 1.6; color: var(--text-secondary);
+}
+.extract-card .extract-label {
+  font-size: 0.7rem; color: var(--accent); font-weight: 700;
+  margin-bottom: 4px; display: flex; align-items: center; gap: 6px;
+}
+.extract-card .katex { font-size: 0.95em; }
+
+/* ── TOAST ───────────────────────────────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(12px);
+  background: rgba(23,23,23,0.95); color: #fff; font-size: 0.82rem; font-weight: 500;
+  padding: 9px 16px; border-radius: var(--radius-md); z-index: 999;
+  opacity: 0; pointer-events: none; transition: opacity 0.25s ease, transform 0.25s ease;
+  display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.error { background: rgba(225,29,72,0.95); }
+.toast.success { background: rgba(5,150,105,0.95); }
+
+.input-hint {
+  font-size: 0.7rem; color: var(--text-muted);
+  margin-top: 8px; text-align: center;
+}
+.input-hint kbd {
+  background: #ffffff; border: 1px solid #d4d4d8; border-radius: var(--radius-xs);
+  padding: 1px 5px; font-size: 0.68rem; font-family: monospace;
+}
+
+/* ── RESPONSIVE ──────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .sidebar { position:fixed; left:0; top:0; height:100%; transform:translateX(-100%); box-shadow:4px 0 20px rgba(0,0,0,0.12); }
+  .sidebar.open { transform: translateX(0); }
+  .chat-header .back-btn { display:flex; }
+  .model-badge span { display:none; }
+  .chat-header .header-actions .status-badge span { display:none; }
+  .chat-header .header-actions .status-badge { padding: 5px; }
+  .msg-row { max-width: 100%; }
+  .messages-wrap { padding: 18px 16px; }
+  .input-area { padding: 12px 14px 16px; }
+}
+
+/* ── SCROLL TO BOTTOM BTN ─────────────────────────────────────────────────── */
+.scroll-btn {
+  position: absolute; bottom: 100px; right: 24px;
+  width: 34px; height: 34px; border-radius: var(--radius-pill);
+  background: #ffffff; border: 1px solid var(--glass-border);
+  color: var(--text-secondary); font-size: 0.85rem;
+  cursor: pointer; display: none; align-items: center; justify-content: center;
+  box-shadow: var(--glass-shadow); transition: all 0.2s ease;
+  z-index: 4;
+}
+.scroll-btn.visible { display: flex; }
+.scroll-btn:hover { background: #fafafa; color: var(--text-primary); border-color: #d4d4d8; }
+
+/* ── TOPIC SELECTOR in header ─────────────────────────────────────────────── */
+.topic-select {
+  padding: 5px 10px; border-radius: var(--radius-sm); font-size:0.8rem;
+  border: 1px solid var(--glass-border); background: #ffffff;
+  color: var(--text-secondary); outline: none; cursor: pointer;
+  margin-left: auto; font-family: var(--font-body);
+}
+</style>
+</head>
+<body>
+<div class="glow-orb orb-1"></div>
+<div class="glow-orb orb-2"></div>
+
+<div class="app-shell">
+  <!-- ── SIDEBAR ─────────────────────────────────────────────────────────── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon"><i class="fa-solid fa-robot"></i></div>
+      <div class="brand-text">
+        <h2>AI Gia Sư</h2>
+        <span>Đa môn học · Gemini</span>
+      </div>
+    </div>
+
+    <span class="subject-label">Môn học</span>
+    <div class="subject-list">
+      <button class="subject-btn active" data-subject="toan">
+        <span class="topic-icon" style="background:linear-gradient(135deg,#8b5cf6,#ec4899);"><i class="fa-solid fa-square-root-variable"></i></span> Toán học
+      </button>
+      <button class="subject-btn" data-subject="vatly" data-coming="1">
+        <span class="topic-icon" style="background:#0ea5e9;"><i class="fa-solid fa-atom"></i></span> Vật Lý
+      </button>
+      <button class="subject-btn" data-subject="hoa" data-coming="1">
+        <span class="topic-icon" style="background:#22c55e;"><i class="fa-solid fa-flask"></i></span> Hóa học
+      </button>
+      <button class="subject-btn" data-subject="sinh" data-coming="1">
+        <span class="topic-icon" style="background:#84cc16;"><i class="fa-solid fa-leaf"></i></span> Sinh học
+      </button>
+      <button class="subject-btn" data-subject="anh" data-coming="1">
+        <span class="topic-icon" style="background:linear-gradient(135deg,#0ea5e9,#22d3ee);"><i class="fa-solid fa-language"></i></span> Tiếng Anh
+      </button>
+    </div>
+
+    <span class="subject-label">Chủ đề Toán</span>
+    <div class="topic-list" id="topicList">
+      <button class="topic-btn active" data-topic="">
+        <span class="topic-icon"><i class="fa-solid fa-layer-group"></i></span> Tất cả
+      </button>
+      <button class="topic-btn" data-topic="giai_tich">
+        <span class="topic-icon"><i class="fa-solid fa-wave-square"></i></span> Giải tích
+      </button>
+      <button class="topic-btn" data-topic="dao_ham">
+        <span class="topic-icon"><i class="fa-solid fa-chart-line"></i></span> Đạo hàm
+      </button>
+      <button class="topic-btn" data-topic="tich_phan">
+        <span class="topic-icon"><i class="fa-solid fa-chart-area"></i></span> Tích phân
+      </button>
+      <button class="topic-btn" data-topic="luong_giac">
+        <span class="topic-icon"><i class="fa-solid fa-drafting-compass"></i></span> Lượng giác
+      </button>
+      <button class="topic-btn" data-topic="ham_so">
+        <span class="topic-icon"><i class="fa-solid fa-bezier-curve"></i></span> Hàm số
+      </button>
+      <button class="topic-btn" data-topic="mu_logarit">
+        <span class="topic-icon"><i class="fa-solid fa-superscript"></i></span> Mũ & Logarit
+      </button>
+      <button class="topic-btn" data-topic="so_phuc">
+        <span class="topic-icon"><i class="fa-solid fa-atom"></i></span> Số phức
+      </button>
+      <button class="topic-btn" data-topic="xac_suat">
+        <span class="topic-icon"><i class="fa-solid fa-dice"></i></span> Xác suất
+      </button>
+      <button class="topic-btn" data-topic="hinh_hoc_khong_gian">
+        <span class="topic-icon"><i class="fa-solid fa-cube"></i></span> Hình học KG
+      </button>
+    </div>
+
+  </aside>
+
+  <!-- ── MAIN ──────────────────────────────────────────────────────────── -->
+  <div class="chat-main">
+    <div class="chat-header">
+      <button class="back-btn" id="btnToggleSidebar" onclick="document.getElementById('sidebar').classList.toggle('open')">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <div class="ai-avatar"><i class="fa-solid fa-robot"></i></div>
+      <div class="ai-info">
+        <h3 id="headerTitle">AI Giải Bài Tập Toán THPT</h3>
+        <p id="headerSub">Semantic Cache · Gemini</p>
+      </div>
+      <div class="model-badge">
+        <i class="fa-solid fa-bolt"></i>
+        <span id="modelBadgeText">gemini</span>
+      </div>
+      <div class="header-actions">
+        <div class="status-badge" id="statusBadge" title="Trạng thái kết nối">
+          <div class="status-dot" id="statusDot"></div>
+          <span id="statusText">Đang kết nối…</span>
+        </div>
+        <a href="admin.html" target="_blank" class="header-link" title="Trạm Nạp Kiến Thức">
+          <i class="fa-solid fa-database"></i>
+        </a>
+        <button id="newChatBtn" class="header-link" type="button" title="Xóa hội thoại & bắt đầu mới">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+        <a href="index.html" class="header-link" title="Về trang chủ">
+          <i class="fa-solid fa-arrow-left"></i>
+        </a>
+      </div>
+    </div>
+
+    <div class="messages-wrap" id="messagesWrap">
+      <!-- Welcome screen -->
+      <div class="welcome-screen" id="welcomeScreen">
+        <div class="big-icon"><i class="fa-solid fa-robot"></i></div>
+        <div>
+          <h1 id="welcomeTitle">Chào bạn, mình là <span style="color: var(--accent);">AI Gia Sư</span></h1>
+          <p id="welcomeDesc">Mình giúp bạn giải bài tập Toán THPT từng bước — từ lượng giác, đạo hàm, tích phân đến xác suất. Công thức LaTeX được render sạch đẹp, và đang mở rộng thêm nhiều môn học khác.</p>
+        </div>
+        <div class="quick-chips" id="quickChips">
+          <div class="chip" data-q="Giải phương trình $\sin(2x) = \frac{\sqrt{3}}{2}$"><i class="fa-solid fa-drafting-compass"></i> Lượng giác mẫu</div>
+          <div class="chip" data-q="Tìm đạo hàm của hàm số $f(x) = \ln(x^2 + 1)$"><i class="fa-solid fa-chart-line"></i> Đạo hàm mẫu</div>
+          <div class="chip" data-q="Tính tích phân $\int_0^1 (3x^2 + 2x) \, dx$"><i class="fa-solid fa-chart-area"></i> Tích phân mẫu</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="scroll-btn" id="scrollBtn" onclick="scrollToBottom(true)">
+      <i class="fa-solid fa-chevron-down"></i>
+    </button>
+
+    <div class="input-area">
+      <div class="input-box">
+        <!-- Composer: nút + mở bảng chọn ảnh/file · textarea · nút gửi -->
+        <div class="composer">
+          <div class="composer-attach">
+            <button class="attach-btn" id="attachBtn" type="button" title="Đính kèm ảnh / file">
+              <i class="fa-solid fa-plus"></i>
+              <i class="fa-solid fa-check state-check"></i>
+            </button>
+            <div class="composer-menu" id="composerMenu" hidden>
+              <button type="button" data-action="image" class="composer-menu-item">
+                <i class="fa-solid fa-image"></i> <span>Ảnh</span>
+              </button>
+              <button type="button" data-action="camera" class="composer-menu-item">
+                <i class="fa-solid fa-camera"></i> <span>Chụp ảnh</span>
+              </button>
+              <button type="button" data-action="pdf" class="composer-menu-item">
+                <i class="fa-solid fa-file-pdf"></i> <span>File PDF</span>
+              </button>
+            </div>
+          </div>
+          <textarea id="questionInput" rows="1" placeholder="Hỏi bài Toán... hoặc dán ảnh bằng Ctrl+V, đính kèm ảnh/PDF (hỗ trợ LaTeX $x^2$, $$\\int_0^1 f(x)dx$$)"></textarea>
+          <button class="send-btn" id="sendBtn" type="button" title="Gửi (Enter)">
+            <i class="fa-solid fa-arrow-up"></i>
+          </button>
+          <input type="file" id="imgFileInput" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp,.pdf,application/pdf"
+                 style="display:none">
+        </div>
+        <!-- Preview ảnh trước khi gửi -->
+        <div class="img-preview-bar" id="imgPreviewBar" style="display:none">
+          <img id="imgPreviewThumb" src="" alt="preview" title="Bấm để xem lớn">
+          <span id="imgPreviewName" class="img-preview-name"></span>
+          <button class="img-preview-remove" id="imgPreviewRemove" title="Bỏ ảnh">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="input-hint">
+          <kbd>Enter</kbd> gửi · <kbd>Shift+Enter</kbd> xuống dòng · Dán ảnh: <kbd>Ctrl+V</kbd> · LaTeX <kbd>$...$</kbd> / <kbd>$$...$$</kbd>
+        </div>
+      </div>
+      <div class="lightbox" id="lightbox" hidden>
+        <button class="lightbox-close" id="lightboxClose" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
+        <img id="lightboxImg" src="" alt="Xem ảnh lớn">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+const API_URL = 'http://localhost:3001/api/ai-tutor/ask';
+const HEALTH_URL = 'http://localhost:3001/api/ai-tutor/health';
+const API_FILE_URL = 'http://localhost:3001/api/ai-tutor/ask-file';
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let currentTopic = '';
+let isLoading = false;
+let messageCount = 0;
+let pendingFile = null; // ảnh / PDF đang chờ gửi
+let chatHistory = []; // bộ nhớ ngữ cảnh (role: user/model, tối đa 6 lượt)
+
+// ── DOM REFS ──────────────────────────────────────────────────────────────────
+const messagesWrap = document.getElementById('messagesWrap');
+const questionInput = document.getElementById('questionInput');
+const sendBtn       = document.getElementById('sendBtn');
+const welcomeScreen = document.getElementById('welcomeScreen');
+const statusBadge   = document.getElementById('statusBadge');
+const statusDot     = document.getElementById('statusDot');
+const statusText    = document.getElementById('statusText');
+const scrollBtn     = document.getElementById('scrollBtn');
+const attachBtn     = document.getElementById('attachBtn');
+const composerMenu  = document.getElementById('composerMenu');
+const imgFileInput  = document.getElementById('imgFileInput');
+const imgPreviewBar = document.getElementById('imgPreviewBar');
+const imgPreviewThumb = document.getElementById('imgPreviewThumb');
+const imgPreviewName  = document.getElementById('imgPreviewName');
+const imgPreviewRemove = document.getElementById('imgPreviewRemove');
+const lightbox      = document.getElementById('lightbox');
+const lightboxImg   = document.getElementById('lightboxImg');
+const lightboxClose = document.getElementById('lightboxClose');
+
+// ── ATTACH MENU (+ button) ─────────────────────────────────────────────────────
+attachBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  composerMenu.hidden = !composerMenu.hidden;
+});
+document.addEventListener('click', () => { composerMenu.hidden = true; });
+composerMenu.addEventListener('click', (e) => e.stopPropagation());
+
+composerMenu.querySelectorAll('.composer-menu-item').forEach(item => {
+  item.addEventListener('click', () => {
+    composerMenu.hidden = true;
+    if (item.dataset.action === 'camera') {
+      imgFileInput.setAttribute('capture', 'environment');
+    } else {
+      imgFileInput.removeAttribute('capture');
+    }
+    imgFileInput.click();
+  });
+});
+
+// ── FILE SELECT / PASTE HANDLERS ──────────────────────────────────────────────
+const ACCEPT_MIME = ['image/jpeg','image/png','image/webp','application/pdf'];
+const ACCEPT_EXT  = /\.(jpe?g|png|webp|pdf)$/i;
+const MAX_FILE_BYTES = 15 * 1024 * 1024;
+
+function isPdfFile(file) {
+  return file.type === 'application/pdf' || /\.pdf$/i.test(file.name || '');
+}
+
+function setPendingFile(file) {
+  // Validate client-side
+  const extOk = ACCEPT_EXT.test(file.name || '');
+  if (!ACCEPT_MIME.includes(file.type) && !extOk) {
+    showToast('Chỉ hỗ trợ ảnh JPG, PNG, WebP và PDF.', 'error');
+    return;
+  }
+  if (file.size > MAX_FILE_BYTES) {
+    showToast('File tối đa 15MB.', 'error');
+    return;
+  }
+
+  if (imgPreviewThumb.src.startsWith('blob:')) URL.revokeObjectURL(imgPreviewThumb.src);
+  pendingFile = file;
+
+  const isPdf = isPdfFile(file);
+  if (isPdf) {
+    // Hiển thị icon PDF thay vì thumbnail
+    imgPreviewThumb.style.display = 'none';
+    imgPreviewBar.classList.add('pdf-attach');
+    imgPreviewBar.dataset.pdf = file.name;
+  } else {
+    imgPreviewThumb.style.display = 'block';
+    imgPreviewBar.classList.remove('pdf-attach');
+    delete imgPreviewBar.dataset.pdf;
+    imgPreviewThumb.src = URL.createObjectURL(file);
+  }
+
+  imgPreviewName.textContent = file.name || 'Ảnh dán từ clipboard';
+  imgPreviewBar.style.display = 'flex';
+  attachBtn.classList.add('has-image');
+  attachBtn.title = 'File đã chọn — bấm để thay đổi';
+  questionInput.placeholder = 'Thêm ghi chú cho file (tuỳ chọn)...';
+  questionInput.focus();
+}
+
+imgFileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  setPendingFile(file);
+});
+
+// Paste ảnh từ clipboard (Ctrl+V)
+questionInput.addEventListener('paste', (e) => {
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      e.preventDefault();
+      const file = item.getAsFile();
+      if (file) {
+        setPendingFile(file);
+        showToast('Đã dán ảnh từ clipboard', 'success');
+      }
+      return;
+    }
+  }
+});
+
+// Lightbox: bấm thumbnail để xem ảnh lớn
+function openLightbox(src) {
+  lightboxImg.src = src;
+  lightbox.hidden = false;
+}
+function closeLightbox() {
+  lightbox.hidden = true;
+  lightboxImg.src = '';
+}
+imgPreviewBar.addEventListener('click', () => {
+  if (pendingFile && !isPdfFile(pendingFile)) openLightbox(imgPreviewThumb.src);
+});
+lightboxClose.addEventListener('click', closeLightbox);
+lightbox.addEventListener('click', (e) => {
+  if (e.target === lightbox) closeLightbox();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !lightbox.hidden) closeLightbox();
+});
+
+imgPreviewRemove.addEventListener('click', (e) => {
+  e.stopPropagation();
+  clearImagePreview();
+});
+
+function clearImagePreview() {
+  pendingFile = null;
+  imgFileInput.value = '';
+  if (imgPreviewThumb.src.startsWith('blob:')) URL.revokeObjectURL(imgPreviewThumb.src);
+  imgPreviewBar.style.display = 'none';
+  imgPreviewThumb.src = '';
+  imgPreviewThumb.style.display = 'block';
+  imgPreviewBar.classList.remove('pdf-attach');
+  delete imgPreviewBar.dataset.pdf;
+  attachBtn.classList.remove('has-image');
+  attachBtn.title = 'Đính kèm ảnh / PDF';
+  questionInput.placeholder = 'Hỏi bài Toán... hoặc dán ảnh bằng Ctrl+V, đính kèm ảnh/PDF (hỗ trợ LaTeX $x^2$, $$\\int_0^1 f(x)dx$$)';
+}
+
+// ── TOAST ────────────────────────────────────────────────────────────────────
+let _toastEl = null;
+function showToast(msg, type = 'info', duration = 2600) {
+  if (!_toastEl) {
+    _toastEl = document.createElement('div');
+    _toastEl.className = 'toast';
+    document.body.appendChild(_toastEl);
+  }
+  const icon = type === 'error' ? 'fa-triangle-exclamation'
+             : type === 'success' ? 'fa-circle-check' : 'fa-circle-info';
+  _toastEl.innerHTML = `<i class="fa-solid ${icon}"></i><span>${escapeHtml(msg)}</span>`;
+  _toastEl.className = `toast ${type}`;
+  requestAnimationFrame(() => _toastEl.classList.add('show'));
+  clearTimeout(_toastEl._t);
+  _toastEl._t = setTimeout(() => _toastEl.classList.remove('show'), duration);
+}
+
+// ── AUTO-RESIZE TEXTAREA ─────────────────────────────────────────────────────
+questionInput.addEventListener('input', () => {
+  questionInput.style.height = 'auto';
+  questionInput.style.height = Math.min(questionInput.scrollHeight, 160) + 'px';
+});
+
+// Enter to send, Shift+Enter for newline
+questionInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+// Gửi khi bấm nút gửi
+sendBtn.addEventListener('click', sendMessage);
+
+// ── SUBJECT SWITCHER (mở rộng đa môn học) ───────────────────────────────────
+const SUBJECT_META = {
+  toan: { title: 'AI Giải Bài Tập Toán THPT', desc: 'Semantic Cache · Gemini',
+          welcome: 'Chào bạn, mình là <span style="color: var(--accent);">AI Gia Sư Toán</span>',
+          welcomeDesc: 'Mình giúp bạn giải bài tập Toán THPT từng bước — từ lượng giác, đạo hàm, tích phân đến xác suất. Công thức LaTeX được render sạch đẹp.' },
+  vatly: { title: 'AI Giải Bài Tập Vật Lý', desc: 'Sắp ra mắt · Semantic Cache',
+           welcome: 'Chào bạn, mình là <span style="color:#0ea5e9;">AI Gia Sư Vật Lý</span>',
+           welcomeDesc: 'Môn Vật Lý đang được chuẩn bị. Hãy thử môn Toán trong lúc này nhé!' },
+  hoa:   { title: 'AI Giải Bài Tập Hóa Học', desc: 'Sắp ra mắt · Semantic Cache',
+           welcome: 'Chào bạn, mình là <span style="color:#22c55e;">AI Gia Sư Hóa Học</span>',
+           welcomeDesc: 'Môn Hóa Học đang được chuẩn bị. Hãy thử môn Toán trong lúc này nhé!' },
+  sinh:  { title: 'AI Giải Bài Tập Sinh Học', desc: 'Sắp ra mắt · Semantic Cache',
+           welcome: 'Chào bạn, mình là <span style="color:#84cc16;">AI Gia Sư Sinh Học</span>',
+           welcomeDesc: 'Môn Sinh Học đang được chuẩn bị. Hãy thử môn Toán trong lúc này nhé!' },
+  anh:   { title: 'AI Giải Bài Tập Tiếng Anh', desc: 'Sắp ra mắt · Semantic Cache',
+           welcome: 'Chào bạn, mình là <span style="color:#ef4444;">AI Gia Sư Tiếng Anh</span>',
+           welcomeDesc: 'Môn Tiếng Anh đang được chuẩn bị. Hãy thử môn Toán trong lúc này nhé!' },
+};
+let currentSubject = 'toan';
+
+document.querySelectorAll('.subject-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (btn.dataset.coming === '1') {
+      showToast('Môn này sắp ra mắt. Hiện tại mình đang dạy Toán nhé!', 'info');
+      return;
+    }
+    document.querySelectorAll('.subject-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentSubject = btn.dataset.subject;
+    const meta = SUBJECT_META[currentSubject];
+    document.getElementById('headerTitle').textContent = meta.title;
+    document.getElementById('welcomeTitle').innerHTML = meta.welcome;
+    document.getElementById('welcomeDesc').textContent = meta.welcomeDesc;
+    questionInput.placeholder = `Hỏi bài ${currentSubject === 'toan' ? 'Toán' : ''}... hoặc dán ảnh bằng Ctrl+V (hỗ trợ LaTeX $x^2$, $$\\int_0^1 f(x)dx$$)`;
+    questionInput.focus();
+  });
+});
+
+// ── TOPIC BUTTONS ─────────────────────────────────────────────────────────────
+document.querySelectorAll('.topic-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.topic-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTopic = btn.dataset.topic;
+    questionInput.focus();
+  });
+});
+
+// ── QUICK CHIPS ───────────────────────────────────────────────────────────────
+document.querySelectorAll('#quickChips .chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    questionInput.value = chip.dataset.q;
+    questionInput.dispatchEvent(new Event('input'));
+    questionInput.focus();
+    sendMessage();
+  });
+});
+
+// ── HEALTH CHECK ─────────────────────────────────────────────────────────────
+// ── SCROLL WATCHER ────────────────────────────────────────────────────────────
+messagesWrap.addEventListener('scroll', () => {
+  const dist = messagesWrap.scrollHeight - messagesWrap.scrollTop - messagesWrap.clientHeight;
+  scrollBtn.classList.toggle('visible', dist > 120);
+});
+
+function scrollToBottom(smooth = true) {
+  messagesWrap.scrollTo({ top: messagesWrap.scrollHeight, behavior: smooth ? 'smooth' : 'instant' });
+}
+
+// ── KATEX RENDER ─────────────────────────────────────────────────────────────
+function renderMath(el) {
+  if (!window.renderMathInElement) {
+    setTimeout(() => renderMath(el), 150);
+    return;
+  }
+  renderMathInElement(el, {
+    delimiters: [
+      { left: '$$',  right: '$$',  display: true  },
+      { left: '$',   right: '$',   display: false },
+      { left: '\\(', right: '\\)', display: false },
+      { left: '\\[', right: '\\]', display: true  },
+    ],
+    throwOnError: false,
+    strict: false,
+  });
+}
+
+// ── MARKED CONFIG ─────────────────────────────────────────────────────────────
+if (window.marked) {
+  marked.setOptions({ breaks: true, gfm: true });
+}
+
+// ── FORMAT AI ANSWER ─────────────────────────────────────────────────────────
+function formatAnswer(text) {
+  if (!text) return '';
+  // Escape $...$ trước khi parse Markdown để tránh Marked phá LaTeX
+  // Dùng placeholder trick
+  const mathBlocks = [];
+  let safe = text
+    .replace(/\$\$([\s\S]+?)\$\$/g, (m) => { mathBlocks.push(m); return `%%MATH_BLOCK_${mathBlocks.length-1}%%`; })
+    .replace(/\$([^$\n]+?)\$/g,     (m) => { mathBlocks.push(m); return `%%MATH_INLINE_${mathBlocks.length-1}%%`; });
+
+  // Parse Markdown
+  if (window.marked) safe = marked.parse(safe);
+  else safe = safe.replace(/\n/g, '<br>');
+
+  // Restore LaTeX
+  mathBlocks.forEach((m, i) => {
+    safe = safe.replace(`%%MATH_BLOCK_${i}%%`, m).replace(`%%MATH_INLINE_${i}%%`, m);
+  });
+  return safe;
+}
+
+// ── CREATE MESSAGE ELEMENT ────────────────────────────────────────────────────
+function createUserMsg(text) {
+  const row = document.createElement('div');
+  row.className = 'msg-row user';
+  const time = new Date().toLocaleTimeString('vi-VN', { hour:'2-digit', minute:'2-digit' });
+  row.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;max-width:70%;">
+      <div class="msg-bubble" style="background:var(--chat-user-bg);color:#fff;">${escapeHtml(text)}</div>
+      <div class="msg-meta">${time}</div>
+    </div>
+    <div class="msg-avatar"><i class="fa-solid fa-user"></i></div>`;
+  return row;
+}
+
+function createAiMsg(html, meta) {
+  const row = document.createElement('div');
+  row.className = 'msg-row ai';
+  const time = new Date().toLocaleTimeString('vi-VN', { hour:'2-digit', minute:'2-digit' });
+  // Huy hiệu theo độ tin cậy: verified (GV duyệt) vs AI tự giải
+  let badge = '';
+  if (meta.isVerified === true) {
+    badge = `<span class="badge-verified"><i class="fa-solid fa-circle-check"></i> Đáp án chuẩn từ Giáo viên</span>`;
+  } else {
+    badge = `<span class="badge-ai"><i class="fa-solid fa-robot"></i> AI tự giải</span>`;
+  }
+  const sourceBadge = meta.source === 'cache'
+    ? `<span class="badge-cache"><i class="fa-solid fa-bolt"></i> Cache · ${meta.score}</span>`
+    : '';
+  const latency = meta.latencyMs ? `${meta.latencyMs}ms` : '';
+  row.innerHTML = `
+    <div class="msg-avatar"><i class="fa-solid fa-robot"></i></div>
+    <div style="display:flex;flex-direction:column;gap:4px;max-width:78%;">
+      <div class="msg-bubble ai-content">${html}</div>
+      <div class="msg-meta">${badge} ${sourceBadge} ${latency ? `· ${latency}` : ''} · ${time}</div>
+    </div>`;
+  return row;
+}
+
+function createTyping(withImage = false) {
+  const row = document.createElement('div');
+  row.className = 'typing-row';
+  row.id = 'typingIndicator';
+  row.innerHTML = `
+    <div class="msg-avatar"><i class="fa-solid fa-robot"></i></div>
+    <div class="typing-bubble">
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <span class="typing-label">${withImage ? 'AI đang đọc ảnh/PDF & giải...' : 'AI đang giải...'}</span>
+    </div>`;
+  return row;
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Chuyển File/Blob → dataURL
+function readAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── SEND MESSAGE ──────────────────────────────────────────────────────────────
+async function sendMessage() {
+  const q = questionInput.value.trim();
+  const hasImage = !!pendingFile;
+
+  // Phải có ít nhất file hoặc text
+  if (!q && !hasImage) return;
+  if (isLoading) return;
+
+  // Ẩn welcome screen lần đầu
+  if (messageCount === 0) welcomeScreen.style.display = 'none';
+  messageCount++;
+
+  isLoading = true;
+  sendBtn.disabled = true;
+
+  // Lưu lại ảnh/text trước khi reset form
+  const file = pendingFile;
+  const noteText = q;
+  const isFilePdf = file ? isPdfFile(file) : false;
+
+  // ── Hiển thị user message ──────────────────────────────────────────────────
+  if (hasImage) {
+    const fname = file.name || 'Ảnh dán từ clipboard';
+    let dataUrl = imgPreviewThumb.src;
+    const userRow = document.createElement('div');
+
+    if (isFilePdf) {
+      // PDF: hiển thị dạng thẻ tệp đính kèm
+      userRow.className = 'msg-row user';
+      userRow.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;max-width:70%;">
+          <div class="msg-bubble" style="background:var(--chat-user-bg);color:#fff;padding:10px 14px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:1.5rem;color:#f8fafc;"><i class="fa-solid fa-file-pdf"></i></span>
+              <div style="display:flex;flex-direction:column;">
+                <strong style="font-size:0.82rem;word-break:break-all;max-width:220px;">${escapeHtml(fname)}</strong>
+                <small style="opacity:.8;font-size:0.72rem;">PDF · ${(file.size/1024).toFixed(0)} KB</small>
+              </div>
+            </div>
+            ${noteText ? `<span style="display:block;margin-top:6px;">${escapeHtml(noteText)}</span>` : ''}
+          </div>
+        </div>
+        <div class="msg-avatar"><i class="fa-solid fa-user"></i></div>`;
+    } else {
+      // Ảnh: chuyển thành dataURL cho bền vững
+      if (dataUrl.startsWith('blob:')) {
+        try {
+          dataUrl = await readAsDataURL(file);
+        } catch { /* giữ blob URL */ }
+      }
+      userRow.className = 'msg-row user';
+      userRow.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;max-width:70%;">
+          <div class="msg-bubble" style="background:var(--chat-user-bg);color:#fff;padding:8px;">
+            <img src="${dataUrl}" alt="đề bài" class="sent-image"
+              style="max-width:200px;max-height:160px;border-radius:8px;display:block;cursor:zoom-in;margin-bottom:${noteText?'6px':'0'}">
+            ${noteText ? `<span>${escapeHtml(noteText)}</span>` : ''}
+          </div>
+          <div class="msg-meta">
+            <span style="font-size:0.7rem;color:var(--text-muted);"><i class="fa-solid fa-image"></i> ${escapeHtml(fname)} · bấm ảnh để xem</span>
+          </div>
+        </div>
+        <div class="msg-avatar"><i class="fa-solid fa-user"></i></div>`;
+    }
+    messagesWrap.appendChild(userRow);
+    if (!isFilePdf) userRow.querySelector('.sent-image').addEventListener('click', () => openLightbox(dataUrl));
+  } else {
+    messagesWrap.appendChild(createUserMsg(noteText));
+  }
+
+  questionInput.value = '';
+  questionInput.style.height = 'auto';
+  clearImagePreview();
+
+  // Typing indicator
+  const typing = createTyping(hasImage);
+  messagesWrap.appendChild(typing);
+  scrollToBottom();
+
+  try {
+    let data;
+
+    if (file) {
+      // ── Gửi ảnh / PDF ────────────────────────────────────────────────────
+      const formData = new FormData();
+      formData.append('file', file);
+      if (noteText) formData.append('note', noteText);
+      formData.append('subject', currentSubject);
+      formData.append('history', JSON.stringify(chatHistory)); // bộ nhớ ngữ cảnh nối tiếp
+
+      const res = await fetch(API_FILE_URL, { method: 'POST', body: formData });
+      data = await res.json();
+      typing.remove();
+      if (!res.ok || !data.success) throw new Error(data.message || `HTTP ${res.status}`);
+
+      // Hiển thị đề đã bóc tách (nếu có)
+      if (data.extractedQuestion) {
+        const extractRow = document.createElement('div');
+        extractRow.className = 'msg-row ai';
+        extractRow.innerHTML = `
+          <div class="msg-avatar"><i class="fa-solid fa-robot"></i></div>
+          <div style="max-width:78%;">
+            <div class="extract-card">
+              <div class="extract-label">
+                <i class="fa-solid fa-eye"></i> AI đã bóc tách đề bài:
+              </div>
+              <div class="extract-content">${escapeHtml(data.extractedQuestion)}</div>
+            </div>
+          </div>`;
+        messagesWrap.appendChild(extractRow);
+        renderMath(extractRow.querySelector('.extract-content'));
+      }
+    } else {
+      // ── Gửi text thông thường ────────────────────────────────────────────
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question: noteText,
+          topic: currentTopic || undefined,
+          subject: currentSubject,
+          history: chatHistory, // bộ nhớ ngữ cảnh nối tiếp
+        }),
+      });
+      data = await res.json();
+      typing.remove();
+      if (!res.ok || !data.success) throw new Error(data.message || `HTTP ${res.status}`);
+    }
+
+    // Lưu cặp hội thoại vào bộ nhớ ngữ cảnh
+    const userMsgForHistory = data.extractedQuestion ? `${data.extractedQuestion}${noteText ? `\nGhi chú: ${noteText}` : ''}` : noteText;
+    pushChatHistory(userMsgForHistory, data.answer);
+
+    // Hiển thị đáp án AI
+    const html = formatAnswer(data.answer);
+    const aiRow = createAiMsg(html, {
+      source: data.source,
+      score: data.score ? data.score.toFixed(3) : null,
+      latencyMs: data.latencyMs,
+      isVerified: data.isVerified === true,
+    });
+    messagesWrap.appendChild(aiRow);
+    renderMath(aiRow.querySelector('.ai-content'));
+    scrollToBottom();
+
+  } catch (err) {
+    typing.remove();
+    const errRow = document.createElement('div');
+    errRow.className = 'msg-row ai';
+    errRow.innerHTML = `
+      <div class="msg-avatar"><i class="fa-solid fa-robot"></i></div>
+      <div class="msg-bubble ai-content" style="border-color:#fecaca;background:#fff5f5;color:#991b1b;max-width:78%;">
+        <i class="fa-solid fa-triangle-exclamation" style="color:#f87171;margin-right:6px;"></i>
+        <strong>Lỗi:</strong> ${escapeHtml(err.message)}<br>
+        <small style="color:#b91c1c;">Kiểm tra server <code>node index.js</code> đang chạy tại port 3001.</small>
+      </div>`;
+    messagesWrap.appendChild(errRow);
+    scrollToBottom();
+  } finally {
+    isLoading = false;
+    sendBtn.disabled = false;
+    saveConvo();
+    questionInput.focus();
+  }
+}
+
+// ── CHAT HISTORY (bộ nhớ ngữ cảnh) ───────────────────────────────────────────
+const MAX_HISTORY_TURNS = 6; // 6 lượt = 3 cặp hỏi-đáp gần nhất
+
+/**
+ * Đẩy 1 cặp (user, model) vào chatHistory.
+ * Định dạng chuẩn Gemini: { role, parts: [{ text }] }
+ */
+function pushChatHistory(userText, modelText) {
+  if (!userText) return;
+  chatHistory.push(
+    { role: 'user',  parts: [{ text: String(userText).slice(0, 2000) }] },
+    { role: 'model', parts: [{ text: String(modelText).slice(0, 4000) }] }
+  );
+  // Giữ tối đa 6 lượt gần nhất để không vượt giới hạn token
+  if (chatHistory.length > MAX_HISTORY_TURNS) {
+    chatHistory = chatHistory.slice(-MAX_HISTORY_TURNS);
+  }
+}
+
+// ── PERSISTENCE (reload giữ lại bài giải) ────────────────────────────────────
+// Lưu toàn bộ tin nhắn đã render + bộ nhớ ngữ cảnh vào localStorage, khôi phục lại
+// khi tải lại trang để người dùng xem lại bài giải cũ.
+const CONVO_KEY = 'ai_tutor_convo_v3';
+
+function saveConvo() {
+  try {
+    const rows = [...messagesWrap.querySelectorAll('.msg-row')].map((el) => el.outerHTML);
+    localStorage.setItem(CONVO_KEY, JSON.stringify({
+      v: 3,
+      rows,
+      chatHistory,
+      currentTopic,
+      currentSubject,
+      savedAt: Date.now(),
+      messageCount,
+    }));
+  } catch (e) {
+    /* localStorage đầy hoặc bị khoá — bỏ qua, không làm gãy chat */
+  }
+}
+
+function restoreConvo() {
+  try {
+    const raw = localStorage.getItem(CONVO_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    if (!saved || !Array.isArray(saved.rows) || saved.rows.length === 0) return;
+
+    // Có tin nhắn → giấu welcome screen
+    welcomeScreen.style.display = 'none';
+    if (Array.isArray(saved.rows)) {
+      for (const html of saved.rows) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        const row = tmp.firstElementChild;
+        if (row) messagesWrap.appendChild(row);
+      }
+    }
+    if (Array.isArray(saved.history)) chatHistory = saved.history;
+    if (saved.currentTopic) currentTopic = saved.currentTopic;
+    if (saved.currentSubject && SUBJECT_META[saved.currentSubject]) currentSubject = saved.currentSubject;
+    if (typeof saved.messageCount === 'number') messageCount = saved.messageCount;
+
+    // Render lại LaTeX + gắn lại click xem ảnh lớn
+    messagesWrap.querySelectorAll('.ai-content, .extract-content').forEach((el) => renderMath(el));
+    messagesWrap.querySelectorAll('.sent-image').forEach((img) => {
+      img.addEventListener('click', () => openLightbox(img.src));
+    });
+    scrollToBottom(false);
+  } catch (e) {
+    /* dữ liệu hỏng → bỏ qua, bắt đầu mới */
+  }
+}
+
+// Nút "Xóa hội thoại" — xoá khỏi localStorage + reset về màn hình chào
+document.getElementById('newChatBtn').addEventListener('click', () => {
+  localStorage.removeItem(CONVO_KEY);
+  chatHistory = [];
+  messagesWrap.querySelectorAll('.msg-row').forEach((el) => el.remove());
+  currentTopic = '';
+  messageCount = 0;
+  welcomeScreen.style.display = '';
+  showToast('Đã xóa hội thoại', 'success');
+});
+
+// Khôi phục lại bài giải cũ khi mở trang
+restoreConvo();
+
+// ── HEALTH CHECK ──────────────────────────────────────────────────────────────
+async function checkHealth() {
+  try {
+    const res = await fetch(HEALTH_URL, { signal: AbortSignal.timeout(4000) });
+    if (res.ok) {
+      const data = await res.json();
+      statusBadge.className = 'status-badge';
+      statusText.textContent = 'Đã kết nối · ' + (data.config?.vectorDb || 'upstash');
+      document.getElementById('headerSub').textContent =
+        `Semantic Cache · ${data.config?.vectorDb || 'Upstash'} · Cosine ${data.config?.similarityThreshold || 0.95}`;
+    } else {
+      throw new Error('not ok');
+    }
+  } catch {
+    statusBadge.className = 'status-badge offline';
+    statusText.textContent = 'Server chưa chạy';
+  }
+}
+
+// Kiểm tra khi load và mỗi 30s
+checkHealth();
+setInterval(checkHealth, 30000);
+
+// Focus input khi load
+window.addEventListener('load', () => questionInput.focus());
+</script>
+</body>
+</html>

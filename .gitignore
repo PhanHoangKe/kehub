@@ -15,3 +15,15 @@ npm-debug.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# Backup / file tạm — không commit
+*.bak
+*.backup_pre_fix
+*_fixed.html
+*_ftfy.html
+fix_*.py
+__pycache__/
+*.pyc
+
+# Runtime state (AI Gia Sư)
+ai-tutor/review_queue.json

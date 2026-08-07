@@ -1,0 +1,527 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kho Câu Hài — Đặc Vụ Đòi Nợ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  :root {
+    --bg: #0a0e14; --panel: #11171f; --line: rgba(34,211,238,0.16);
+    --cyan: #22d3ee; --amber: #f5b73f; --green: #4ade80; --red: #f87171;
+    --text: #e6f4ff; --dim: #93a7bd; --mute: #5f7386;
+    --mono: 'JetBrains Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Outfit', sans-serif; color: var(--text); min-height: 100vh;
+    background:
+      radial-gradient(1000px 500px at 85% -10%, rgba(34,211,238,0.10), transparent 60%),
+      radial-gradient(700px 400px at -10% 30%, rgba(245,183,63,0.06), transparent 55%),
+      var(--bg);
+  }
+  .wrap { max-width: 1020px; margin: 0 auto; padding: 16px 16px 60px; }
+
+  .head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+  .head h1 { font-size: 22px; font-weight: 800; letter-spacing: .3px; }
+  .head h1 i { color: var(--cyan); margin-right: 8px; }
+  .head .sub { color: var(--dim); font-size: 13px; margin-top: 6px; line-height: 1.5; max-width: 640px; }
+  .head .actions { display: flex; gap: 10px; }
+
+  .btn {
+    font-family: inherit; cursor: pointer; border-radius: 3px; border: 1px solid var(--border);
+    background: var(--panel); color: var(--text); padding: 9px 16px; font-size: 14px; font-weight: 600;
+    transition: all .15s; display: inline-flex; align-items: center; gap: 7px;
+  }
+  .btn:hover { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan) inset; transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn.primary { background: linear-gradient(140deg, #0e7490, #155e75); border-color: #155e75; }
+  .btn.danger { color: var(--red); border-color: rgba(248,113,113,.35); }
+  .btn.small { padding: 5px 10px; font-size: 12px; border-radius: 2px; }
+
+  #loginOverlay {
+    position: fixed; inset: 0; z-index: 50; display: none;
+    background: rgba(0,0,0,.7); backdrop-filter: blur(4px); place-items: center;
+  }
+  #loginOverlay.show { display: grid; }
+  .login-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 3px; padding: 26px;
+    width: min(360px, 100%);
+  }
+  .login-card h2 { font-size: 18px; margin-bottom: 16px; }
+  .login-card input {
+    width: 100%; padding: 12px 14px; border-radius: 3px; border: 1px solid var(--border);
+    background: #0b1016; color: var(--text); font-size: 15px; margin-bottom: 12px; outline: none;
+  }
+  .login-card input:focus { border-color: var(--cyan); }
+  .login-err { color: var(--red); font-size: 13px; margin-bottom: 8px; display: none; }
+
+  /* Panel: Dán nhanh + AI tách */
+  .quick {
+    background: var(--panel); border: 1px dashed var(--cyan); border-radius: 3px; padding: 18px; margin-bottom: 18px;
+  }
+  .quick h3 { font-size: 15px; margin-bottom: 6px; }
+  .quick .qlabel { font-size: 12px; color: var(--dim); margin-bottom: 10px; line-height: 1.5; }
+  #pasteText {
+    width: 100%; min-height: 110px; padding: 10px 13px; border-radius: 3px; border: 1px solid var(--border);
+    background: #0b1016; color: var(--text); font-size: 14px; outline: none; resize: vertical; font-family: inherit;
+  }
+  #pasteText:focus { border-color: var(--cyan); }
+  .quick .rowline { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .quick .meta-sel { display: flex; gap: 8px; }
+  .quick .meta-sel select { padding: 7px 10px; border-radius: 2px; border: 1px solid var(--border); background: #0b1016; color: var(--text); font-size: 13px; outline: none; }
+  .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid rgba(255,255,255,.25); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: -2px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .preview-box { margin-top: 12px; }
+  .preview-box .pv-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .pv-item {
+    display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; margin-bottom: 6px;
+    background: #0d1219; border: 1px solid var(--border); border-radius: 2px;
+  }
+  .pv-item input[type="checkbox"] { margin-top: 3px; width: 15px; height: 15px; accent-color: var(--cyan); flex-shrink: 0; }
+  .pv-body { flex: 1; }
+  .pv-text { font-size: 14px; line-height: 1.45; }
+  .pv-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 5px; }
+  .pv-edit { margin-top: 6px; }
+  .pv-edit input, .pv-edit select {
+    padding: 5px 8px; border-radius: 2px; border: 1px solid var(--border); background: #0b1016; color: var(--text); font-size: 12px; outline: none; margin-right: 6px; margin-bottom: 4px;
+  }
+  .pv-toggle { font-size: 12px; color: var(--cyan); cursor: pointer; background: none; border: none; font-family: inherit; }
+  .pv-toggle:hover { text-decoration: underline; }
+  .pv-empty { color: var(--mute); font-size: 14px; padding: 16px 0; text-align: center; }
+
+  /* editor add */
+  .editor {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 3px; padding: 20px; margin-bottom: 22px;
+  }
+  .editor h3 { font-size: 15px; margin-bottom: 14px; }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 12px; color: var(--dim); margin-bottom: 5px; font-weight: 600; }
+  .field input, .field textarea, .field select {
+    width: 100%; padding: 10px 13px; border-radius: 3px; border: 1px solid var(--border);
+    background: #0b1016; color: var(--text); font-size: 14px; outline: none; font-family: inherit;
+  }
+  .field textarea { min-height: 84px; resize: vertical; }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--cyan); }
+  .row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .row .field { margin-bottom: 12px; }
+  .hint { font-size: 12px; color: var(--mute); margin-top: 4px; }
+
+  .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .toolbar .count { font-size: 14px; color: var(--dim); }
+  .toolbar .count b { color: var(--cyan); }
+  #search {
+    padding: 9px 14px; border-radius: 3px; border: 1px solid var(--border);
+    background: var(--panel); color: var(--text); font-size: 14px; outline: none; min-width: 220px;
+  }
+  #search:focus { border-color: var(--cyan); }
+
+  #ribList { display: flex; flex-direction: column; gap: 10px; }
+  .rib { background: var(--panel); border: 1px solid var(--border); border-radius: 3px; padding: 14px 16px; }
+  .rib .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .rib .text { font-size: 15px; line-height: 1.5; }
+  .rib .meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .chip { font-size: 11px; padding: 2px 8px; border-radius: 2px; background: rgba(34,211,238,0.10); color: var(--cyan); border: 1px solid rgba(34,211,238,0.25); }
+  .chip.tag { background: rgba(245,183,63,0.10); color: var(--amber); border-color: rgba(245,183,63,0.25); }
+  .chip.degree { font-family: var(--mono); }
+  .deg-Nhẹ { background: rgba(74,222,128,.12); color: var(--green); border-color: rgba(74,222,128,.3); }
+  .deg-Vừa { background: rgba(245,183,63,.12); color: var(--amber); border-color: rgba(245,183,63,.3); }
+  .deg-Nặng { background: rgba(248,113,113,.12); color: var(--red); border-color: rgba(248,113,113,.3); }
+  .rib .text-edit { display: none; margin-top: 8px; }
+  .rib.editing .text-edit { display: block; }
+  .rib.editing .text, .rib.editing .edit-btn { display: none; }
+  .rib-actions { display: flex; gap: 6px; }
+  .rib-actions .btn { padding: 6px 10px; font-size: 12px; }
+  .edit-box { display: grid; grid-template-columns: 1.6fr 1fr .8fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .empty { text-align: center; color: var(--mute); padding: 40px 0; font-size: 15px; }
+
+  #toast {
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(120%);
+    background: var(--panel); border: 1px solid var(--cyan); border-radius: 3px;
+    padding: 11px 20px; font-size: 14px; z-index: 60; transition: transform .25s; box-shadow: 0 8px 30px rgba(0,0,0,.5);
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+  #toast.err { border-color: var(--red); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <h1><i class="fa-solid fa-book-skull"></i> Kho Câu Hài — Đặc Vụ Đòi Nợ</h1>
+      <div class="sub">Quản lý kho ngữ liệu RAG. Dán gọn một đoạn vào ô <b>"Dán nhanh"</b>, AI tự tách từng câu + gắn chủ đề/tag/độ, bạn tick rồi đưa vào kho. Sửa/xoá tự invalid cache để server embed lại.</div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="btnOpenAdd"><i class="fa-solid fa-plus"></i> Thêm tay</button>
+      <button class="btn danger" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Thoát</button>
+    </div>
+  </div>
+
+  <!-- Dán nhanh + AI tách -->
+  <div class="quick">
+    <h3><i class="fa-solid fa-wand-magic-sparkles" style="color:var(--cyan)"></i> Dán nhanh — AI tự tách câu</h3>
+    <div class="sublabel">Copy đoạn văn bản (Google, meme, bài viết...) dán vào đây, bấm "AI tách câu". Mỗi câu được tách riêng + đề xuất chủ đề/tag/độ — bạn tích chọn rồi "Đưa vào kho".</div>
+    <textarea id="pasteText" placeholder="Dán văn bản vào đây... ví dụ: &#10;Tụi bạn vay tiền mua xe xong quên trả, dad ngày thằng bạn tiền cứ miên man. Trả đi chứ nhìn nợ còn dai hơn sợi người yêu cũ..."></textarea>
+    <div class="quickline">
+      <button class="btn primary" id="btnSplit"><i class="fa-solid fa-wand-magic-sparkles"></i> AI tách câu</button>
+      <span class="quickStatus" id="splitStatus"></span>
+    </div>
+    <div class="preview-box" id="previewBox" style="display:none;">
+      <div class="pv-head">
+        <span class="count">Tách được <b id="pvCount">0</b> câu — <span id="pvSelCount">0</span> được chọn</span>
+        <div class="rib-actions">
+          <button class="btn" id="pvSelectAll"><i class="fa-solid fa-check-double"></i> Chọn hết</button>
+          <button class="btn primary" id="btnCommitPreview"><i class="fa-solid fa-box-archive"></i> Đưa vào kho</button>
+        </div>
+      </div>
+      <div id="pvList"></div>
+    </div>
+  </div>
+
+  <div class="editor" id="editor" style="display:none;">
+    <h3 id="editorTitle"><i class="fa-solid fa-square-plus"></i> Thêm câu mới (tay)</h3>
+    <div class="field">
+      <label>Nội dung câu hài (*)</label>
+      <textarea id="fText" placeholder="VD: Nợ thì ít, mà mặt tui thì dày cộp hơn đến Cô Bạch..."></textarea>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Chủ đề / tình huống</label>
+        <input id="fTopic" placeholder="VD: vay mua xe, nợ mà mặt dày, bạn thân mượn tiền...">
+      </div>
+      <div class="field">
+        <label>Mức độ sát thương</label>
+        <select id="fDegree">
+          <option value="Nhẹ">Nhẹ</option>
+          <option value="Vừa" selected>Vừa</option>
+          <option value="Nặng">Nặng</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Tags (cách nhau bằng dấu phẩy)</label>
+        <input id="fTags" placeholder="VD: cà khịa, genz, ngọt">
+        <div class="hint">Dùng cho AI tra cứu — càng nhiều càng dễ tìm.</div>
+      </div>
+    </div>
+    <div class="rib-actions">
+      <button class="btn primary" id="btnSave"><i class="fa-solid fa-floppy-disk"></i> Lưu</button>
+      <button class="btn" id="btnCancel">Huỷ</button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="count">Tổng: <b id="count">0</b> câu &nbsp;·&nbsp; đã nhúng cache: <b id="cacheCount">-</b></div>
+    <div style="position:relative;">
+      <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--mute);font-size:13px;pointer-events:none;"></i>
+      <input id="search" placeholder="Tìm theo từ khoá, tag, chủ đề..." style="padding-left:32px;">
+    </div>
+  </div>
+  <div id="ribList"></div>
+
+  <div id="toast"></div>
+</div>
+
+<div id="loginOverlay" class="show">
+  <div class="login-card">
+    <h2><i class="fa-solid fa-lock" style="color:var(--cyan)"></i> Đăng nhập Admin</h2>
+    <div class="login-err" id="loginErr"></div>
+    <input type="password" id="loginPass" placeholder="Mật khẩu Admin" autocomplete="current-password">
+    <button class="btn primary" id="loginBtn" style="width:100%;justify-content:center;"><i class="fa-solid fa-arrow-right-to-bracket"></i> Đăng nhập</button>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const token = () => localStorage.getItem('admin_token');
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const authHeaders = (json) => {
+  const h = {};
+  if (token()) h['Authorization'] = 'Bearer ' + token();
+  if (json) h['Content-Type'] = 'application/json';
+  return h;
+};
+
+let ITEMS = [];
+let PREVIEW = [];
+
+function toast(msg, isErr) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = isErr ? 'show err' : 'show';
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { t.className = ''; }, 2600);
+}
+function setBusy(btn, busy, idleHtml) {
+  btn.disabled = busy;
+  btn.innerHTML = busy ? '<span class="spinner"></span> Đang xử lý...' : idleHtml;
+}
+
+async function api(method, url, body) {
+  const res = await fetch(url, { method, headers: authHeaders(body != null), body: body != null ? JSON.stringify(body) : undefined });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401) { showLogin(); throw new Error('Phiên đã hết hạn'); }
+  if (!data.success) throw new Error(data.message || 'Lỗi server');
+  return data;
+}
+
+/* ── Render list ── */
+function render() {
+  const q = ($('search').value || '').toLowerCase().trim();
+  let items = ITEMS;
+  if (q) {
+    items = items.filter(it =>
+      it.text.toLowerCase().includes(q) ||
+      (it.topic||'').toLowerCase().includes(q) ||
+      (it.tags||[]).some(t => t.toLowerCase().includes(q)));
+  }
+  $('count').textContent = (ITEMS||[]).length;
+  const box = $('ribList');
+  box.innerHTML = '';
+  if (!items.length) { box.innerHTML = '<div class="empty">Chưa có câu nào. Dán văn bản lên ô < trên để AI tách, hoặc nhấn "Thêm tay".</div>'; return; }
+  items.forEach(it => {
+    const div = document.createElement('div');
+    div.className = 'rib';
+    div.innerHTML = `
+      <div class="top">
+        <span style="font-family:var(--mono);font-size:11px;color:var(--mute);">${esc(it.id)}</span>
+        <div class="rib-actions">
+          <button class="btn small edit-btn" data-a="edit" data-id="${esc(it.id)}"><i class="fa-solid fa-pen"></i></button>
+          <button class="btn small danger" data-a="del" data-id="${esc(it.id)}"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      </div>
+      <div class="text">${esc(it.text)}</div>
+      <div class="meta">
+        <span class="chip degree deg-${esc(it.degree)}">${esc(it.degree)}</span>
+        ${it.topic ? `<span class="chip"><i class="fa-solid fa-tag"></i> ${esc(it.topic)}</span>` : ''}
+        ${(it.tags||[]).slice(0,6).map(t => `<span class="chip tag">#${esc(t)}</span>`).join('')}
+      </div>
+      <div class="text-edit">
+        <div class="edit-box">
+          <input value="${esc(it.text)}" data-ef="text">
+          <input value="${esc(it.topic||'')}" data-ef="topic" placeholder="chủ đề">
+          <select data-ef="degree">
+            <option value="Nhẹ"  ${it.degree==='Nhẹ'?'selected':''}>Nhẹ</option>
+            <option value="Vừa"  ${it.degree==='Vừa'?'selected':''}>Vừa</option>
+            <option value="Nặng" ${it.degree==='Nặng'?'selected':''}>Nặng</option>
+          </select>
+          <input value="${esc((it.tags||[]).join(', '))}" data-ef="tags" placeholder="tag1, tag2">
+        </div>
+        <div class="rib-actions">
+          <button class="btn small primary" data-a="save-edit" data-id="${esc(it.id)}"><i class="fa-solid fa-check"></i> Lưu</button>
+          <button class="btn small" data-a="cancel-edit"><i class="fa-solid fa-xmark"></i> Huỷ</button>
+        </div>
+      </div>
+    `;
+    div.addEventListener('click', async (ev) => {
+      const btn = ev.target.closest('[data-a]');
+      if (!btn) return;
+      const id = btn.dataset.id;
+      if (btn.dataset.a === 'del') {
+        if (!confirm('Xoá câu này?')) return;
+        try { await api('DELETE', '/api/debt-ribs/' + encodeURIComponent(id)); ITEMS = ITEMS.filter(x => x.id !== id); render(); toast('Đã xoá'); }
+        catch (e) { toast(e.message, true); }
+      } else if (btn.dataset.a === 'edit') div.classList.add('editing');
+      else if (btn.dataset.a === 'cancel-edit') div.classList.remove('editing');
+      else if (btn.dataset.a === 'save-edit') {
+        const g = (k) => div.querySelector(`[data-ef="${k}"]`).value.trim();
+        if (!g('text')) { toast('Nội dung không dóc', true); return; }
+        try {
+          const payload = { text: g('text'), topic: g('topic'), degree: g('degree'), tags: g('tags').split(',').map(s=>s.trim()).filter(Boolean) };
+          await api('PUT', '/api/debt-ribs/' + encodeURIComponent(id), payload);
+          const i = ITEMS.findIndex(x => x.id === id);
+          if (i >= 0) ITEMS[i] = { ...ITEMS[i], ...payload };
+          render(); toast('Đã lưu');
+        } catch (e) { toast(e.message, true); }
+      }
+    });
+    box.appendChild(div);
+  });
+}
+
+/* ── AI tách ── */
+$('btnSplit').addEventListener('click', async () => {
+  const text = $('pasteText').value.trim();
+  if (!text) { toast('Dán văn bản vào đầu để AI tách', true); return; }
+  setBusy($('btnSplit'), true, '<i class="fa-solid fa-wand-magic-sparkles"></i> AI tách câu');
+  $('splitStatus').textContent = '';
+  try {
+    const res = await fetch('/api/debt-ribs/preview', {
+      method: 'POST', headers: authHeaders(true), body: JSON.stringify({ text })
+    });
+    const data = await res.json();
+    if (res.status === 401) { showLogin(); throw new Error('hết phiên'); }
+    if (!data.success) throw new Error(data.message || 'Lỗi');
+    PREVIEW = (data.items || []).map(it => ({ ...it, checked: true }));
+    renderPreview();
+    $('splitStatus').textContent = PREVIEW.length ? `Tách được ${PREVIEW.length} câu.` : 'AI không nhận ra câu nào — thử paste nhiều nội dung hơn hoặc dùng Thêm tay.';
+  } catch (e) { toast(e.message, true); $('splitStatus').textContent = e.message; }
+  setBusy($('btnSplit'), false, '<i class="fa-solid fa-wand-magic-sparkles"></i> AI tách câu');
+});
+
+function renderPreview() {
+  const box = $('previewBox');
+  const list = $('pvList');
+  $('pvCount').textContent = PREVIEW.length;
+  $('pvSelCount').textContent = PREVIEW.filter(p => p.checked).length;
+  box.style.display = 'block';
+  list.innerHTML = '';
+  if (!PREVIEW.length) { list.innerHTML = '<div class="pv-empty">Chưa có câu nào.</div>'; return; }
+  PREVIEW.forEach((p, idx) => {
+    const d = document.createElement('div');
+    d.className = 'pv-item';
+    d.innerHTML = `
+      <input type="checkbox" data-idx="${idx}" ${p.checked?'checked':''}>
+      <div class="pv-body">
+        <div class="pv-text">${esc(p.text)}</div>
+        <div class="pv-meta">
+          <span class="chip degree deg-${esc(p.degree)}">${esc(p.degree)}</span>
+          <span class="chip">${esc(p.topic||'chưa có chủ đề')}</span>
+          ${(p.tags||[]).slice(0,5).map(t=>`<span class="chip tag">#${esc(t)}</span>`).join('')}
+          <button class="pv-toggle" data-idx="${idx}">sửa chi tiết</button>
+        </div>
+        <div class="pv-edit" style="display:none;">
+          <input value="${esc(p.text)}" data-pv="text" placeholder="nội dung" style="width:100%;">
+          <div style="margin-top:4px;">
+            <input value="${esc(p.topic||'')}" data-pv="topic" placeholder="chủ đề" style="width:38%;">
+            <select data-pv="degree">
+              <option value="Nhẹ"  ${p.degree==='Nhẹ'?'selected':''}>Nhẹ</option>
+              <option value="Vừa"  ${p.degree==='Vừa'?'selected':''}>Vừa</option>
+              <option value="Nặng" ${p.degree==='Nặng'?'selected':''}>Nặng</option>
+            </select>
+            <input value="${esc((p.tags||[]).join(', '))}" data-pv="tags" placeholder="tag1, tag2" style="width:36%;">
+          </div>
+        </div>
+      </div>
+    `;
+    d.addEventListener('click', (ev) => {
+      const tgl = ev.target.closest('.pv-toggle');
+      const chk = ev.target.closest('input[type="checkbox"]');
+      if (tgl) {
+        const edit = d.querySelector('.pv-edit');
+        edit.style.display = edit.style.display === 'none' ? 'block' : 'none';
+        return;
+      }
+      if (chk) { PREVIEW[idx].checked = chk.checked; refreshSel(); return; }
+    });
+    d.addEventListener('input', (ev) => {
+      const f = ev.target.closest('[data-pv]');
+      if (!f) return;
+      const k = f.dataset.pv;
+      if (k === 'tags') PREVIEW[idx].tags = f.value.split(',').map(s=>s.trim()).filter(Boolean);
+      else PREVIEW[idx][k] = f.value;
+    });
+    list.appendChild(d);
+  });
+  refreshSel();
+}
+function refreshSel() { $('pvSelCount').textContent = PREVIEW.filter(p => p.checked).length; }
+
+$('pvSelectAll').addEventListener('click', () => {
+  const all = PREVIEW.every(p => p.checked);
+  PREVIEW.forEach(p => p.checked = !all);
+  document.querySelectorAll('.pv-item input[type="checkbox"]').forEach(c => c.checked = !all);
+  refreshSel();
+});
+
+$('btnCommitPreview').addEventListener('click', async () => {
+  const chosen = PREVIEW.filter(p => p.checked);
+  if (!chosen.length) { toast('Chọn ít nhất 1 câu', true); return; }
+  const payload = { items: chosen.map(c => ({ text: c.text, topic: c.topic||'', degree: c.degree, tags: c.tags||[] })) };
+  setBusy($('btnCommitPreview'), true);
+  try {
+    const data = await api('post', '/api/debt-ribs/bulk', payload);
+    ITEMS = ITEMS.concat(data.added);
+    PREVIEW = [];
+    renderPreview();
+    render();
+    toast(`Đã thêm ${data.count} câu vào kho`);
+  } catch (e) { toast(e.message, true); }
+  setBusy($('btnCommitPreview'), false);
+});
+
+/* ── Editor (add tay) ── */
+function showAdd() {
+  $('editorTitle').innerHTML = '<i class="fa-solid fa-square-plus"></i> Thêm câu mới (tay)';
+  ['fText','fTopic','fTags'].forEach(i => $(i).value = '');
+  $('fDegree').value = 'Vừa';
+  $('editor').style.display = 'block';
+  $('fText').focus();
+}
+function hideEditor() { $('editor').style.display = 'none'; render(); }
+$('btnOpenAdd').addEventListener('click', showAdd);
+$('btnCancel').addEventListener('click', hideEditor);
+$('btnSave').addEventListener('click', async () => {
+  const text = $('fText').value.trim();
+  if (!text) { toast('Nhập nội dung câu', true); return; }
+  try {
+    const payload = {
+      text, topic: $('fTopic').value.trim(), degree: $('fDegree').value,
+      tags: $('fTags').value.split(',').map(s=>s.trim()).filter(Boolean)
+    };
+    const data = await api('post', '/api/debt-ribs', payload);
+    ITEMS.push(data.item);
+    hideEditor(); toast('Đã thêm vào kho');
+  } catch (e) { toast(e.message, true); }
+});
+
+let searchTimer;
+$('search').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(render, 200); });
+
+/* ── Cache info ── */
+async function loadCacheCount() {
+  try { const d = await api('get', '/api/debt-ribs/cache-info'); $('cacheCount').textContent = d.count != null ? d.count : '-'; }
+  catch { $('cacheCount').textContent = '-'; }
+}
+
+/* ── Login ── */
+function showLogin() { $('loginOverlay').classList.add('show'); $('loginErr').style.display='none'; $('loginPass').value=''; $('loginPass').focus(); }
+async function doLogin() {
+  const pass = $('loginPass').value;
+  if (!pass) return;
+  $('loginErr').style.display = 'none';
+  $('loginBtn').disabled = true; $('loginBtn').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang kiểm tra...';
+  try {
+    const res = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({password: pass}) });
+    const data = await res.json();
+    if (data.success) {
+      if (data.token) localStorage.setItem('admin_token', data.token);
+      $('loginOverlay').classList.remove('show');
+      await init();
+    } else { $('loginErr').textContent = data.message || 'Mật khẩu không đúng'; $('loginErr').style.display='block'; }
+  } catch (e) { $('loginErr').textContent = 'Không kết nối được server'; $('loginErr').style.display='block'; }
+  $('loginBtn').disabled = false; $('loginBtn').innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> Đăng nhập';
+}
+$('loginBtn').addEventListener('click', doLogin);
+$('loginPass').addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+$('btnLogout').addEventListener('click', async () => {
+  try { await fetch('/api/logout', { method: 'POST', credentials: 'include' }); } catch {}
+  localStorage.removeItem('admin_token');
+  location.reload();
+});
+
+/* ── Boot ── */
+async function checkAuth() {
+  if (!token()) return false;
+  try {
+    const res = await fetch('/api/debt-ribs', { headers: authHeaders() });
+    if (res.status === 401) return false;
+    const data = await res.json();
+    ITEMS = data.items || [];
+    return true;
+  } catch { return false; }
+}
+async function init() {
+  try { const data = await api('get', '/api/debt-ribs'); ITEMS = data.items || []; render(); loadCacheCount(); }
+  catch (e) { toast(e.message, true); }
+}
+(async function boot() {
+  if (await checkAuth()) { $('loginOverlay').classList.remove('show'); render(); loadCacheCount(); }
+  else showLogin();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trạm Nạp Kiến Thức | Admin CMS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: #faf8ff; color: #2d2836; }
+    .font-head { font-family: 'Outfit', sans-serif; }
+    .char-count { font-variant-numeric: tabular-nums; }
+    .preview-box .katex-display { margin: 0.5rem 0; overflow-x: auto; }
+    textarea { resize: vertical; }
+
+    .field { transition: border-color .15s ease, box-shadow .15s ease; }
+    .field:focus { outline: none; border-color: #c4b5fd; box-shadow: 0 0 0 3px rgba(139,92,246,.15); }
+
+    .btn-dark { background: linear-gradient(135deg, #8b5cf6, #ec4899); color: #fff; transition: all .18s ease; }
+    .btn-dark:hover:not(:disabled) { background: linear-gradient(135deg, #7c3aed, #db2777); box-shadow: 0 4px 14px rgba(236,72,153,.35); }
+    .btn-dark:active:not(:disabled) { transform: scale(.98); }
+    .btn-dark:disabled { background: #e4e4e7; color: #a1a1aa; cursor: not-allowed; }
+
+    .btn-light { background: #fff; color: #3f3f46; border: 1px solid #ece4f4; transition: all .18s ease; }
+    .btn-light:hover:not(:disabled) { background: #faf8ff; border-color: #ddd6fe; }
+    .btn-light:disabled { opacity: .5; cursor: not-allowed; }
+
+    .fade-in { animation: fadeIn .25s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+    /* Tabs */
+    .tab-btn { transition: all .15s ease; }
+    .tab-btn.active { background: linear-gradient(135deg, #8b5cf6, #ec4899); color: #fff; box-shadow: 0 3px 10px rgba(236,72,153,.30); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* Entry card trong danh sách duyệt */
+    .entry-card { transition: border-color .15s ease, box-shadow .15s ease; }
+    .entry-card:hover { border-color: #c4b5fd; }
+
+    /* Dropzone */
+    #dropzone { transition: all .18s ease; }
+    #dropzone.dragover { border-color: #ec4899; background: #fdf2f8; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Header -->
+    <header class="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-lg bg-gradient-to-br from-[#8b5cf6] to-[#ec4899] flex items-center justify-center text-white shadow-sm">
+          <i class="fa-solid fa-database text-base"></i>
+        </div>
+        <div>
+          <h1 class="font-head text-xl font-bold text-[#1a1a1a]">Trạm Nạp Kiến Thức</h1>
+          <p class="text-sm text-[#71717a]">Nạp đề chuẩn vào Vector DB — AI tự tách, phân loại &amp; kiểm tra trùng</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <span id="vectorBadge" class="hidden items-center gap-1.5 text-xs font-semibold text-[#8b5cf6] bg-[#faf5ff] border border-[#e9d8ff] rounded-md px-3 py-2">
+          <i class="fa-solid fa-circle-check"></i> <span id="vectorCount">–</span> đáp án trong DB
+        </span>
+        <a href="ai-tutor-chat.html" target="_blank"
+          class="btn-dark inline-flex items-center gap-2 text-xs font-medium rounded-md px-3.5 py-2 shadow-sm">
+          <i class="fa-solid fa-robot"></i> Mở AI Chat
+        </a>
+        <a href="index.html" target="_self"
+          class="btn-light inline-flex items-center gap-2 text-xs font-medium rounded-md px-3.5 py-2">
+          <i class="fa-solid fa-house"></i> Về Trang Chủ
+        </a>
+      </div>
+    </header>
+
+    <!-- Tabs -->
+    <div class="mb-6 inline-flex bg-white border border-[#e4e4e7] rounded-lg p-1 shadow-sm">
+      <button class="tab-btn active flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium" data-tab="tabSmart">
+        <i class="fa-solid fa-wand-magic-sparkles text-white"></i> Nạp nhanh bằng AI
+      </button>
+      <button class="tab-btn flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-[#71717a]" data-tab="tabManual">
+        <i class="fa-solid fa-pen-to-square text-[#a1a1aa]"></i> Nhập tay
+      </button>
+      <button class="tab-btn flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-[#71717a]" data-tab="tabLibrary">
+        <i class="fa-solid fa-box-archive text-[#a1a1aa]"></i> Kho dữ liệu
+      </button>
+      <button class="tab-btn relative flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-[#71717a]" data-tab="tabReview">
+        <i class="fa-solid fa-user-check text-[#a1a1aa]"></i> Kiểm duyệt
+        <span id="reviewBadge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#ef4444] text-white text-[10px] leading-[18px] text-center font-bold"></span>
+      </button>
+    </div>
+
+    <!-- ============ TAB 1: NẠP NHANH BẰNG AI ============ -->
+    <div id="tabSmart" class="tab-pane active">
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+        <!-- Cột trái: nhập liệu -->
+        <div class="lg:col-span-2 bg-white rounded-lg border border-[#e4e4e7] shadow-sm overflow-hidden">
+          <div class="px-6 py-4 border-b border-[#f4f4f5] flex items-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles text-[#8b5cf6]"></i>
+            <h2 class="font-semibold text-[#1a1a1a]">1 · Dán đề / chụp ảnh</h2>
+          </div>
+
+          <div class="p-5 space-y-4">
+            <div>
+              <label class="block text-xs font-medium text-[#3f3f46] mb-1.5">Mật khẩu Admin <span class="text-[#ef4444]">*</span></label>
+              <div class="relative">
+                <i class="fa-solid fa-key absolute left-3.5 top-3 text-[#a1a1aa] text-sm"></i>
+                <input type="password" id="smartPassword" autocomplete="off"
+                  class="field w-full pl-10 pr-4 py-2.5 bg-white border border-[#e4e4e7] rounded-md text-sm"
+                  placeholder="••••••••••••">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-[#3f3f46] mb-1.5">
+                Dán câu hỏi — 1 câu hoặc cả đề thi
+                <span class="text-[#a1a1aa] font-normal">(LaTeX: $...$)</span>
+              </label>
+              <textarea id="smartText" rows="9"
+                class="field w-full px-3.5 py-2.5 bg-white border border-[#e4e4e7] rounded-md text-sm font-mono leading-relaxed"
+                placeholder="Ví dụ: Tính tích phân $I = \int_0^1 \frac{x^2}{x+1} \, dx$...&#10;&#10;Hoặc dán cả đề 50 câu — AI tự tách từng câu."></textarea>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-[#3f3f46] mb-1.5">Hoặc tải ảnh / PDF đề thi</label>
+              <div id="dropzone"
+                class="border-2 border-dashed border-[#d4d4d8] rounded-lg p-5 text-center cursor-pointer hover:border-[#a1a1aa] transition">
+                <i class="fa-solid fa-cloud-arrow-up text-2xl text-[#a1a1aa] mb-2"></i>
+                <p class="text-sm text-[#71717a]">Kéo thả ảnh / PDF vào đây, hoặc <span class="text-[#8b5cf6] font-medium">bấm chọn file</span></p>
+                <p class="text-xs text-[#a1a1aa] mt-1">JPG, PNG, WebP, PDF — tối đa 15MB</p>
+                <input type="file" id="smartFile" accept=".jpg,.jpeg,.png,.webp,.pdf,image/*,application/pdf" class="hidden">
+              </div>
+              <div id="smartFileInfo" class="hidden mt-2 flex items-center gap-2 text-xs text-[#3f3f46] bg-[#f4f4f5] rounded-md px-3 py-2">
+                <i class="fa-solid fa-file text-[#8b5cf6]"></i> <span id="smartFileName" class="truncate"></span>
+                <button type="button" id="smartFileClear" class="ml-auto text-[#a1a1aa] hover:text-[#ef4444]"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+            </div>
+
+            <button id="smartRunBtn"
+              class="btn-dark w-full font-medium py-3 rounded-md flex items-center justify-center gap-2 shadow-sm">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              <span>AI Tách câu &amp; Soạn đáp án</span>
+            </button>
+            <p class="text-[11px] text-[#a1a1aa] leading-relaxed">
+              AI sẽ: tách từng câu · nhận diện chuyên đề &amp; độ khó · soạn đáp án sơ bộ · tự kiểm tra trùng trong DB.
+              Bạn chỉ cần duyệt lại rồi bấm <strong>Nạp tất cả</strong>.
+            </p>
+          </div>
+        </div>
+
+        <!-- Cột phải: kết quả duyệt -->
+        <div class="lg:col-span-3 bg-white rounded-lg border border-[#e4e4e7] shadow-sm overflow-hidden flex flex-col">
+          <div class="px-6 py-4 border-b border-[#f4f4f5] flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-clipboard-check text-[#a1a1aa]"></i>
+              <h2 class="font-semibold text-[#1a1a1a]">2 · Duyệt &amp; nạp</h2>
+              <span id="smartCountBadge" class="hidden text-[10px] font-semibold text-[#8b5cf6] bg-[#faf5ff] border border-[#e9d8ff] rounded-full px-2 py-0.5"></span>
+            </div>
+            <button id="saveAllBtn" disabled
+              class="btn-dark inline-flex items-center gap-2 text-xs font-medium rounded-md px-4 py-2 shadow-sm">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Nạp tất cả
+            </button>
+          </div>
+
+          <div id="smartResult" class="p-5 space-y-4 flex-1 overflow-auto max-h-[70vh]">
+            <div class="text-center py-12 text-[#a1a1aa]">
+              <i class="fa-solid fa-arrow-left-long text-2xl mb-3"></i>
+              <p class="text-sm">Dán đề hoặc tải file ở bên trái, bấm <strong>AI Tách câu</strong>.<br>Kết quả các câu hỏi sẽ hiện ở đây để bạn duyệt.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ TAB 2: NHẬP TAY ============ -->
+    <div id="tabManual" class="tab-pane">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Form thủ công -->
+        <div class="bg-white rounded-lg border border-[#e4e4e7] shadow-sm overflow-hidden">
+          <div class="px-6 py-4 border-b border-[#f4f4f5] flex items-center gap-2">
+            <i class="fa-solid fa-pen-to-square text-[#a1a1aa]"></i>
+            <h2 class="font-semibold text-[#1a1a1a]">Form nhập liệu thủ công</h2>
+          </div>
+
+          <form id="adminForm" class="p-6 space-y-5">
+            <div>
+              <label class="block text-sm font-medium text-[#3f3f46] mb-1.5">Mật khẩu Admin <span class="text-[#ef4444]">*</span></label>
+              <div class="relative">
+                <i class="fa-solid fa-key absolute left-3.5 top-3 text-[#a1a1aa] text-sm"></i>
+                <input type="password" id="password" required autocomplete="off"
+                  class="field w-full pl-10 pr-4 py-2.5 bg-white border border-[#e4e4e7] rounded-md text-sm"
+                  placeholder="••••••••••••">
+              </div>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="block text-sm font-medium text-[#3f3f46]">
+                  Câu hỏi / Đề bài <span class="text-[#ef4444]">*</span>
+                  <span class="text-xs text-[#a1a1aa] font-normal ml-1">(Hỗ trợ LaTeX)</span>
+                </label>
+                <span id="qCount" class="char-count text-xs text-[#a1a1aa]">0 / 2000</span>
+              </div>
+              <textarea id="question" rows="5" required maxlength="2000"
+                class="field w-full px-3.5 py-2.5 bg-white border border-[#e4e4e7] rounded-md text-sm font-mono leading-relaxed"
+                placeholder="Ví dụ: Tính tích phân $I = \int_0^1 \frac{x^2}{x+1} \, dx$"></textarea>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="block text-sm font-medium text-[#3f3f46]">
+                  Đáp án &amp; Barem chấm <span class="text-[#ef4444]">*</span>
+                </label>
+                <span id="aCount" class="char-count text-xs text-[#a1a1aa]">0 / 8000</span>
+              </div>
+              <textarea id="answer" rows="8" required maxlength="8000"
+                class="field w-full px-3.5 py-2.5 bg-white border border-[#e4e4e7] rounded-md text-sm font-mono leading-relaxed"
+                placeholder="Bước 1: Đặt ẩn phụ...&#10;Bước 2: Biến đổi...&#10;=> Đáp án: $I = 1 - \ln 2$ (0.5đ)"></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-[#3f3f46] mb-1.5">Chuyên đề</label>
+                <div class="relative">
+                  <select id="topic"
+                    class="field w-full appearance-none px-3.5 py-2.5 bg-white border border-[#e4e4e7] rounded-md text-sm cursor-pointer">
+                    <option value="ham_so">Khảo sát hàm số</option>
+                    <option value="giai_tich">Giải tích</option>
+                    <option value="dao_ham">Đạo hàm</option>
+                    <option value="tich_phan" selected>Tích phân</option>
+                    <option value="luong_giac">Lượng giác</option>
+                    <option value="phuong_trinh">Phương trình</option>
+                    <option value="bat_phuong_trinh">Bất phương trình</option>
+                    <option value="mu_logarit">Mũ &amp; Logarit</option>
+                    <option value="so_phuc">Số phức</option>
+                    <option value="hinh_hoc_khong_gian">Hình học không gian</option>
+                    <option value="xac_suat">Xác suất / Thống kê</option>
+                    <option value="thu_tu_toan">Thứ tự toán (tổ hợp, chỉnh hợp)</option>
+                    <option value="cap_so">Cấp số cộng / nhân</option>
+                    <option value="khac">Khác</option>
+                  </select>
+                  <i class="fa-solid fa-chevron-down absolute right-3.5 top-3.5 text-[#a1a1aa] pointer-events-none text-xs"></i>
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-[#3f3f46] mb-1.5">Độ khó</label>
+                <div class="relative">
+                  <select id="difficulty"
+                    class="field w-full appearance-none px-3.5 py-2.5 bg-white border border-[#e4e4e7] rounded-md text-sm cursor-pointer">
+                    <option value="Nhận biết">Nhận biết</option>
+                    <option value="Thông hiểu" selected>Thông hiểu</option>
+                    <option value="Vận dụng">Vận dụng</option>
+                    <option value="VDC">Vận dụng cao (VDC)</option>
+                  </select>
+                  <i class="fa-solid fa-chevron-down absolute right-3.5 top-3.5 text-[#a1a1aa] pointer-events-none text-xs"></i>
+                </div>
+              </div>
+            </div>
+
+            <div id="statusAlert" class="hidden rounded-md p-3.5 flex items-start gap-3 text-sm border"></div>
+
+            <button type="submit" id="submitBtn"
+              class="btn-dark w-full font-medium py-3 rounded-md flex items-center justify-center gap-2 shadow-sm">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+              <span>Nạp vào Database</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Preview LaTeX -->
+        <div class="bg-white rounded-lg border border-[#e4e4e7] shadow-sm overflow-hidden flex flex-col">
+          <div class="px-6 py-4 border-b border-[#f4f4f5] flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-eye text-[#a1a1aa]"></i>
+              <h2 class="font-semibold text-[#1a1a1a]">Xem trước (Render LaTeX)</h2>
+            </div>
+            <button type="button" id="refreshBtn" class="text-xs px-3 py-1.5 rounded-md bg-[#f4f4f5] hover:bg-[#e4e4e7] text-[#3f3f46] transition flex items-center gap-1.5">
+              <i class="fa-solid fa-rotate-right"></i> Render lại
+            </button>
+          </div>
+
+          <div class="p-6 space-y-6 flex-1 overflow-auto">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold uppercase tracking-wide text-[#8b5cf6]"><i class="fa-solid fa-file-pen"></i> Đề bài</span>
+              </div>
+              <div id="qPreview" class="preview-box bg-[#fafafc] border border-[#f0eafc] rounded-md p-4 min-h-[100px] text-[#3f3f46] text-sm leading-relaxed">
+                <span class="text-[#a1a1aa] italic">Nhập câu hỏi ở cột trái để xem preview...</span>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold uppercase tracking-wide text-[#16a34a]"><i class="fa-solid fa-circle-check"></i> Đáp án &amp; Hướng dẫn chấm</span>
+              </div>
+              <div id="aPreview" class="preview-box bg-[#fafafc] border border-[#e7f6ec] rounded-md p-4 min-h-[160px] text-[#3f3f46] text-sm leading-relaxed">
+                <span class="text-[#a1a1aa] italic">Nhập đáp án ở cột trái để xem preview...</span>
+              </div>
+            </div>
+
+            <div class="border-t border-[#f4f4f5] pt-5">
+              <h3 class="text-xs font-semibold uppercase tracking-wide text-[#a1a1aa] mb-3"><i class="fa-solid fa-tags"></i> Metadata sẽ được lưu</h3>
+              <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                <div class="flex items-center gap-2">
+                  <dt class="text-[#a1a1aa] w-20 shrink-0">topic:</dt>
+                  <dd id="metaTopic" class="text-[#3f3f46] font-mono bg-[#f4f4f5] px-2 py-0.5 rounded text-xs">tich_phan</dd>
+                </div>
+                <div class="flex items-center gap-2">
+                  <dt class="text-[#a1a1aa] w-20 shrink-0">difficulty:</dt>
+                  <dd id="metaDiff" class="text-[#3f3f46] font-mono bg-[#f4f4f5] px-2 py-0.5 rounded text-xs">Thông hiểu</dd>
+                </div>
+                <div class="flex items-center gap-2">
+                  <dt class="text-[#a1a1aa] w-20 shrink-0">source:</dt>
+                  <dd class="text-[#3f3f46] font-mono bg-[#f4f4f5] px-2 py-0.5 rounded text-xs">admin_cms</dd>
+                </div>
+                <div class="flex items-center gap-2">
+                  <dt class="text-[#a1a1aa] w-20 shrink-0">verified:</dt>
+                  <dd class="text-[#16a34a] font-mono bg-[#f4f4f5] px-2 py-0.5 rounded text-xs font-semibold">true</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div class="border-t border-[#f4f4f5] pt-5">
+              <h3 class="text-xs font-semibold uppercase tracking-wide text-[#a1a1aa] mb-3"><i class="fa-solid fa-lightbulb"></i> Cách hoạt động</h3>
+              <ol class="text-xs text-[#71717a] space-y-1.5 leading-relaxed list-decimal list-inside">
+                <li>Nhập đề + đáp án chuẩn (kèm barem) ở cột trái.</li>
+                <li>Backend tạo <strong>embedding</strong> và lưu vào <strong>Vector DB</strong>.</li>
+                <li>Khi học sinh hỏi đề tương tự → trả lời <strong>chuẩn giáo viên</strong> + badge <strong><i class="fa-solid fa-circle-check"></i> Đáp án chuẩn</strong>.</li>
+                <li>Điểm tương đồng (cosine) &gt; 0.93 sẽ bị chặn trùng khi nạp hàng loạt.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ TAB 3: KHO DỮ LIỆU ============ -->
+    <div id="tabLibrary" class="tab-pane">
+      <div class="bg-white rounded-lg border border-[#e4e4e7] shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-[#f4f4f5] flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-box-archive text-[#a1a1aa]"></i>
+            <h2 class="font-semibold text-[#1a1a1a]">Kho dữ liệu đã nạp</h2>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="relative">
+              <i class="fa-solid fa-key absolute left-3 top-2.5 text-[#a1a1aa] text-xs"></i>
+              <input type="password" id="libPassword" autocomplete="off"
+                class="field w-48 pl-8 pr-3 py-2 bg-white border border-[#e4e4e7] rounded-md text-sm"
+                placeholder="Mật khẩu Admin">
+            </div>
+            <button id="loadLibBtn" class="btn-dark inline-flex items-center gap-2 text-xs font-medium rounded-md px-3.5 py-2 shadow-sm">
+              <i class="fa-solid fa-rotate"></i> Tải dữ liệu
+            </button>
+          </div>
+        </div>
+
+        <div id="libStatus" class="hidden px-6 py-3 text-sm border-b"></div>
+
+        <div id="libBody" class="p-6">
+          <div class="text-center py-12 text-[#a1a1aa]">
+            <i class="fa-solid fa-box-open text-2xl mb-3"></i>
+            <p class="text-sm">Nhập mật khẩu và bấm <strong>Tải dữ liệu</strong> để xem các câu hỏi đang lưu trong Vector DB.</p>
+          </div>
+        </div>
+
+        <div id="libFooter" class="hidden px-6 py-3 border-t border-[#f4f4f5] flex items-center justify-between">
+          <span id="libPageInfo" class="text-xs text-[#71717a]"></span>
+          <div class="flex gap-2">
+            <button id="libPrevBtn" class="btn-light text-xs font-medium rounded-md px-3 py-1.5">← Trước</button>
+            <button id="libNextBtn" class="btn-light text-xs font-medium rounded-md px-3 py-1.5">Sau →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ TAB 4: KIỂM DUYỆT (Consensus lệch → giáo viên duyệt) ============ -->
+    <div id="tabReview" class="tab-pane">
+      <div class="bg-white rounded-lg border border-[#e4e4e7] shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-[#f4f4f5] flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-user-check text-[#a1a1aa]"></i>
+            <h2 class="font-semibold text-[#1a1a1a]">Hàng đợi kiểm duyệt</h2>
+            <span class="text-xs text-[#a1a1aa] font-normal ml-1">
+              — Câu mà 2 "solver" AI trả lời <em>lệch nhau</em>, cần giáo viên chốt đáp án.
+            </span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="relative">
+              <i class="fa-solid fa-key absolute left-3 top-2.5 text-[#a1a1aa] text-xs"></i>
+              <input type="password" id="rvPassword" autocomplete="off"
+                class="field w-48 pl-8 pr-3 py-2 bg-white border border-[#e4e4e7] rounded-md text-sm"
+                placeholder="Mật khẩu Admin">
+            </div>
+            <button id="rvLoadBtn" class="btn-dark inline-flex items-center gap-2 text-xs font-medium rounded-md px-3.5 py-2 shadow-sm">
+              <i class="fa-solid fa-rotate"></i> Tải queue
+            </button>
+          </div>
+        </div>
+
+        <div id="rvStatus" class="hidden px-6 py-3 text-sm border-b"></div>
+
+        <div id="rvBody" class="p-6">
+          <div class="text-center py-12 text-[#a1a1aa]">
+            <i class="fa-solid fa-inbox text-2xl mb-3"></i>
+            <p class="text-sm">Nhập mật khẩu và bấm <strong>Tải queue</strong> để xem các câu đang chờ duyệt.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="mt-8 text-center text-xs text-[#a1a1aa]">
+      <p>© AI Gia sư Toán THPT — RAG System. Dữ liệu từ giáo viên &amp; đề thi chính thức Bộ GD&amp;ĐT.</p>
+    </footer>
+  </div>
+
+  <script>
+    // ════════════════════════════════════════════════════════════════════════
+    //  CONSTANTS
+    // ════════════════════════════════════════════════════════════════════════
+    const BASE = 'http://localhost:3001';
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  TABS
+    // ════════════════════════════════════════════════════════════════════════
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => {
+          b.classList.remove('active');
+          b.classList.add('text-[#71717a]');
+          b.querySelector('i')?.classList.remove('text-white', 'text-violet-500');
+        });
+        btn.classList.add('active');
+        btn.classList.remove('text-[#71717a]');
+        btn.querySelector('i')?.classList.add('text-white');
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  SHARED HELPERS
+    // ════════════════════════════════════════════════════════════════════════
+    const TOPIC_LABELS = {
+      ham_so: 'Khảo sát hàm số', giai_tich: 'Giải tích', dao_ham: 'Đạo hàm',
+      tich_phan: 'Tích phân', luong_giac: 'Lượng giác', phuong_trinh: 'Phương trình',
+      bat_phuong_trinh: 'Bất phương trình', mu_logarit: 'Mũ & Logarit', so_phuc: 'Số phức',
+      hinh_hoc_khong_gian: 'Hình học KG', xac_suat: 'Xác suất / Thống kê',
+      thu_tu_toan: 'Tổ hợp, chỉnh hợp', cap_so: 'Cấp số', khac: 'Khác'
+    };
+
+    async function api(path, body) {
+      const res = await fetch(BASE + path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body || {}),
+      });
+      let data = {};
+      try { data = await res.json(); } catch (_) {}
+      if (!res.ok) throw new Error(data.message || `Lỗi ${res.status}`);
+      return data;
+    }
+
+    function rememberPw(pw) {
+      if (pw) localStorage.setItem('adm_pw', JSON.stringify(pw));
+    }
+    function rememberedPw() {
+      try { return JSON.parse(localStorage.getItem('adm_pw') || '""'); } catch { return ''; }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  TAB 1: NẠP NHANH BẰNG AI
+    // ════════════════════════════════════════════════════════════════════════
+    const smartText = document.getElementById('smartText');
+    const smartPassword = document.getElementById('smartPassword');
+    const smartFile = document.getElementById('smartFile');
+    const dropzone = document.getElementById('dropzone');
+    const smartFileInfo = document.getElementById('smartFileInfo');
+    const smartFileName = document.getElementById('smartFileName');
+    const smartRunBtn = document.getElementById('smartRunBtn');
+    const smartResult = document.getElementById('smartResult');
+    const smartCountBadge = document.getElementById('smartCountBadge');
+    const saveAllBtn = document.getElementById('saveAllBtn');
+
+    let pendingEntries = [];
+
+    // Dropzone
+    ['dragenter','dragover'].forEach(ev => dropzone.addEventListener(ev, e => {
+      e.preventDefault(); dropzone.classList.add('dragover');
+    }));
+    ['dragleave','drop'].forEach(ev => dropzone.addEventListener(ev, e => {
+      e.preventDefault(); dropzone.classList.remove('dragover');
+    }));
+    dropzone.addEventListener('drop', e => {
+      if (e.dataTransfer.files[0]) setSmartFile(e.dataTransfer.files[0]);
+    });
+    dropzone.addEventListener('click', () => smartFile.click());
+    smartFile.addEventListener('change', () => {
+      if (smartFile.files[0]) setSmartFile(smartFile.files[0]);
+    });
+
+    function setSmartFile(file) {
+      const okTypes = ['image/jpeg','image/png','image/webp','application/pdf'];
+      if (!okTypes.includes(file.type)) {
+        alert('Định dạng không hỗ trợ. Chỉ nhận JPG, PNG, WebP, PDF.');
+        return;
+      }
+      if (file.size > 15 * 1024 * 1024) {
+        alert('File quá lớn (tối đa 15MB).');
+        return;
+      }
+      smartFileName.textContent = file.name + ` (${(file.size/1024/1024).toFixed(1)}MB)`;
+      smartFileInfo.classList.remove('hidden');
+    }
+    document.getElementById('smartFileClear').addEventListener('click', () => {
+      smartFile.value = '';
+      smartFileInfo.classList.add('hidden');
+    });
+
+    function renderEntries() {
+      smartResult.innerHTML = '';
+      smartCountBadge.classList.add('hidden');
+      saveAllBtn.disabled = true;
+
+      if (!pendingEntries.length) {
+        smartResult.innerHTML = `<div class="text-center py-10 text-[#a1a1aa]">
+          <i class="fa-regular fa-rectangle-xmark text-2xl mb-2"></i>
+          <p class="text-sm">Không có câu hỏi nào.</p></div>`;
+        return;
+      }
+
+      smartCountBadge.textContent = `${pendingEntries.length} câu sẵn sàng`;
+      smartCountBadge.classList.remove('hidden');
+      saveAllBtn.disabled = false;
+
+      pendingEntries.forEach((entry, idx) => {
+        const card = document.createElement('div');
+        card.className = 'entry-card bg-[#fafafc] border border-[#e4e4e7] rounded-lg p-4 fade-in';
+        card.innerHTML = `
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-[#8b5cf6] bg-[#faf5ff] rounded-md px-2 py-1">Câu ${idx + 1}</span>
+            <div class="flex items-center gap-2">
+              ${entry.duplicate ? '<span class="text-[10px] font-semibold text-[#f59e0b] bg-[#fffbeb] border border-[#fde68a] rounded-full px-2 py-0.5"><i class="fa-solid fa-triangle-exclamation"></i> Trùng trong đoạn</span>' : ''}
+              <button class="del-entry text-[#a1a1aa] hover:text-[#ef4444] transition" data-idx="${idx}"><i class="fa-solid fa-trash-can"></i></button>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <div>
+              <textarea class="entry-q field w-full px-3 py-2 bg-white border border-[#e4e4e7] rounded-md text-xs font-mono" rows="2" data-idx="${idx}">${escapeHTML(entry.question)}</textarea>
+            </div>
+            <div>
+              <textarea class="entry-a field w-full px-3 py-2 bg-white border border-[#e4e4e7] rounded-md text-xs font-mono" rows="3" data-idx="${idx}">${escapeHTML(entry.answer)}</textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <select class="entry-topic field w-full px-2 py-1.5 bg-white border border-[#e4e4e7] rounded-md text-xs" data-idx="${idx}">
+                ${Object.entries(TOPIC_LABELS).map(([v,l]) => `<option value="${v}" ${entry.topic === v ? 'selected' : ''}>${l}</option>`).join('')}
+              </select>
+              <select class="entry-diff field w-full px-2 py-1.5 bg-white border border-[#e4e4e7] rounded-md text-xs" data-idx="${idx}">
+                ${['Nhận biết','Thông hiểu','Vận dụng','VDC'].map(d => `<option ${entry.difficulty === d ? 'selected' : ''}>${d}</option>`).join('')}
+              </select>
+            </div>
+          </div>`;
+        smartResult.appendChild(card);
+      });
+
+      // Lắng nghe chỉnh sửa / xóa
+      smartResult.querySelectorAll('.entry-q').forEach(t => t.addEventListener('input', e => {
+        pendingEntries[+e.target.dataset.idx].question = e.target.value;
+      }));
+      smartResult.querySelectorAll('.entry-a').forEach(t => t.addEventListener('input', e => {
+        pendingEntries[+e.target.dataset.idx].answer = e.target.value;
+      }));
+      smartResult.querySelectorAll('.entry-topic').forEach(s => s.addEventListener('change', e => {
+        pendingEntries[+e.target.dataset.idx].topic = e.target.value;
+      }));
+      smartResult.querySelectorAll('.entry-diff').forEach(s => s.addEventListener('change', e => {
+        pendingEntries[+e.target.dataset.idx].difficulty = e.target.value;
+      }));
+      smartResult.querySelectorAll('.del-entry').forEach(b => b.addEventListener('click', e => {
+        pendingEntries.splice(+e.target.closest('button').dataset.idx, 1);
+        renderEntries();
+      }));
+    }
+
+    smartRunBtn.addEventListener('click', async () => {
+      const password = smartPassword.value;
+      if (!password) { alert('Vui lòng nhập mật khẩu Admin.'); return; }
+
+      const hasText = smartText.value.trim().length >= 5;
+      const hasFile = smartFile.files[0];
+
+      if (!hasText && !hasFile) {
+        alert('Vui lòng dán đề thi hoặc tải ảnh/PDF lên.');
+        return;
+      }
+
+      smartRunBtn.disabled = true;
+      const original = smartRunBtn.innerHTML;
+      smartRunBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>AI đang xử lý...</span>';
+      smartResult.innerHTML = `<div class="text-center py-12 text-[#71717a]">
+        <i class="fa-solid fa-circle-notch fa-spin text-2xl mb-3"></i>
+        <p class="text-sm">AI đang bóc tách, phân loại &amp; soạn đáp án... (10-30s)</p></div>`;
+
+      try {
+        let text = smartText.value.trim();
+
+        // Nếu có file → gọi extract-file để bóc tách text trước
+        if (hasFile) {
+          const fd = new FormData();
+          fd.append('file', smartFile.files[0]);
+          fd.append('password', password);
+          const extractRes = await fetch(BASE + '/api/admin/extract-file', { method: 'POST', body: fd });
+          const extractData = await extractRes.json();
+          if (!extractRes.ok || !extractData.success) throw new Error(extractData.message || 'Lỗi bóc tách file.');
+          text = text ? text + '\n\n' + extractData.text : extractData.text;
+        }
+
+        if (text.trim().length < 5) throw new Error('Không lấy được nội dung câu hỏi.');
+
+        const data = await api('/api/admin/smart-import', { password, text });
+        pendingEntries = data.entries.map(e => ({
+          question: e.question, answer: e.answer,
+          topic: e.topic, difficulty: e.difficulty, duplicate: e.duplicate,
+        }));
+        renderEntries();
+      } catch (err) {
+        smartResult.innerHTML = `<div class="rounded-md p-4 bg-[#fef2f2] border border-[#fecaca] text-sm text-[#991b1b] fade-in">
+          <i class="fa-solid fa-circle-exclamation mr-2"></i>${escapeHTML(err.message)}
+        </div>`;
+        console.error('[Smart]', err);
+      } finally {
+        smartRunBtn.disabled = false;
+        smartRunBtn.innerHTML = original;
+      }
+    });
+
+    saveAllBtn.addEventListener('click', async () => {
+      if (!pendingEntries.length) return;
+      const password = smartPassword.value;
+      if (!password) { alert('Vui lòng nhập mật khẩu Admin.'); return; }
+
+      saveAllBtn.disabled = true;
+      const original = saveAllBtn.innerHTML;
+      saveAllBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Đang nạp...</span>';
+
+      try {
+        const items = pendingEntries.filter(e => e.question.trim() && e.answer.trim());
+        const data = await api('/api/admin/save-batch', { password, items });
+        rememberPw(password);
+        updateReviewBadge();
+        smartResult.innerHTML = `<div class="rounded-md p-4 bg-[#f0fdf4] border border-[#bbf7d0] text-sm text-[#166534] fade-in">
+          <i class="fa-solid fa-circle-check mr-2"></i><strong>${escapeHTML(data.message || 'Nạp thành công!')}</strong>
+          <div class="text-xs mt-1 opacity-80">
+            Nạp ${data.saved} / ${data.total} câu ${data.duplicatesSkipped ? `· bỏ qua ${data.duplicatesSkipped} câu trùng` : ''} · ${data.latencyMs}ms
+          </div>
+        </div>`;
+        pendingEntries = [];
+        renderEntries();
+        loadStats();
+      } catch (err) {
+        smartResult.innerHTML = `<div class="rounded-md p-4 bg-[#fef2f2] border border-[#fecaca] text-sm text-[#991b1b] fade-in">
+          <i class="fa-solid fa-circle-exclamation mr-2"></i>${escapeHTML(err.message)}
+        </div>`;
+        console.error('[SaveBatch]', err);
+      } finally {
+        saveAllBtn.disabled = false;
+        saveAllBtn.innerHTML = original;
+      }
+    });
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  TAB 2: NHẬP TAY — LIVE PREVIEW + SUBMIT
+    // ════════════════════════════════════════════════════════════════════════
+    const qInput  = document.getElementById('question');
+    const aInput  = document.getElementById('answer');
+    const qCount  = document.getElementById('qCount');
+    const aCount  = document.getElementById('aCount');
+    const qPrev   = document.getElementById('qPreview');
+    const aPrev   = document.getElementById('aPreview');
+    const topicSel  = document.getElementById('topic');
+    const diffSel   = document.getElementById('difficulty');
+    const metaTopic = document.getElementById('metaTopic');
+    const metaDiff  = document.getElementById('metaDiff');
+
+    function escapeHTML(str) {
+      const div = document.createElement('div');
+      div.textContent = str ?? '';
+      return div.innerHTML;
+    }
+
+    function renderWithKatex(element, rawText) {
+      if (!rawText || !rawText.trim()) {
+        element.innerHTML = '<span class="text-[#a1a1aa] italic">Chưa có nội dung...</span>';
+        return;
+      }
+      element.textContent = rawText;
+      if (window.renderMathInElement) {
+        renderMathInElement(element, {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '$',  right: '$',  display: false },
+            { left: '\\(', right: '\\)', display: false },
+            { left: '\\[', right: '\\]', display: true }
+          ],
+          throwOnError: false,
+          errorColor: '#dc2626'
+        });
+      } else {
+        element.innerHTML = escapeHTML(rawText).replace(/\n/g, '<br>');
+      }
+    }
+
+    function updateCounters() {
+      qCount.textContent = `${qInput.value.length} / 2000`;
+      aCount.textContent = `${aInput.value.length} / 8000`;
+      qCount.className = 'char-count text-xs ' + (qInput.value.length > 1800 ? 'text-[#f97316]' : 'text-[#a1a1aa]');
+      aCount.className = 'char-count text-xs ' + (aInput.value.length > 7200 ? 'text-[#f97316]' : 'text-[#a1a1aa]');
+    }
+
+    let debounceTimer;
+    function scheduleRender() {
+      clearTimeout(debounceTimer);
+      updateCounters();
+      debounceTimer = setTimeout(() => {
+        renderWithKatex(qPrev, qInput.value);
+        renderWithKatex(aPrev, aInput.value);
+      }, 250);
+    }
+
+    qInput.addEventListener('input', scheduleRender);
+    aInput.addEventListener('input', scheduleRender);
+    topicSel.addEventListener('change', () => metaTopic.textContent = topicSel.value);
+    diffSel.addEventListener('change',  () => metaDiff.textContent  = diffSel.value);
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+      renderWithKatex(qPrev, qInput.value);
+      renderWithKatex(aPrev, aInput.value);
+    });
+
+    const form       = document.getElementById('adminForm');
+    const submitBtn  = document.getElementById('submitBtn');
+    const statusEl   = document.getElementById('statusAlert');
+
+    function showStatus(type, message, detail = '') {
+      statusEl.className = 'rounded-md p-3.5 flex items-start gap-3 text-sm border fade-in';
+      statusEl.classList.remove('hidden');
+      if (type === 'success') {
+        statusEl.classList.add('bg-[#f0fdf4]','text-[#166534]','border-[#bbf7d0]');
+      } else if (type === 'warn') {
+        statusEl.classList.add('bg-[#fffbeb]','text-[#92400e]','border-[#fde68a]');
+      } else {
+        statusEl.classList.add('bg-[#fef2f2]','text-[#991b1b]','border-[#fecaca]');
+      }
+      statusEl.innerHTML = `
+        <i class="fa-solid ${type === 'success' ? 'fa-circle-check' : type === 'warn' ? 'fa-triangle-exclamation' : 'fa-circle-exclamation'} mt-0.5 text-base"></i>
+        <div class="flex-1">
+          <div class="font-medium">${escapeHTML(message)}</div>
+          ${detail ? `<div class="text-xs mt-1 opacity-80 font-mono break-all">${escapeHTML(detail)}</div>` : ''}
+        </div>`;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        password:   document.getElementById('password').value,
+        question:   qInput.value.trim(),
+        answer:     aInput.value.trim(),
+        topic:      topicSel.value,
+        difficulty: diffSel.value
+      };
+      if (!payload.password) { showStatus('error','Vui lòng nhập mật khẩu Admin.'); return; }
+      if (payload.question.length < 5) { showStatus('warn','Câu hỏi quá ngắn.'); return; }
+      if (payload.answer.length   < 5) { showStatus('warn','Đáp án quá ngắn.');   return; }
+
+      submitBtn.disabled = true;
+      const originalBtnHTML = submitBtn.innerHTML;
+      submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Đang tạo embedding &amp; lưu...</span>';
+      statusEl.classList.add('hidden');
+
+      try {
+        const response = await fetch(BASE + '/api/admin/add-qa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        let data = {};
+        try { data = await response.json(); } catch (_) {}
+        if (response.ok && data.success) {
+          showStatus('success', data.message || 'Nạp thành công!',
+            data.info?.latencyMs ? `<i class="fa-solid fa-clock"></i> ${data.info.latencyMs}ms <i class="fa-solid fa-tag"></i> ${data.info.topic} <i class="fa-solid fa-signal"></i> ${data.info.difficulty}` : '');
+          qInput.value = '';
+          aInput.value = '';
+          scheduleRender();
+          loadStats();
+        } else {
+          showStatus('error', data.message || `Lỗi ${response.status}`, data.error || '');
+        }
+      } catch (err) {
+        showStatus('error', 'Không thể kết nối tới máy chủ.', 'Đảm bảo backend đã chạy: cd ai-tutor && npm run dev');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnHTML;
+      }
+    });
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  TAB 3: KHO DỮ LIỆU
+    // ════════════════════════════════════════════════════════════════════════
+    const libPassword = document.getElementById('libPassword');
+    const loadLibBtn  = document.getElementById('loadLibBtn');
+    const libBody     = document.getElementById('libBody');
+    const libStatus   = document.getElementById('libStatus');
+    const libFooter   = document.getElementById('libFooter');
+    const libPageInfo = document.getElementById('libPageInfo');
+    const libPrevBtn  = document.getElementById('libPrevBtn');
+    const libNextBtn  = document.getElementById('libNextBtn');
+    let libCursor = '', libPrevCursor = null;
+
+    function showLibStatus(type, msg) {
+      libStatus.classList.remove('hidden');
+      libStatus.className = 'px-6 py-3 text-sm border-b ' +
+        (type === 'error' ? 'bg-[#fef2f2] border-[#fecaca] text-[#991b1b]' : 'bg-[#f0fdf4] border-[#bbf7d0] text-[#166534]');
+      libStatus.innerHTML = msg;
+    }
+
+    async function loadLibrary(reset = true) {
+      const password = libPassword.value;
+      if (!password) { showLibStatus('error','Vui lòng nhập mật khẩu Admin.'); return; }
+
+      loadLibBtn.disabled = true;
+      loadLibBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Đang tải...';
+      try {
+        if (reset) { libCursor = ''; libPrevCursor = null; }
+        const data = await api('/api/admin/list-qa', { password, cursor: libCursor });
+        rememberPw(password);
+        libFooter.classList.remove('hidden');
+        libPageInfo.textContent = `Hiển thị ${data.entries.length} câu · Tổng trong DB: ${data.totalInDb ?? '–'}`;
+        libPrevBtn.disabled = libPrevCursor === null;
+        libNextBtn.disabled = !data.nextCursor;
+
+        if (!data.entries.length) {
+          libBody.innerHTML = `<div class="text-center py-12 text-[#a1a1aa]">
+            <i class="fa-solid fa-box-open text-2xl mb-3"></i>
+            <p class="text-sm">Chưa có dữ liệu nào trong DB.</p></div>`;
+          return;
+        }
+
+        const rows = data.entries.map(e => `
+          <div class="border border-[#e4e4e7] rounded-lg p-4 fade-in">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex-1 min-w-0">
+                <p class="text-xs font-mono text-[#3f3f46] leading-relaxed">${escapeHTML(e.question)}</p>
+                <div class="mt-2 flex items-center gap-2 flex-wrap">
+                  <span class="text-[10px] font-semibold text-[#8b5cf6] bg-[#faf5ff] border border-[#e9d8ff] rounded-full px-2 py-0.5">${escapeHTML(TOPIC_LABELS[e.topic] || e.topic || 'khac')}</span>
+                  <span class="text-[10px] font-semibold text-[#3f3f46] bg-[#f4f4f5] border border-[#e4e4e7] rounded-full px-2 py-0.5">${escapeHTML(e.difficulty || '–')}</span>
+                  ${e.verified ? '<span class="text-[10px] font-semibold text-[#16a34a] bg-[#f0fdf4] border border-[#bbf7d0] rounded-full px-2 py-0.5"><i class="fa-solid fa-circle-check"></i> Giáo viên</span>' : ''}
+                  ${e.source ? `<span class="text-[10px] font-semibold text-[#71717a] bg-[#fafafa] border border-[#e4e4e7] rounded-full px-2 py-0.5">${escapeHTML(e.source)}</span>` : ''}
+                </div>
+              </div>
+              <button class="del-lib text-[#a1a1aa] hover:text-[#ef4444] transition shrink-0" data-id="${escapeHTML(e.id)}" title="Xóa">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+            ${e.answer ? `<details class="mt-2"><summary class="text-xs text-[#a1a1aa] cursor-pointer hover:text-[#8b5cf6]">Xem đáp án</summary><p class="mt-2 text-xs font-mono text-[#52525b] leading-relaxed whitespace-pre-wrap bg-[#fafafc] rounded-md p-3">${escapeHTML(e.answer)}</p></details>` : ''}
+          </div>`).join('');
+
+        libBody.innerHTML = `<div class="space-y-3">${rows}</div>`;
+
+        libBody.querySelectorAll('.del-lib').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            if (!confirm('Xóa entry này khỏi Vector DB?')) return;
+            try {
+              await api('/api/admin/delete-qa', { password, id: btn.dataset.id });
+              showLibStatus('success', 'Đã xóa entry.');
+              loadLibrary(false);
+            } catch (err) {
+              showLibStatus('error', escapeHTML(err.message));
+            }
+          });
+        });
+
+        // Lưu cursor cho nút điều hướng
+        libPrevCursor = libCursor || null;
+        libCursor = data.nextCursor || '';
+      } catch (err) {
+        showLibStatus('error', escapeHTML(err.message));
+      } finally {
+        loadLibBtn.disabled = false;
+        loadLibBtn.innerHTML = '<i class="fa-solid fa-rotate"></i> Tải dữ liệu';
+      }
+    }
+
+    loadLibBtn.addEventListener('click', () => loadLibrary(true));
+    libPrevBtn.addEventListener('click', () => { libCursor = libPrevCursor || ''; loadLibrary(false); });
+    libNextBtn.addEventListener('click', () => loadLibrary(false));
+    libPassword.addEventListener('keydown', e => { if (e.key === 'Enter') loadLibrary(true); });
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  TAB 4: KIỂM DUYỆT (review queue — consensus lệch)
+    // ════════════════════════════════════════════════════════════════════════
+    const rvPassword = document.getElementById('rvPassword');
+    const rvLoadBtn = document.getElementById('rvLoadBtn');
+    const rvStatus = document.getElementById('rvStatus');
+    const rvBody = document.getElementById('rvBody');
+
+    function showRvStatus(type, msg) {
+      rvStatus.classList.remove('hidden');
+      rvStatus.className = 'px-6 py-3 text-sm border-b ' +
+        (type === 'error' ? 'bg-[#fef2f2] border-[#fecaca] text-[#991b1b]' : 'bg-[#f0fdf4] border-[#bbf7d0] text-[#166534]');
+      rvStatus.innerHTML = msg;
+    }
+
+    async function updateReviewBadge() {
+      try {
+        const pw = rememberedPw();
+        if (!pw) return;
+        const data = await api('/api/admin/review-queue', { password: pw });
+        const pending = (data.entries || []).filter(e => e.status === 'pending').length;
+        const badge = document.getElementById('reviewBadge');
+        if (pending > 0) {
+          badge.textContent = pending;
+          badge.classList.remove('hidden');
+        } else {
+          badge.classList.add('hidden');
+        }
+      } catch (_) { /* bỏ qua */ }
+    }
+
+    function reviewCard(e) {
+      const verdict = e.critic?.verdict || '';
+      return `
+        <div class="border border-[#d4d4d8] rounded-lg overflow-hidden fade-in">
+          <div class="px-4 py-3 bg-[#fafafc] border-b border-[#e4e4e7] flex items-start justify-between gap-3">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-[10px] font-semibold text-[#b45309] bg-[#fef3c7] border border-[#fde68a] rounded-full px-2 py-0.5"><i class="fa-solid fa-triangle-exclamation"></i> Chờ duyệt</span>
+                <span class="text-[10px] text-[#a1a1aa] font-mono">${escapeHTML(e.id.slice(0,8))}…</span>
+              </div>
+              <p class="text-sm font-medium text-[#1a1a1a] leading-relaxed">${escapeHTML(e.question)}</p>
+              ${e.critic?.verdict ? `<p class="mt-1.5 text-xs text-[#8b5cf6]"><i class="fa-solid fa-scale-balanced"></i> Ý kiến Critic: <strong>${escapeHTML(e.critic.verdict)}</strong></p>` : ''}
+              <p class="text-[11px] text-[#71717a] mt-1">Độ giống lời giải: <strong>${Math.round((e.similarity || 0) * 100)}%</strong></p>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2">
+            ${['resultA','resultB'].map((k, i) => {
+              const r = e[k] || {};
+              return `
+              <div class="p-4 ${i === 0 ? 'border-r border-[#e4e4e7]' : ''}">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-semibold text-[#3f3f46] uppercase tracking-wide">Lời giải ${k === 'resultA' ? 'A' : 'B'}</span>
+                  <button class="pick-rv btn-dark inline-flex items-center gap-1.5 text-[11px] font-medium rounded-md px-3 py-1.5 shadow-sm" data-id="${escapeHTML(e.id)}" data-pick="${k === 'resultA' ? 'A' : 'B'}">
+                    <i class="fa-solid fa-circle-check"></i> Chọn đáp án
+                  </button>
+                </div>
+                <p class="text-xs font-mono text-[#52525b] leading-relaxed whitespace-pre-wrap bg-[#fafafc] rounded-md p-3 max-h-64 overflow-y-auto">${escapeHTML(r.step_by_step || '(trống)')}</p>
+                ${r.final_answer ? `<p class="mt-2 text-xs text-[#16a34a] font-semibold"><i class="fa-solid fa-flag-checkered"></i> Kết luận: ${escapeHTML(r.final_answer)}</p>` : ''}
+              </div>`;}).join('')}
+          </div>
+          <div class="px-4 py-2.5 bg-[#fafafc] border-t border-[#e4e4e7] flex items-center justify-end gap-2">
+            <button class="rej-rv text-xs font-medium rounded-md px-3 py-1.5 border border-[#e4e4e7] text-[#71717a] hover:text-[#ef4444] hover:border-[#fecaca] transition" data-id="${escapeHTML(e.id)}">
+              <i class="fa-solid fa-trash-can"></i> Loại bỏ (reject)
+            </button>
+          </div>
+        </div>`;
+    }
+
+    async function loadReview() {
+      const password = rvPassword.value;
+      if (!password) { showRvStatus('error','Vui lòng nhập mật khẩu Admin.'); return; }
+
+      rvLoadBtn.disabled = true;
+      rvLoadBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Đang tải...';
+      try {
+        const data = await api('/api/admin/review-queue', { password });
+        rememberPw(password);
+        if (!data.entries.length) {
+          rvBody.innerHTML = `<div class="text-center py-12 text-[#a1a1aa]">
+            <i class="fa-solid fa-circle-check text-2xl mb-3"></i>
+            <p class="text-sm">Queue trống — không có câu nào cần duyệt.</p></div>`;
+          updateReviewBadge();
+          return;
+        }
+        const pending = data.entries.filter(e => e.status === 'pending');
+        rvBody.innerHTML = `<div class="space-y-4">${pending.map(reviewCard).join('')}</div>`;
+
+        rvBody.querySelectorAll('.rej-rv').forEach(btn => {
+          btn.addEventListener('click', async () => { await actReview('reject', btn.dataset.id); });
+        });
+        rvBody.querySelectorAll('.pick-rv').forEach(btn => {
+          btn.addEventListener('click', async () => { await actReview('approve', btn.dataset.id, btn.dataset.pick); });
+        });
+        showRvStatus('success', `Tìm thấy ${data.entries.filter(e => e.status === 'pending').length} câu đang chờ duyệt.`);
+        updateReviewBadge();
+      } catch (err) {
+        showRvStatus('error', escapeHTML(err.message));
+      } finally {
+        rvLoadBtn.disabled = false;
+        rvLoadBtn.innerHTML = '<i class="fa-solid fa-rotate"></i> Tải queue';
+      }
+    }
+
+    async function actReview(action, id, pick) {
+      const password = rvPassword.value;
+      if (!password) { showRvStatus('error','Vui lòng nhập mật khẩu Admin.'); return; }
+      const confirmMsg = action === 'approve'
+        ? `Xác nhận chọn LỜI GIẢI ${pick} làm đáp án chuẩn và lưu vào DB?`
+        : 'Xác nhận loại bỏ (reject) câu này khỏi queue?';
+      if (!confirm(confirmMsg)) return;
+      try {
+        const path = action === 'approve' ? '/api/admin/review-approve' : '/api/admin/review-reject';
+        await api(path, { password, id, pick });
+        showRvStatus('success', action === 'approve' ? `Đã duyệt (${pick}) và lưu đáp án chuẩn.` : 'Đã loại bỏ khỏi queue.');
+        loadReview();
+      } catch (err) {
+        showRvStatus('error', escapeHTML(err.message));
+      }
+    }
+
+    rvLoadBtn.addEventListener('click', loadReview);
+    rvPassword.addEventListener('keydown', e => { if (e.key === 'Enter') loadReview(); });
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  STATS BADGE + INIT
+    // ════════════════════════════════════════════════════════════════════════
+    async function loadStats() {
+      try {
+        const res = await fetch(BASE + '/api/ai-tutor/stats');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (typeof data.vectorCount === 'number') {
+          document.getElementById('vectorCount').textContent = data.vectorCount;
+          document.getElementById('vectorBadge').classList.remove('hidden');
+          document.getElementById('vectorBadge').classList.add('inline-flex');
+        }
+      } catch (_) { /* server chưa chạy — bỏ qua */ }
+    }
+
+    window.addEventListener('load', () => {
+      updateCounters();
+      renderWithKatex(qPrev, qInput.value);
+      renderWithKatex(aPrev, aInput.value);
+      loadStats();
+      updateReviewBadge();
+      if (window.renderMathInElement) renderMathInElement(document.body);
+    });
+  </script>
+</body>
+</html>

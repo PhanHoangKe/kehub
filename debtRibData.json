@@ -1,0 +1,181 @@
+{
+  "_readme": "KHO NGỮ LIỆU CÂU HÀI CHO ĐẶC VỤ ĐÒI NỢ (RAG). Mỗi phần tử là 1 câu/tớ lữu. Bạn sưu tầm từ confession/meme/tik tok, điền vào mảng items (có thể xóa ví dụ bên dưới). Tóm tắt 2 mẹo: tag càng nhiều càng tốt; degree là Nhẹ/Vừa/Nặng.",
+  "items": [
+    {
+      "id": "cmsiej8dfyx4l",
+      "text": "Tiền không tự nhiên sinh ra và mất đi, nó chỉ chuyển từ túi tôi sang túi bạn rồi... không thấy quay về.",
+      "tags": [
+        "triết lý",
+        "cà khịa",
+        "genz"
+      ],
+      "topic": "vật lý tiền tệ",
+      "degree": "Nhẹ"
+    },
+    {
+      "id": "cmsiej8dfttfh",
+      "text": "Vay tiền thấy lòng người, trả tiền thấy nhân phẩm.",
+      "tags": [
+        "triết lý",
+        "thâm thúy",
+        "nhắc nợ"
+      ],
+      "topic": "nhân phẩm",
+      "degree": "Vừa"
+    },
+    {
+      "id": "cmsiej8dfpgfy",
+      "text": "Người trưởng thành là người biết tự giác trả nợ trước Tết/trước cuối tháng.",
+      "tags": [
+        "nhắc nhở",
+        "văn minh",
+        "thời gian"
+      ],
+      "topic": "tự giác trả nợ",
+      "degree": "Nhẹ"
+    },
+    {
+      "id": "cmsiej8dfy8h2",
+      "text": "Kiếp này tôi cho bạn mượn tiền, kiếp sau xin làm chủ nợ của bạn tiếp để đòi nợ cho đủ.",
+      "tags": [
+        "văn vở",
+        "cà khịa",
+        "kiếp luân hồi"
+      ],
+      "topic": "kiếp sau",
+      "degree": "Vừa"
+    },
+    {
+      "id": "cmsiej8df1zyk",
+      "text": "Người lạ ơi... Hãy trả nợ giùm tôi! Mượn hoài không trả, đòi hoài ngại quá!",
+      "tags": [
+        "trend",
+        "nhạc chế",
+        "dễ thương"
+      ],
+      "topic": "mượn hoài không trả",
+      "degree": "Nhẹ"
+    },
+    {
+      "id": "cmsiej8df8dey",
+      "text": "Nhân chi sơ tính bản thiện... Anh/Em đây không muốn nhiều chuyện, vậy nên bạn hãy trả tiền nhanh nhanh!",
+      "tags": [
+        "ca dao",
+        "vần điệu",
+        "cảnh cáo"
+      ],
+      "topic": "ca dao biến tấu",
+      "degree": "Vừa"
+    },
+    {
+      "id": "cmsiej8dfs4wx",
+      "text": "Thiên linh linh, địa linh tinh, xin bạn đừng linh tinh mà hãy trả nợ giùm tôi!",
+      "tags": [
+        "tâm linh",
+        "hài hước",
+        "genz"
+      ],
+      "topic": "tâm linh đòi nợ",
+      "degree": "Nhẹ"
+    },
+    {
+      "id": "cmsiej8dffsis",
+      "text": "Ôi hoàng tử! Hãy trả nợ cho người em gái bị dính lời nguyền.",
+      "tags": [
+        "trend",
+        "cổ tích",
+        "nũng nịu"
+      ],
+      "topic": "cổ tích",
+      "degree": "Nhẹ"
+    },
+    {
+      "id": "cmsiej8dfaev1",
+      "text": "Thanh xuân như một tách trà, dành cả thanh xuân để đi đòi tiền.",
+      "tags": [
+        "trend",
+        "thanh xuân",
+        "than thở"
+      ],
+      "topic": "thanh xuân",
+      "degree": "Nhẹ"
+    },
+    {
+      "id": "cmsiej8df07qw",
+      "text": "Alo bạn ơi! Tài khoản của tôi đang rơi vào trạng thái 'báo động đỏ', xin hãy giải cứu bằng khoản nợ hôm nọ!",
+      "tags": [
+        "cấp bách",
+        "nhẹ nhàng",
+        "bạn bè"
+      ],
+      "topic": "báo động tài chính",
+      "degree": "Nhẹ"
+    },
+    {
+      "id": "cmsiej8dfgonu",
+      "text": "Ví tôi dạo này mỏng dính như bánh tráng phơi sương, mong bạn ra tay tiếp tế.",
+      "tags": [
+        "ví dụ ví von",
+        "nghèo",
+        "văn vở"
+      ],
+      "topic": "ví rỗng",
+      "degree": "Nhẹ"
+    },
+    {
+      "id": "cmsiej8dfiyht",
+      "text": "Hôm nay trời xanh, mây trắng, nắng vàng... Rất thích hợp để bạn ting ting trả nợ.",
+      "tags": [
+        "thơ mộng",
+        "ting ting",
+        "nhắc khéo"
+      ],
+      "topic": "thời tiết đẹp",
+      "degree": "Nhẹ"
+    },
+    {
+      "id": "cmsiej8dfwomh",
+      "text": "Tình hữu nghị muốn bền lâu... Xin bạn vui lòng thanh toán đúng hẹn.",
+      "tags": [
+        "ngoại giao",
+        "nhắc nợ",
+        "nghiêm túc"
+      ],
+      "topic": "tình bạn",
+      "degree": "Vừa"
+    },
+    {
+      "id": "cmsiej8dfc4c4",
+      "text": "Đừng để tiền làm mờ mắt, nhưng hãy để chuyển khoản làm ấm lòng chủ nợ.",
+      "tags": [
+        "triết lý",
+        "chuyển khoản",
+        "ấm lòng"
+      ],
+      "topic": "chuyển khoản",
+      "degree": "Nhẹ"
+    },
+    {
+      "id": "cmsiej8dfy3b1",
+      "text": "Nghe nói bạn sắp giàu rồi, trả trước chút tiền lẻ hôm nọ vay tớ đi!",
+      "tags": [
+        "cà khịa",
+        "tiền lẻ",
+        "nịnh nọt"
+      ],
+      "topic": "bạn sắp giàu",
+      "degree": "Nhẹ"
+    },
+    {
+      "id": "cmsiej8dfbury",
+      "text": "Tiền của tớ cũng biết nhớ nhà đấy, bạn cho nó về với chủ nhân đi.",
+      "tags": [
+        "nhân hóa",
+        "đáng yêu",
+        "nhắc nợ"
+      ],
+      "topic": "tiền nhớ nhà",
+      "degree": "Nhẹ"
+    }
+  ]
+}

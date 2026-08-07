@@ -1,0 +1,1476 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ĐẶC VỤ ĐÒI NỢ — Hồ Sơ Tuyệt Mật</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@500;700;900&family=Be+Vietnam+Pro:wght@500;600;700;900&family=Rye&family=Special+Elite&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  :root {
+    --bg-0: #05070d;
+    --bg-1: #0a1014;
+    --panel: rgba(15, 23, 30, 0.82);
+    --panel-solid: #0c131b;
+    --line: rgba(80, 200, 255, 0.16);
+    --line-bright: rgba(80, 200, 255, 0.45);
+    --cyan: #22d3ee;
+    --cyan-dim: #0ea5a9;
+    --amber: #f5b73f;
+    --red: #ff4d4d;
+    --lime: #9fff5a;
+    --text: #e6f4ff;
+    --text-dim: #93a7bd;
+    --text-mute: #5f7386;
+    --font-display: 'Orbitron', sans-serif;
+    --font-body: 'Outfit', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body { min-height: 100%; }
+
+  body {
+    font-family: var(--font-body);
+    background:
+      radial-gradient(1100px 500px at 85% -10%, rgba(34, 211, 238, 0.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 10%, rgba(245, 183, 63, 0.07), transparent 55%),
+      var(--bg-0);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .bg-grid {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(80,200,255,0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(80,200,255,0.045) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: radial-gradient(ellipse at center, #000 30%, transparent 78%);
+    -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 78%);
+  }
+  .bg-scanlines {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.35;
+    background: repeating-linear-gradient(0deg, transparent 0 2px, rgba(0,0,0,0.18) 2px 3px);
+  }
+
+  .wrap {
+    position: relative; z-index: 2;
+    max-width: 1180px; margin: 0 auto; padding: 16px 16px 48px;
+  }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 12px 4px 22px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-emblem {
+    width: 44px; height: 44px; flex-shrink: 0;
+    display: grid; place-items: center;
+    border: 1px solid var(--line-bright);
+    border-radius: 10px;
+    background: linear-gradient(150deg, rgba(34,211,238,0.18), rgba(255,255,255,0.02));
+    box-shadow: 0 0 22px rgba(34,211,238,0.25), inset 0 0 12px rgba(34,211,238,0.12);
+    color: var(--cyan);
+    font-size: 20px;
+  }
+  .brand-lock { color: var(--amber); filter: drop-shadow(0 0 6px rgba(245,183,63,0.6)); }
+  .brand-text .claim {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 3px;
+    color: var(--text-dim);
+  }
+  .brand-text h1 {
+    font-family: var(--font-display); font-weight: 900; letter-spacing: 1px;
+    font-size: clamp(14px, 3.6vw, 18px);
+    color: var(--text);
+    text-transform: uppercase;
+  }
+  .brand-text h1 span { color: var(--cyan); }
+
+  .clock { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); text-align: right; line-height: 1.5; }
+  .topbar-admin {
+    width: 40px; height: 40px; flex-shrink: 0; display: grid; place-items: center;
+    border: 1px solid var(--line-bright); border-radius: 10px; color: var(--cyan);
+    background: linear-gradient(150deg, rgba(34,211,238,0.16), rgba(255,255,255,0.02));
+    box-shadow: 0 0 16px rgba(34,211,238,0.2);
+    transition: all .18s; text-decoration: none;
+  }
+  .topbar-admin:hover { transform: translateY(-2px); border-color: var(--cyan); box-shadow: 0 0 24px rgba(34,211,238,0.4); }
+  .clock .cstatus { color: var(--lime); }
+  .blink { animation: blink 1.2s steps(2, start) infinite; }
+  @keyframes blink { to { visibility: hidden; } }
+
+  /* ── Banner ─────────────────────────────────────────── */
+  .banner {
+    display: flex; align-items: flex-start; gap: 14px;
+    border: 1px solid var(--amber);
+    background: linear-gradient(120deg, rgba(245,183,63,0.10), rgba(255,75,75,0.05));
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin-bottom: 26px;
+    position: relative; overflow: hidden;
+  }
+  .banner::after {
+    content: 'LEVEL: SÒNG PHẲNG'; position: absolute; right: -34px; top: 8px;
+    transform: rotate(90deg); font-family: var(--font-mono); font-size: 9px;
+    letter-spacing: 2px; color: var(--amber); opacity: 0.5;
+  }
+  .banner-stamp { flex-shrink: 0; width: 74px; text-align: center; }
+  .stamp {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+    color: var(--amber); border: 2px solid var(--amber);
+    border-radius: 6px; padding: 5px 7px; transform: rotate(-6deg);
+    background: rgba(245,183,63,0.08);
+  }
+  .banner-title {
+    font-family: var(--font-display); font-weight: 700; font-size: clamp(15px, 4vw, 21px);
+    letter-spacing: 0.5px; margin: 4px 0 6px; text-transform: uppercase;
+  }
+  .banner-title .dark { color: #dc3d3d; text-shadow: 0 0 14px rgba(255,75,75,0.5); }
+  .banner p { color: var(--text-dim); font-size: 13px; max-width: 640px; line-height: 1.55; }
+
+  /* ── Layout ─────────────────────────────────────────── */
+  .layout {
+    display: grid; grid-template-columns: minmax(0, 1.16fr) minmax(0, 0.84fr);
+    gap: 22px; align-items: start;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    backdrop-filter: blur(10px);
+    position: relative;
+  }
+
+  .panel-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 12px 16px; border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(34,211,238,0.06), transparent);
+  }
+  .panel-title {
+    display: flex; align-items: center; gap: 9px;
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 2px;
+    color: var(--cyan); text-transform: uppercase;
+  }
+  .panel-title i { color: var(--amber); }
+  .corner-tag {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 1px; color: var(--text-mute);
+    border: 1px dashed var(--line-bright); border-radius: 5px; padding: 2px 7px;
+  }
+
+  .field { padding: 14px 16px 0; }
+  .field-label {
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; letter-spacing: 1.6px;
+    color: var(--text-dim); text-transform: uppercase; margin-bottom: 7px;
+  }
+  .field-label .req { color: var(--amber); }
+
+  .control {
+    width: 100%; padding: 12px 14px;
+    background: rgba(5, 9, 16, 0.7);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--text); font-size: 15px; font-family: var(--font-body);
+    outline: none; transition: border-color 0.18s, box-shadow 0.18s;
+    appearance: none;
+  }
+  .control::placeholder { color: var(--text-mute); }
+  .control:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 3px rgba(34,211,238,0.14), 0 0 16px rgba(34,211,238,0.2);
+  }
+  select.control {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2322d3ee' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center; cursor: pointer;
+  }
+  select.control option { background: var(--panel-solid); color: var(--text); }
+
+  .money-input input.control { padding-right: 76px; border-radius: 8px; }
+  .money-suffix {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    font-family: var(--font-mono); font-weight: 700; font-size: 12px; letter-spacing: .5px;
+    color: var(--cyan); pointer-events: none; white-space: nowrap;
+  }
+  .money-suffix:empty { display: none; }
+
+  .field-hint { font-size: 12px; color: var(--text-mute); margin-top: 6px; }
+  .hint-code { font-size: 11px; color: var(--text-mute); font-weight: 500; text-transform: uppercase; letter-spacing: .5px; margin-left: 2px; }
+  .field-full { padding: 14px 16px 0; }
+
+  /* Upload ảnh nhận diện đối tượng */
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  .photo-upload {
+    display: flex; align-items: center; gap: 12px; cursor: pointer;
+    background: var(--panel); border: 1px dashed var(--line-bright); border-radius: var(--radius);
+    padding: 12px 14px; transition: border-color .2s, box-shadow .2s;
+  }
+  .photo-upload:hover { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(34,211,238,0.1); }
+  .photo-upload.done { border-style: solid; border-color: var(--lime); background: rgba(132,204,22,0.07); }
+  .photo-upload-icon {
+    width: 42px; height: 42px; flex-shrink: 0; border-radius: 8px;
+    display: grid; place-items: center; font-size: 18px; color: var(--cyan);
+    background: rgba(34,211,238,0.1); border: 1px solid var(--line-bright);
+  }
+  .photo-upload.done .photo-upload-icon { color: var(--lime); background: rgba(132,204,22,0.12); border-color: var(--lime); }
+  .photo-upload-text { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 600; color: var(--text-dim); line-height: 1.4; }
+  .photo-upload-preview { display: none; width: 46px; height: 46px; flex-shrink: 0; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); background: #000; }
+  .photo-upload-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-upload.done .photo-upload-preview { display: block; }
+
+  /* Checkbox ủy quyền gửi email */
+  .authorize-box {
+    display: flex; align-items: flex-start; gap: 12px; cursor: pointer;
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 13px 14px; transition: border-color .2s, box-shadow .2s;
+  }
+  .authorize-box:hover { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(34,211,238,0.08); }
+  .authorize-box-check {
+    width: 22px; height: 22px; flex-shrink: 0; margin-top: 1px; border-radius: 6px;
+    display: grid; place-items: center; font-size: 13px; color: transparent;
+    background: rgba(255,255,255,0.05); border: 2px solid var(--text-mute);
+    transition: all .2s;
+  }
+  .authorize-box input:checked + .authorize-box-check { background: var(--lime); border-color: var(--lime); color: #0c1203; }
+  .authorize-box-text { flex: 1; min-width: 0; font-size: 13.5px; color: var(--text-dim); line-height: 1.4; }
+  .authorize-box-text strong { color: var(--cyan); }
+  .authorize-box-text small { display: block; font-size: 11.5px; color: var(--text-mute); margin-top: 3px; }
+
+  /* Mối quan hệ chips */
+  .rel-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+    gap: 8px;
+  }
+  .rel-chip {
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 10px 8px; border-radius: 8px;
+    border: 1px solid var(--line); cursor: pointer;
+    font-size: 13px; color: var(--text-dim);
+    background: rgba(255,255,255,0.02);
+    transition: all 0.16s ease; font-weight: 500;
+  }
+  .rel-chip i { color: var(--text-mute); transition: color 0.16s; }
+  .rel-chip:hover { border-color: var(--line-bright); color: var(--text); }
+  .rel-chip.active {
+    border-color: var(--cyan); color: var(--text);
+    background: rgba(34,211,238,0.10);
+    box-shadow: 0 0 12px rgba(34,211,238,0.18);
+  }
+  .rel-chip.active i { color: var(--cyan); }
+
+  /* Phong cách cards */
+  .style-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .style-card {
+    position: relative; padding: 13px 12px; border-radius: 9px;
+    border: 1px solid var(--line); cursor: pointer;
+    background: rgba(255,255,255,0.02); transition: all 0.16s;
+  }
+  .style-card .em { font-size: 18px; color: var(--amber); margin-bottom: 6px; display: block; }
+  .style-card .nm { font-weight: 600; font-size: 14px; }
+  .style-card .ds { font-size: 11px; color: var(--text-mute); margin-top: 3px; line-height: 1.4; }
+  .style-card input { position: absolute; opacity: 0; pointer-events: none; }
+  .style-card.active { border-color: var(--cyan); background: rgba(34,211,238,0.10); box-shadow: 0 0 14px rgba(34,211,238,0.16); }
+  .style-card.active .em { color: var(--cyan); }
+
+  .submit-zone { padding: 18px 16px 20px; }
+  .summon-btn {
+    width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px;
+    padding: 16px; border: none; border-radius: 10px; cursor: pointer;
+    font-family: var(--font-display); font-weight: 900; font-size: clamp(14px, 2.4vw, 17px);
+    letter-spacing: 1.5px; color: #031018; text-transform: uppercase;
+    background: linear-gradient(120deg, var(--amber), #ffd27a);
+    box-shadow: 0 8px 26px rgba(245,183,63,0.35), 0 0 0 1px rgba(255,210,122,0.4) inset;
+    transition: transform 0.15s, box-shadow 0.2s, filter 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .summon-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 34px rgba(245,183,63,0.5); filter: brightness(1.05); }
+  .summon-btn:active { transform: translateY(0) scale(0.985); }
+  .summon-btn:disabled { filter: grayscale(0.7) brightness(0.8); cursor: not-allowed; transform: none; }
+  .summon-btn .swap-note {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px;
+    background: linear-gradient(120deg, var(--cyan), #5ff0ff); color: #031018;
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .summon-btn.loading .swap-note { opacity: 1; }
+  .summon-btn.loading .swap-default { opacity: 0; }
+
+  .foot {
+    margin-top: 30px; padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-family: var(--font-mono); font-size: 10.5px; color: var(--text-mute);
+    letter-spacing: 1px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  }
+  .foot i { color: var(--amber); }
+  .disclaimer { color: var(--text-mute); margin-top: 6px; font-size: 10.5px; max-width: 720px; line-height: 1.6; }
+
+  /* ── VIEW 2: LOADING ─────────────────────────────────── */
+  .loading-view {
+    max-width: 620px; margin: 26px auto 0; text-align: center;
+    animation: fadeIn 0.4s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .radar {
+    width: 130px; height: 130px; margin: 0 auto 26px; position: relative;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(34,211,238,0.06), rgba(5,9,16,0.9));
+    border: 1px solid var(--line-bright);
+  }
+  .radar-ring { position: absolute; inset: 0; border-radius: 50%; border: 1px solid rgba(34,211,238,0.22); }
+  .radar-ring.r1 { inset: 18%; } .radar-ring.r2 { inset: 36%; } .radar-ring.r3 { inset: 54%; }
+  .radar-sweep {
+    position: absolute; inset: 4px; border-radius: 50%;
+    background: conic-gradient(from 0deg, rgba(34,211,238,0.55), transparent 70deg, transparent 360deg);
+    animation: spin 1.6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .radar-blip { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 8px var(--amber); animation: blip 1.4s ease infinite; }
+  .radar-blip.b1 { top: 24%; left: 64%; animation-delay: 0.2s; }
+  .radar-blip.b2 { bottom: 22%; left: 30%; animation-delay: 0.9s; }
+  .radar-icon { position: absolute; inset: 0; display: grid; place-items: center; font-size: 24px; color: var(--cyan); }
+
+  .loading-title {
+    font-family: var(--font-display); font-weight: 700; font-size: clamp(15px, 3.6vw, 19px);
+    letter-spacing: 2px; color: var(--cyan); margin-bottom: 18px; text-transform: uppercase;
+  }
+
+  .loading-terminal {
+    text-align: left; max-width: 520px; margin: 0 auto 20px;
+    background: rgba(2, 6, 10, 0.8);
+    border: 1px solid var(--line); border-radius: 10px;
+    padding: 16px 18px; min-height: 200px;
+    font-family: var(--font-mono); font-size: 13px; line-height: 1.9;
+  }
+  .term-line { color: var(--lime); opacity: 0; transition: opacity 0.2s ease; white-space: pre-wrap; word-break: break-word; }
+  .term-line.typed { opacity: 1; }
+  .term-line::after { content: '█'; color: var(--lime); animation: blink 1s steps(1) infinite; margin-left: 2px; }
+  .term-line:last-child::after { content: '█'; }
+
+  .loading-progress { max-width: 520px; margin: 0 auto 10px; height: 6px; border-radius: 4px; background: rgba(255,255,255,0.06); overflow: hidden; }
+  .loading-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--cyan), var(--amber)); border-radius: 4px; transition: width 0.25s ease; }
+  .loading-note { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; color: var(--text-dim); }
+
+  /* ── VIEW 3: HỒ SƠ VỤ ÁN ─────────────────────────────── */
+  .case-view { animation: fadeIn 0.45s ease; }
+
+  .case-header {
+    display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center;
+    background: linear-gradient(120deg, rgba(245,183,63,0.08), rgba(34,211,238,0.05));
+    border: 1px solid var(--line-bright); border-radius: var(--radius);
+    padding: 18px 20px; margin-bottom: 16px;
+  }
+  .case-code-label, .case-agent-label { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 2px; color: var(--text-mute); }
+  .case-code-value {
+    font-family: var(--font-display); font-weight: 900; font-size: clamp(20px, 5vw, 26px);
+    color: var(--amber); letter-spacing: 2px; text-shadow: 0 0 16px rgba(245,183,63,0.4);
+  }
+  .case-agent { display: flex; align-items: center; gap: 12px; }
+  .case-agent-icon {
+    width: 42px; height: 42px; flex-shrink: 0; display: grid; place-items: center;
+    border-radius: 50%; border: 1px solid var(--line-bright);
+    background: radial-gradient(circle, rgba(34,211,238,0.25), rgba(5,9,16,0.9));
+    color: var(--cyan); font-size: 17px;
+    box-shadow: 0 0 16px rgba(34,211,238,0.25);
+  }
+  .case-agent-name {
+    font-family: var(--font-display); font-weight: 700; font-size: 14px; letter-spacing: 1px;
+    color: var(--text); text-transform: uppercase;
+  }
+  .case-target { text-align: right; }
+
+  .case-nhay {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 16px 18px; margin-bottom: 16px;
+  }
+  .case-nhay-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+  .case-nhay-title { font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 1.5px; color: var(--text-dim); text-transform: uppercase; }
+  .case-nhay-title i { color: var(--amber); }
+  .case-nhay-badge {
+    font-family: var(--font-display); font-weight: 900; font-size: 13px; letter-spacing: 1px;
+    color: var(--amber); border: 1px solid var(--amber); border-radius: 6px; padding: 4px 10px;
+    background: rgba(245,183,63,0.08);
+  }
+  .case-nhay-bar { height: 10px; border-radius: 6px; background: rgba(255,255,255,0.06); overflow: hidden; }
+  .case-nhay-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--lime), var(--amber), var(--red)); transition: width 1.2s cubic-bezier(0.2, 0.7, 0.2, 1); }
+  .case-nhay-scale { display: flex; justify-content: space-between; margin-top: 7px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 1px; color: var(--text-mute); }
+
+  .case-cards-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 4px 2px 12px; }
+  .case-cards { display: grid; gap: 14px; }
+
+  /* Lời phán của đặc vụ (khu vực riêng, không lặp trong từng thẻ) */
+  .case-verdict {
+    background: linear-gradient(120deg, rgba(167,139,250,0.08), rgba(59,130,246,0.05));
+    border: 1px dashed var(--line-bright);
+    border-radius: var(--radius); padding: 14px 18px; margin-bottom: 16px;
+  }
+  .case-verdict-label {
+    font-family: var(--font-display); font-weight: 900; font-size: 12px; letter-spacing: 1.5px;
+    color: var(--purple); text-transform: uppercase; margin-bottom: 7px;
+  }
+  .case-verdict-label i { margin-right: 6px; }
+  .case-verdict-text { font-size: 13.5px; line-height: 1.6; color: var(--text-dim); }
+
+  /* Trạng thái gửi email cảnh báo */
+  .case-email {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: rgba(132,204,22,0.08); border: 1px solid rgba(132,204,22,0.35);
+    border-radius: var(--radius); padding: 13px 16px; margin-bottom: 16px;
+  }
+  .case-email > i { font-size: 20px; color: var(--lime); margin-top: 1px; }
+  .case-email.error { background: rgba(255,77,77,0.08); border-color: rgba(255,77,77,0.35); }
+  .case-email.error > i { color: var(--red); }
+  .case-email-title { font-family: var(--font-display); font-weight: 900; font-size: 13px; letter-spacing: .5px; color: var(--lime); }
+  .case-email.error .case-email-title { color: var(--red); }
+  .case-email-sub { font-size: 12px; color: var(--text-mute); margin-top: 3px; line-height: 1.5; }
+
+  /* Cổng Hoàn Lương (QR) */
+  .qr-wrap { margin-top: 20px; }
+  .qr-card {
+    display: flex; align-items: center; gap: 18px;
+    background: linear-gradient(120deg, rgba(34,211,238,0.07), rgba(245,183,63,0.06));
+    border: 1px solid var(--line-bright);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+  }
+  .qr-box {
+    flex-shrink: 0; width: 148px; height: 148px;
+    background: #fff; border-radius: 10px; padding: 8px;
+    box-shadow: 0 0 22px rgba(34,211,238,0.15);
+  }
+  .qr-box img { width: 100%; height: 100%; display: block; object-fit: contain; }
+  .qr-info { flex: 1; min-width: 0; }
+  .qr-via { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--cyan); margin-bottom: 4px; letter-spacing: .5px; }
+  .qr-stk { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); margin-bottom: 10px; letter-spacing: 1px; }
+  .qr-blink {
+    font-family: var(--font-display); font-weight: 900; font-size: clamp(13px, 2.6vw, 16px);
+    color: var(--amber); letter-spacing: 1px; text-transform: uppercase;
+    animation: qrblink 1s steps(2, start) infinite;
+  }
+  @keyframes qrblink { 0%,100% { opacity: 1; } 50% { opacity: 0.15; } }
+
+  @media (max-width: 480px) {
+    .qr-card { flex-direction: column; align-items: flex-start; }
+    .qr-box { align-self: center; }
+  }
+
+  .msg-card {
+    border: 1px solid var(--line); border-radius: var(--radius);
+    background: var(--panel); overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .msg-card:hover { border-color: var(--line-bright); box-shadow: 0 6px 26px rgba(0,0,0,0.35); }
+  .msg-card-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 10px 14px; border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(34,211,238,0.05), transparent);
+  }
+  .msg-card-title { display: flex; align-items: center; gap: 9px; font-family: var(--font-display); font-weight: 700; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
+  .msg-card-title i { color: var(--amber); }
+  .msg-card-tag { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1px; color: var(--text-mute); border: 1px dashed var(--line-bright); border-radius: 5px; padding: 2px 7px; }
+  .msg-card-body { padding: 14px 16px; font-size: 14.5px; line-height: 1.8; color: var(--text); white-space: pre-wrap; word-break: break-word; min-height: 84px; }
+  .msg-card-foot { padding: 0 14px 14px; display: flex; align-items: center; gap: 10px; }
+
+  .copy-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 16px; border-radius: 8px; cursor: pointer;
+    background: rgba(34,211,238,0.1); border: 1px solid var(--line-bright);
+    color: var(--cyan); font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+    letter-spacing: 1px; transition: all 0.16s;
+  }
+  .copy-btn:hover { background: rgba(34,211,238,0.2); }
+  .copy-btn.done { background: rgba(159,255,90,0.12); border-color: var(--lime); color: var(--lime); }
+  .copy-status { font-family: var(--font-mono); font-size: 11px; color: var(--lime); }
+
+  .case-actions { margin-top: 18px; text-align: center; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+  .restart-btn {
+    display: inline-flex; align-items: center; gap: 9px;
+    padding: 12px 22px; border-radius: 9px; cursor: pointer;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--line-bright);
+    color: var(--text-dim); font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+    letter-spacing: 1px; transition: all 0.16s;
+  }
+  .restart-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+  .wanted-btn {
+    display: inline-flex; align-items: center; gap: 9px;
+    padding: 12px 20px; border-radius: 9px; cursor: pointer;
+    background: linear-gradient(120deg, rgba(245,183,63,0.16), rgba(220,80,60,0.16));
+    border: 1px solid var(--amber);
+    color: var(--amber); font-family: var(--font-display); font-size: 12px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase; transition: all 0.16s;
+    box-shadow: 0 0 14px rgba(245,183,63,0.12);
+  }
+  .wanted-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(245,183,63,0.28); background: linear-gradient(120deg, rgba(245,183,63,0.24), rgba(255,80,60,0.22)); }
+  .wanted-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+  .wanted-toast {
+    margin-top: 12px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px;
+    color: var(--lime); min-height: 16px;
+  }
+
+  /* ── Responsive ─────────────────────────────────────── */
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .case-header { grid-template-columns: 1fr 1fr; gap: 12px; }
+    .case-target { grid-column: 1 / -1; text-align: left; }
+  }
+  @media (max-width: 480px) {
+    .wrap { padding: 12px 12px 40px; }
+    .topbar { padding: 8px 2px 16px; }
+    .clock .hide-sm { display: none; }
+    .banner { flex-direction: column; padding: 16px; }
+    .banner-stamp { align-self: flex-start; }
+    .rel-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
+    .style-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+    .field { padding: 12px 12px 0; }
+    .panel-head { padding: 11px 12px; }
+    .corner-tag { display: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="bg-scanlines"></div>
+
+  <div class="wrap">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-emblem"><i class="fa-solid fa-shield-halved"></i><i class="fa-solid fa-lock brand-lock"></i></div>
+        <div class="brand-text">
+          <div class="claim">OPERATION&nbsp;:&nbsp;THU_HỒI_VỐN</div>
+          <h1>Đặc Vụ <span>Thâu Hồi</span> AI</h1>
+        </div>
+      </div>
+      <div class="clock">
+        <div><span class="cstatus">●</span> ĐẶC VỤ TRỰC CHIẾN <span class="blink">_</span></div>
+        <div class="hide-sm" id="clock">--:--:--</div>
+      </div>
+      <a class="topbar-admin" href="debt-rib-admin.html" title="Quản lý kho câu hài"><i class="fa-solid fa-book-skull"></i></a>
+    </div>
+
+    <!-- Banner -->
+    <div class="banner">
+      <div class="banner-stamp"><span class="stamp">TUYỆT MẬT</span></div>
+      <div>
+        <div class="banner-title">Hồ Sơ <span class="dark">Thu Hồi Vốn</span></div>
+        <p>Bạn nhớ vốn nhưng ngại mở lời? Đặc vụ AI sẽ soạn thông điệp <strong>hài hước, lịch sự</strong> theo phong cách bạn chọn — đủ để con nợ giật mình, vừa cười vừa chuyển khoản. Điền hồ sơ để triệu hồi.</p>
+      </div>
+    </div>
+
+    <!-- ══ VIEW 1: FORM ══════════════════════════════════ -->
+    <div class="layout" id="viewForm">
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title"><i class="fa-solid fa-user-secret"></i> Hồ sơ thu thập · Eyewitness Statement</div>
+          <span class="corner-tag">FILE-01</span>
+        </div>
+        <form id="debtForm" novalidate>
+
+          <div class="field">
+            <label class="field-label" for="debtor"><i class="fa-solid fa-fingerprint"></i> Tên con nợ <span class="req">*</span></label>
+            <input class="control" type="text" id="debtor" placeholder="VD: Nguyễn Văn A, &quot;Bình Híp&quot;, crush thời cấp 3..." autocomplete="off">
+            <div class="field-hint">Alias, biệt danh — để đặc vụ "nhận mặt" đối tượng.</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="debtorImage"><i class="fa-solid fa-image-portrait"></i> Ảnh nhận diện đối tượng</label>
+            <label class="photo-upload" id="photoUploadBtn" for="debtorImage">
+              <input class="sr-only" type="file" id="debtorImage" accept="image/*">
+              <span class="photo-upload-icon"><i class="fa-solid fa-camera"></i></span>
+              <span class="photo-upload-text" id="photoUploadText">Tải ảnh nhận diện đối tượng</span>
+              <span class="photo-upload-preview" id="photoPreviewWrap"><img id="photoPreview" alt=""></span>
+            </label>
+            <div class="field-hint">Ảnh sẽ được ghép vào Lệnh Truy Nã (không gửi lên server, chỉ xử lý tại trình duyệt).</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="amount"><i class="fa-solid fa-sack-dollar"></i> Số tiền cần thu hồi <span class="req">*</span></label>
+            <div class="money-input">
+              <input class="control" type="text" inputmode="numeric" id="amount" placeholder="Nhập số, VD: 10000" autocomplete="off">
+              <span class="money-suffix" id="amountPreview"></span>
+            </div>
+            <div class="field-hint">Chỉ nhập số. Hệ thống tự thêm "VNĐ" cho bạn.</div>
+          </div>
+
+          <!-- Ngân hàng + Số tài khoản (Cổng Hoàn Lương) -->
+          <div class="field">
+            <label class="field-label" for="bank"><i class="fa-solid fa-building-columns"></i> Ngân hàng nhận <span class="hint-code">(Cổng Hoàn Lương)</span></label>
+            <select class="control" id="bank">
+              <option value="">— Chọn ngân hàng để tạo QR —</option>
+              <option value="default" disabled>Đang tải danh sách...</option>
+            </select>
+            <div class="field-hint">Người dùng có thể bỏ qua; QR chỉ tạo khi chọn ngân hàng + nhập STK.</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="accountNo"><i class="fa-solid fa-hashtag"></i> Số tài khoản chủ nợ</label>
+            <input class="control" type="text" inputmode="numeric" id="accountNo" placeholder="VD: 0203334444" autocomplete="off">
+            <div class="field-hint">Số tài khoản ngân hàng bạn muốn nhận tiền — sẽ in vào mã QR.</div>
+          </div>
+
+          <!-- Ủy quyền gửi email cảnh báo -->
+          <div class="field">
+            <label class="field-label" for="notifyEmail"><i class="fa-solid fa-envelope-open-text"></i> Email của con nợ <span class="hint-code">(không bắt buộc)</span></label>
+            <input class="control" type="email" id="notifyEmail" placeholder="VD: conno@gmail.com" autocomplete="off">
+            <div class="field-hint">Nơi đặc vụ sẽ "thả trát" cảnh báo hài hước.</div>
+          </div>
+
+          <div class="field">
+            <label class="authorize-box" for="authorizeEmail">
+              <input class="sr-only" type="checkbox" id="authorizeEmail">
+              <span class="authorize-box-check"><i class="fa-solid fa-check"></i></span>
+              <span class="authorize-box-text"><strong>Ủy quyền cho Đặc vụ AI gửi email cảnh báo</strong><br>
+                <small>Đặc vụ sẽ tự động gửi "trát hầu tòa" hài hước tới email con nợ sau khi soạn xong hồ sơ.</small></span>
+            </label>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="reason"><i class="fa-solid fa-file-pen"></i> Lý do nợ <span class="req">*</span></label>
+            <input class="control" type="text" id="reason" placeholder="VD: Vay mua xe, quên trả sau nhậu, &quot;đầu tư&quot; X..." autocomplete="off">
+            <div class="field-hint">Một câu ngắn — đặc vụ sẽ lồng nó vào câu chuyện.</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label"><i class="fa-solid fa-people-arrows"></i> Mối quan hệ <span class="req">*</span></label>
+            <div class="rel-grid" id="relGrid" role="radiogroup">
+              <button type="button" class="rel-chip" data-rel="bạn thân"><i class="fa-solid fa-handshake"></i><span>Bạn thân</span></button>
+              <button type="button" class="rel-chip" data-rel="người yêu cũ"><i class="fa-solid fa-heart-crack"></i><span>Người yêu cũ</span></button>
+              <button type="button" class="rel-chip" data-rel="đồng nghiệp"><i class="fa-solid fa-briefcase"></i><span>Đồng nghiệp</span></button>
+              <button type="button" class="rel-chip" data-rel="anh chị em"><i class="fa-solid fa-people-roof"></i><span>Anh chị em</span></button>
+              <button type="button" class="rel-chip" data-rel="hàng xóm"><i class="fa-solid fa-house"></i><span>Hàng xóm</span></button>
+              <button type="button" class="rel-chip" data-rel="bạn nhậu"><i class="fa-solid fa-martini-glass-citrus"></i><span>Bạn nhậu</span></button>
+              <button type="button" class="rel-chip" data-rel="đối tác"><i class="fa-solid fa-people-carry-box"></i><span>Đối tác</span></button>
+              <button type="button" class="rel-chip" data-rel="custom"><i class="fa-solid fa-ellipsis"></i><span>Khác...</span></button>
+            </div>
+            <div class="field" id="customRelWrap" style="display:none;padding-left:0;padding-right:0;">
+              <input class="control" type="text" id="customRel" placeholder="Ví dụ: bạn cùng bàn đại học...">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label"><i class="fa-solid fa-masks-theater"></i> Phong cách đòi</label>
+            <div class="style-grid" id="styleGrid">
+              <label class="style-card"><input type="radio" name="style" value="cà khịa"><span class="em"><i class="fa-solid fa-face-grin-squint-tears"></i></span><span class="nm">Cà khịa</span><span class="ds">Chua mà dễ thương, lịch sự có công.</span></label>
+              <label class="style-card"><input type="radio" name="style" value="văn vở"><span class="em"><i class="fa-solid fa-feather-pointed"></i></span><span class="nm">Văn vở</span><span class="ds">Sến súa, lãng mạn: kỷ niệm, chữ tín.</span></label>
+              <label class="style-card"><input type="radio" name="style" value="genz"><span class="em"><i class="fa-solid fa-bolt"></i></span><span class="nm">GenZ</span><span class="ds">Flex, vibe, cap căng. Xanh đó bro.</span></label>
+              <label class="style-card"><input type="radio" name="style" value="ngọt ngào"><span class="em"><i class="fa-solid fa-candy-cane"></i></span><span class="nm">Ngọt ngào</span><span class="ds">Nhẹ nhàng, thương thảo, tôn trọng.</span></label>
+              <label class="style-card"><input type="radio" name="style" value="lịch sự"><span class="em"><i class="fa-solid fa-mask"></i></span><span class="nm">Lịch sự</span><span class="ds">Khéo léo, tôn trọng, không gay cấn.</span></label>
+              <label class="style-card"><input type="radio" name="style" value="let-free"><span class="em"><i class="fa-solid fa-dice"></i></span><span class="nm">Ngẫu hứng</span><span class="ds">Đặc vụ tự chọn gu, thêm chút hài.</span></label>
+            </div>
+          </div>
+
+          <div class="submit-zone">
+            <div id="formErrorBox" style="display:none; font-family:var(--font-mono); font-size:12px; color:var(--amber); padding:0 2px 12px; letter-spacing:.5px;"></div>
+            <button type="submit" class="summon-btn" id="summonBtn">
+              <span class="swap-default"><i class="fa-solid fa-radar"></i> Triệu hồi Đặc Vụ AI</span>
+              <span class="swap-note"><i class="fa-solid fa-spinner fa-spin"></i> ĐANG SOẠN MẬT HIỆU...</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ══ VIEW 2: LOADING ══════════════════════════════ -->
+    <div id="viewLoading" class="loading-view" hidden>
+      <div class="radar">
+        <div class="radar-ring r1"></div>
+        <div class="radar-ring r2"></div>
+        <div class="radar-ring r3"></div>
+        <div class="radar-sweep"></div>
+        <div class="radar-blip b1"></div>
+        <div class="radar-blip b2"></div>
+        <div class="radar-icon"><i class="fa-solid fa-user-secret"></i></div>
+      </div>
+      <div class="loading-title">Đang quét cơ sở dữ liệu tình báo</div>
+      <div class="loading-terminal" id="loadingTerminal">
+        <div class="term-line" data-text="> Khởi động giao thức thu hồi vốn..."></div>
+        <div class="term-line" data-text="> Xác định đối tượng và bối cảnh vụ án..."></div>
+        <div class="term-line" data-text="> Lần vết lịch sử các khoản &quot;quên&quot; của mục tiêu..."></div>
+        <div class="term-line" data-text="> Chọn vũ khí ngôn từ phù hợp với hồ sơ..."></div>
+        <div class="term-line" data-text="> Lập hồ sơ vụ án, ký xác nhận đặc vụ phụ trách..."></div>
+        <div class="term-line" data-text="> Hoàn tất. Đang triệu hồi đặc vụ AI..."></div>
+      </div>
+      <div class="loading-progress"><div class="loading-bar" id="loadingBar"></div></div>
+      <div class="loading-note" id="loadingNote">Đánh giá độ nhây...</div>
+    </div>
+
+    <!-- ══ VIEW 3: HỒ SƠ VỤ ÁN ══════════════════════════ -->
+    <div id="viewCase" class="case-view" hidden>
+      <div class="case-header">
+        <div class="case-code">
+          <div class="case-code-label">MÃ HỒ SƠ</div>
+          <div class="case-code-value" id="caseCode">--</div>
+        </div>
+        <div class="case-agent">
+          <div class="case-agent-icon"><i class="fa-solid fa-robot"></i></div>
+          <div>
+            <div class="case-agent-label">ĐẶC VỤ PHỤ TRÁCH</div>
+            <div class="case-agent-name" id="caseAgent">--</div>
+          </div>
+        </div>
+        <div class="case-target">
+          <div class="case-agent-label">ĐỐI TƯỢNG</div>
+          <div class="case-agent-name" id="caseTarget">--</div>
+        </div>
+      </div>
+
+      <div class="case-nhay">
+        <div class="case-nhay-head">
+          <span class="case-nhay-title"><i class="fa-solid fa-gauge-high"></i> Mức độ "nhây" của đối tượng</span>
+          <span class="case-nhay-badge" id="caseNhayLabel">--</span>
+        </div>
+        <div class="case-nhay-bar">
+          <div class="case-nhay-fill" id="caseNhayFill" style="width:0%"></div>
+        </div>
+        <div class="case-nhay-scale"><span>Dễ bảo</span><span>Lì</span><span>Siêu nhây</span><span>Vô đối</span></div>
+      </div>
+
+      <div class="case-verdict" id="caseVerdict" hidden>
+        <div class="case-verdict-label"><i class="fa-solid fa-gavel"></i> LỜI PHÁN CỦA ĐẶC VỤ</div>
+        <div class="case-verdict-text" id="caseVerdictText"></div>
+      </div>
+
+      <div class="case-email" id="caseEmail" hidden>
+        <i class="fa-solid fa-envelope-circle-check"></i>
+        <div>
+          <div class="case-email-title" id="caseEmailTitle"></div>
+          <div class="case-email-sub" id="caseEmailSub"></div>
+        </div>
+      </div>
+
+      <div class="case-cards-head">
+        <div class="panel-title"><i class="fa-solid fa-bolt"></i> 3 Kịch bản tin nhắn</div>
+        <span class="corner-tag">ESCALATE ×3</span>
+      </div>
+      <div class="case-cards" id="caseCards"></div>
+
+      <!-- Cổng Hoàn Lương · mã QR thanh toán -->
+      <div class="qr-wrap" id="qrWrap" hidden>
+        <div class="case-cards-head" style="padding-bottom:10px;">
+          <div class="panel-title"><i class="fa-solid fa-qrcode"></i> Cổng Hoàn Lương</div>
+        </div>
+        <div class="qr-card">
+          <div class="qr-box"><img id="qrImg" alt="QR thanh toán"></div>
+          <div class="qr-info">
+            <div class="qr-via"><i class="fa-solid fa-building-columns"></i> <span id="qrBankLabel">--</span></div>
+            <div class="qr-stk">STK: <span id="qrAccountNo">--</span></div>
+            <div class="qr-blink">QUÉT MÃ NÀY ĐỂ CỨU RỖI TÌNH BẠN</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="case-actions">
+        <button class="wanted-btn" id="wantedBtn"><i class="fa-solid fa-list"></i> Xuất Lệnh Truy Nã</button>
+        <button class="restart-btn" id="restartBtn"><i class="fa-solid fa-rotate-left"></i> Mở hồ sơ mới</button>
+      </div>
+      <div class="wanted-toast" id="wantedToast"></div>
+    </div>
+
+    <!-- Footer -->
+    <div class="foot">
+      <div><i class="fa-solid fa-lock"></i> CLEARANCE: B1 · NỘI BỘ</div>
+      <div>⌘ DB-0</div>
+    </div>
+    <div class="disclaimer">Ký hiệu tương đối giữa bạn và người quen một cách lành mạnh. Tránh gây hiểu lầm hoặc khó chịu — nếu thật sự vướng vấn đề pháp lý, hãy gặp luật sư, không phải đặc vụ AI.</div>
+  </div>
+
+<script>
+// ── CLOCK ──────────────────────────────────────────────
+const clockEl = document.getElementById('clock');
+(function tick() {
+  if (clockEl) {
+    const d = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    clockEl.textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+  }
+  setTimeout(tick, 1000);
+})();
+
+// ── Sub-views ──────────────────────────────────────────
+const viewForm = document.getElementById('viewForm');
+const viewLoading = document.getElementById('viewLoading');
+const viewCase = document.getElementById('viewCase');
+function showView(el) {
+  [viewForm, viewLoading, viewCase].forEach(v => { v.hidden = v !== el; });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── Mối quan hệ ────────────────────────────────────────
+const relGrid = document.getElementById('relGrid');
+const customRelWrap = document.getElementById('customRelWrap');
+let selectedRel = '';
+relGrid.addEventListener('click', e => {
+  const chip = e.target.closest('.rel-chip');
+  if (!chip) return;
+  relGrid.querySelectorAll('.rel-chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  selectedRel = chip.dataset.rel;
+  customRelWrap.style.display = selectedRel === 'custom' ? 'block' : 'none';
+});
+
+// ── Phong cách ─────────────────────────────────────────
+const styleGrid = document.getElementById('styleGrid');
+let selectedStyle = '';
+styleGrid.addEventListener('click', e => {
+  const card = e.target.closest('.style-card');
+  if (!card) return;
+  styleGrid.querySelectorAll('.style-card').forEach(c => c.classList.remove('active'));
+  card.classList.add('active');
+  const input = card.querySelector('input');
+  if (input) {
+    input.checked = true;
+    selectedStyle = input.value;
+  }
+});
+
+// ── LOADING ANIMATION ──────────────────────────────────
+const termLines = Array.from(document.querySelectorAll('#loadingTerminal .term-line'));
+const loadingBar = document.getElementById('loadingBar');
+const loadingNote = document.getElementById('loadingNote');
+function startLoadingAnimation() {
+  termLines.forEach(l => l.classList.remove('typed'));
+  loadingBar.style.width = '0%';
+  loadingNote.textContent = 'Đánh giá độ nhây...';
+  let i = 0;
+  const step = () => {
+    if (i < termLines.length) {
+      termLines[i].classList.add('typed');
+      loadingBar.style.width = Math.round(((i + 1) / termLines.length) * 88) + '%';
+      i++;
+      setTimeout(step, 380);
+    } else {
+      loadingBar.style.width = '92%';
+      loadingNote.textContent = 'Đang chờ đặc vụ gửi mật hiệu...';
+    }
+  };
+  step();
+}
+
+// ── Ngẫu nhiên ─────────────────────────────────────────
+const AGENTS = ['Đại Tá Khéo Léo', 'Thiếu Tá Lầm Lì', 'Tổng Giám Cà Khịa', 'Đặc Vụ Bụng Bự', 'Điệp Viên Thâm Thúy', 'Mãnh Hổ Nhẹ Nhàng', 'Cáo Già Hài Hước', 'Trung Sĩ Ngọt Ngào'];
+const NHAY_LABELS = [
+  { max: 25, label: 'DỄ BẢO' },
+  { max: 50, label: 'LÌ' },
+  { max: 75, label: 'SIÊU NHÂY' },
+  { max: 101, label: 'VÔ ĐỐI' },
+];
+
+function makeCaseCode() {
+  const letters = 'ABCDEFGHJKMNPRSTUVWXYZ';
+  let code = '';
+  for (let i = 0; i < 3; i++) code += letters[Math.floor(Math.random() * letters.length)];
+  code += '-' + Number(Math.floor(Math.random() * 9000) + 1000);
+  return code;
+}
+
+// ── ESCAPE ─────────────────────────────────────────────
+function escapeHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// ── HỒ SƠ VỤ ÁN ────────────────────────────────────────
+const caseCodeEl = document.getElementById('caseCode');
+const caseAgentEl = document.getElementById('caseAgent');
+const caseTargetEl = document.getElementById('caseTarget');
+const caseNhayLabel = document.getElementById('caseNhayLabel');
+const caseNhayFill = document.getElementById('caseNhayFill');
+const caseCards = document.getElementById('caseCards');
+
+function showCaseFile(payload, messages, meta) {
+  meta = meta || {};
+  const caseCode = meta.case_code || makeCaseCode();
+  const agentName = meta.agent_name || AGENTS[Math.floor(Math.random() * AGENTS.length)];
+  const nhay = Math.floor(Math.random() * 60) + 30;
+  const nhayInfo = NHAY_LABELS.find(n => nhay < n.max) || NHAY_LABELS[NHAY_LABELS.length - 1];
+
+  caseCodeEl.textContent = caseCode;
+  caseAgentEl.textContent = agentName;
+  caseTargetEl.textContent = payload.debtor || 'Đối tượng chưa xác định';
+  caseNhayLabel.textContent = meta.risk_assessment ? 'ĐÃ THẨM ĐỊNH' : nhayInfo.label;
+  caseNhayFill.style.width = '0%';
+  rememberCase(payload, messages, meta, caseCode, agentName);
+
+  // Lời phán riêng biệt (không lặp trong từng thẻ) — chỉ hiện khi API trả nhận xét thật
+  const verdictEl = document.getElementById('caseVerdict');
+  const verdictText = document.getElementById('caseVerdictText');
+  if (verdictEl && verdictText && meta.risk_assessment) {
+    verdictText.textContent = meta.risk_assessment;
+    verdictEl.hidden = false;
+  } else if (verdictEl) {
+    verdictEl.hidden = true;
+  }
+
+  // Trạng thái email cảnh báo sau khi ủy quyền
+  const emailEl = document.getElementById('caseEmail');
+  if (emailEl) {
+    if (meta.email && meta.email.requested) {
+      emailEl.hidden = false;
+      emailEl.classList.toggle('error', !meta.email.sent);
+      const title = document.getElementById('caseEmailTitle');
+      const sub = document.getElementById('caseEmailSub');
+      if (title) title.textContent = meta.email.sent
+        ? 'ĐÃ GỬI EMAIL CẢNH BÁO TỚI CON NỢ'
+        : 'CHƯA GỬI ĐƯỢC EMAIL';
+      if (sub) sub.textContent = meta.email.sent
+        ? 'Đặc vụ đã thả "trát hầu tòa" tới ' + (payload.notifyEmail || 'email con nợ') + ' — kiểm tra hộp thư nhé!'
+        : (meta.email.error || 'Có lỗi khi gửi email, thử lại sau.');
+    } else {
+      emailEl.hidden = true;
+    }
+  }
+
+  caseCards.innerHTML = messages.map((m, idx) => `
+    <div class="msg-card">
+      <div class="msg-card-head">
+        <div class="msg-card-title"><i class="fa-solid fa-${m.icon || 'comment'}"></i> ${escapeHtml(m.title)}</div>
+        <span class="msg-card-tag">CẤP ${idx + 1}</span>
+      </div>
+      <div class="msg-card-body">${escapeHtml(m.text)}</div>
+      <div class="msg-card-foot">
+        <button class="copy-btn" data-idx="${idx}"><i class="fa-solid fa-copy"></i> Copy nhanh</button>
+        <span class="copy-status" data-idx="${idx}" data-status></span>
+      </div>
+    </div>`).join('');
+
+  caseCards.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const msg = messages[Number(btn.dataset.idx)];
+      try {
+        await navigator.clipboard.writeText(msg.text);
+        btn.classList.add('done');
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Đã chốt!';
+        setTimeout(() => {
+          btn.classList.remove('done');
+          btn.innerHTML = '<i class="fa-solid fa-copy"></i> Copy nhanh';
+        }, 2000);
+      } catch (err) {
+        const st = caseCards.querySelector('.copy-status[data-idx="' + btn.dataset.idx + '"]');
+        if (st) st.textContent = 'Không copy được (copy tay nhé)';
+      }
+    });
+  });
+
+  showView(viewCase);
+  setTimeout(() => { caseNhayFill.style.width = nhay + '%'; }, 80);
+}
+
+// lưu vụ án hiện tại để nút Xuất Lệnh Truy Nã dùng — gán sau khi render
+function rememberCase(payload, messages, meta, caseCode, agentName) {
+  currentCase = { payload, messages, meta, caseCode, agentName };
+  currentCase.debtorImage = debtorImageData || null;
+  currentCase.qrImage = null;
+  renderQrCard(payload);
+}
+
+// ── TẢI ẢNH NHẬN DIỆN ĐỐI TƯỢNG (chỉ Frontend, không gửi server) ───────────
+let debtorImageData = null; // DataURL ảnh chân dung con nợ
+
+(function setupDebtorImageUpload() {
+  const input = document.getElementById('debtorImage');
+  const btn = document.getElementById('photoUploadBtn');
+  const txt = document.getElementById('photoUploadText');
+  const prevImg = document.getElementById('photoPreview');
+  if (!input || !btn) return;
+
+  input.addEventListener('change', () => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    if (!/^image\//.test(file.type)) { txt.textContent = 'File không phải ảnh — chọn lại!'; return; }
+    if (file.size > 8 * 1024 * 1024) { txt.textContent = 'Ảnh quá to (tối đa 8MB) — chọn ảnh khác!'; return; }
+    const reader = new FileReader();
+    reader.onload = e => {
+      debtorImageData = e.target.result;
+      prevImg.src = debtorImageData;
+      btn.classList.add('done');
+      txt.textContent = 'Đã tải ảnh — sẽ ghép vào Lệnh Truy Nã';
+    };
+    reader.readAsDataURL(file);
+  });
+})();
+
+// ── CỔNG HOÀN LƯƠNG · VietQR ───────────────────────────
+let bankSelectMap = {}; // bin -> tên ngân hàng (fallback, cập nhật từ API)
+const bankOptionsFallback = [
+  ['970436', 'Vietcombank (VCB)'],
+  ['970418', 'BIDV'],
+  ['970415', 'VietinBank (ICB)'],
+  ['970405', 'Agribank'],
+  ['970407', 'Techcombank (TCB)'],
+  ['970422', 'MB Bank (MBBank)'],
+  ['970416', 'ACB'],
+  ['970432', 'VPBank'],
+  ['970403', 'Sacombank (STB)'],
+  ['970423', 'TPBank'],
+  ['970454', 'VIB'],
+  ['970440', 'SHB'],
+  ['970449', 'OCB'],
+  ['970412', 'HSBC'],
+];
+
+function fillBankSelect(banks) {
+  const sel = document.getElementById('bank');
+  if (!sel) return;
+  const list = (banks && banks.length) ? banks : bankOptionsFallback;
+  bankSelectMap = {};
+  sel.innerHTML = '<option value="">— Chọn ngân hàng để tạo QR —</option>';
+  list.forEach(b => {
+    const bin = String(b.bin || b[0]);
+    const name = b.shortName || b.name || b[1] || bin;
+    bankSelectMap[bin] = name;
+    const opt = document.createElement('option');
+    opt.value = bin;
+    opt.textContent = (b.shortName ? '[' + b.shortName + '] ' : '') + name;
+    sel.appendChild(opt);
+  });
+}
+
+async function loadBanks() {
+  const sel = document.getElementById('bank');
+  const ttl = 7 * 24 * 3600 * 1000;
+  try {
+    let banks = null;
+    try {
+      const cached = JSON.parse(localStorage.getItem('vietqr_banks') || 'null');
+      if (cached && cached.t && Date.now() - cached.t < ttl) banks = cached.list;
+    } catch (_) {}
+    if (!banks) {
+      const res = await fetch('https://api.vietqr.io/v2/banks', { signal: AbortSignal.timeout(8000) });
+      const data = await res.json();
+      if (data && data.code === '00' && Array.isArray(data.data) && data.data.length) {
+        banks = data.data;
+        try { localStorage.setItem('vietqr_banks', JSON.stringify({ t: Date.now(), list: banks })); } catch (_) {}
+      }
+    }
+    if (!banks || !banks.length) throw new Error('empty');
+    fillBankSelect(banks);
+  } catch (_) {
+    fillBankSelect(null); // fallback tĩnh
+  }
+}
+
+function qrUrl(payload) {
+  if (!payload || !payload.bankBin || !payload.accountNo) return null;
+  return 'https://img.vietqr.io/image/' + payload.bankBin + '-' + payload.accountNo + '-compact2.png?accountName=' + encodeURIComponent('CỔNG HOÀN LƯƠNG');
+}
+
+function loadImage(src) {
+  return new Promise(resolve => {
+    if (!src) return resolve(null);
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+function loadQrImage(url) {
+  return new Promise(resolve => {
+    if (!url) return resolve(null);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}
+
+function renderQrCard(payload) {
+  const wrap = document.getElementById('qrWrap');
+  const img = document.getElementById('qrImg');
+  const bankLbl = document.getElementById('qrBankLabel');
+  const accLbl = document.getElementById('qrAccountNo');
+  if (!wrap || !img) return;
+  const url = qrUrl(payload);
+  if (!url) { wrap.hidden = true; return; }
+  wrap.hidden = false;
+  bankLbl.textContent = payload.bankName || payload.bankBin;
+  accLbl.textContent = payload.accountNo;
+  img.crossOrigin = 'anonymous';
+  img.alt = 'QR ' + payload.bankName;
+  img.onload = () => { currentCase.qrImage = img; };
+  img.src = url;
+}
+
+loadBanks();
+
+// ── DEMO OFFLINE ───────────────────────────────────────
+// Định dạng số tiền: chỉ nhập số, hệ thống tự thêm "VNĐ" + phân tách hàng nghìn.
+// VD: 10000 → "10.000 VNĐ"; 1000000 → "1.000.000 VNĐ".
+function formatMoneyStr(p) {
+  if (!p) return '?';
+  const raw = String(p.amount ?? '').replace(/[^\d]/g, '');
+  if (!raw) return '0 VNĐ';
+  const num = parseInt(raw, 10);
+  return num.toLocaleString('vi-VN') + ' VNĐ';
+}
+const moneyStr = p => formatMoneyStr(p);
+const cardsStd = [
+  { title: 'Nhắc khéo', icon: 'bell' },
+  { title: 'Thâm thúy', icon: 'eye' },
+  { title: 'Chốt hạ', icon: 'gavel' },
+];
+
+function demoMessages(p) {
+  const s = p.style || 'cà khịa';
+  const money = moneyStr(p);
+  const who = p.debtor;
+
+  if (s === 'genz') {
+    return [
+      { ...cardsStd[0], text: who + ' ơi, dạo này anh/user của bro flex nhỉ? Nhớ có ' + money + ' đang né tại đó nha. Nhẹ nhàng xử lý giùm mình.' },
+      { ...cardsStd[1], text: 'Bro ơi, ngân sách của mình sắp "xịt xỉ". ' + money + ' đang kẹt chỗ bro đó. Reply nhanh kẻo mình phải "block xác nhận" đấy.' },
+      { ...cardsStd[2], text: 'OK bro chốt gọn: ' + money + ' trước cuối tuần nhé. Không thì mình "lên sóng" kể chuyện ' + p.reason + ' cho cả fandom nghe đó.' },
+    ];
+  }
+  if (s === 'văn vở') {
+    return [
+      { ...cardsStd[0], text: 'Gửi ' + who + ', ' + p.relationship + ' thân mến. Giữa ta còn ' + money + ' như kỷ niệm nhỏ. Mình chỉ muốn kỷ niệm ấy quay về cho tròn.' },
+      { ...cardsStd[1], text: 'Thời gian trôi, kỷ niệm còn, nhưng ' + money + ' cứ lưu lạc nơi bạn. Mình tin người từng "nguyện cùng vượt qua" sẽ giúp mình thu hồi chút vốn tình.' },
+      { ...cardsStd[2], text: 'Hỡi ' + who + ', chữ tín như sợi chỉ, căng thì đừng đứt. ' + money + ' đã tới hạn, xin hãy để ví tiền mình thư thả.' },
+    ];
+  }
+  if (s === 'ngọt ngào') {
+    return [
+      { ...cardsStd[0], text: 'Chào ' + who + ', mình biết bạn bận nên nhắc nhẹ một câu. Khoản ' + money + ' vì chuyện ' + p.reason + ' mình vẫn tin bạn xử lý lúc thuận tiện.' },
+      { ...cardsStd[1], text: who + ' thân mến, mình trân trọng ' + p.relationship + '. Chỉ là ' + money + ' đã hơi quá hạn, mình mong hai ta giữ mọi thứ gọn gàng.' },
+      { ...cardsStd[2], text: 'Rất cảm kích nếu ' + who + ' sắp xếp ' + money + ' trong tuần này. Lúc nào cũng được, mình tin bạn.' },
+    ];
+  }
+  if (s === 'lịch sự') {
+    return [
+      { ...cardsStd[0], text: who + ' này, mình note nhẹ khoản ' + money + ' hồi ' + p.reason + '. Không gấp, nhưng có thì mình vui.' },
+      { ...cardsStd[1], text: 'Mình nhắc nhẹ ' + who + ': ' + money + ' vẫn đang chờ ở "két sắt kỷ niệm". Khéo léo là mọi thứ nhẹ.' },
+      { ...cardsStd[2], text: 'Đây là lần nhắc cuối cùng của mình. ' + money + ' — mong nhận trước cuối tuần để hồ sơ được niêm phong trọn vẹn.' },
+    ];
+  }
+  // default cà khịa
+  return [
+    { ...cardsStd[0], text: who + ' ơi, mình đang làm "kiểm kê tài sản tình bạn" thì thấy ' + money + ' thất lạc nơi ' + p.relationship + ' của mình. Bạn xem dùm nhé!' },
+    { ...cardsStd[1], text: 'Người ta nói "tiền bạc phân minh, ái tình dứt khoát". Mình không dám dứt ái tình đâu, chỉ mong ' + who + ' nhớ lại chuyện ' + p.reason + ' rồi giúp mình ' + money + ' về đúng quỹ.' },
+    { ...cardsStd[2], text: who + ' ơi, bản tin phát mạnh: mình cần ' + money + ' cuối tuần này. Không cần né, chuyển khoản là mình rút hồ sơ ngay.' },
+  ];
+}
+
+// ── SUBMIT ─────────────────────────────────────────────
+const form = document.getElementById('debtForm');
+const btn = document.getElementById('summonBtn');
+const restartBtn = document.getElementById('restartBtn');
+
+// Preview "VNĐ" khi gõ số tiền
+(function setupAmountPreview() {
+  const input = document.getElementById('amount');
+  const preview = document.getElementById('amountPreview');
+  if (!input || !preview) return;
+  const update = () => {
+    const raw = input.value.replace(/[^\d]/g, '');
+    preview.textContent = raw ? parseInt(raw, 10).toLocaleString('vi-VN') + ' VNĐ' : '';
+  };
+  input.addEventListener('input', update);
+  input.addEventListener('change', update);
+})();
+
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+
+  const debtor = document.getElementById('debtor').value.trim();
+  const amount = document.getElementById('amount').value.trim();
+  const currency = 'đồng';
+  const reason = document.getElementById('reason').value.trim();
+  const relationship = selectedRel === 'custom'
+    ? (document.getElementById('customRel').value.trim() || 'người quen')
+    : (selectedRel || 'người quen');
+  const style = selectedStyle || 'cà khịa';
+  const bankBin = document.getElementById('bank').value || '';
+  const bankName = bankBin ? (bankSelectMap[bankBin] || '') : '';
+  const accountNo = document.getElementById('accountNo').value.replace(/\D/g, '').trim();
+  const notifyEmail = document.getElementById('notifyEmail').value.trim();
+  const authorizeEmail = document.getElementById('authorizeEmail').checked;
+
+  if (!debtor) return formError('Bạn quên ghi TÊN CON NỢ rồi!');
+  if (!amount) return formError('Số tiền trống — đặc vụ không đoán mò được.');
+
+  const realAmount = formatMoneyStr({ amount });
+  const payload = { debtor, amount, currency, reason, relationship, style, bankBin, bankName, accountNo, notifyEmail, authorizeEmail, money: realAmount };
+
+  btn.disabled = true;
+  showView(viewLoading);
+  startLoadingAnimation();
+
+  const startedAt = Date.now();
+  let messages, meta = {};
+  try {
+    const res = await fetch('/api/debt-agent/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.message || 'HTTP ' + res.status);
+    messages = data.messages || data.scenarios;
+    meta.agent_name = data.agent_name;
+    meta.risk_assessment = data.risk_assessment;
+    meta.case_code = data.case_code;
+    meta.email = data.email;
+  } catch (err) {
+    messages = buildDemoMessages(payload);
+  }
+
+  const elapsed = Date.now() - startedAt;
+  const wait = Math.max(0, 2400 - elapsed);
+  setTimeout(() => {
+    btn.disabled = false;
+    loadingBar.style.width = '100%';
+    loadingNote.textContent = 'Bản tin sẵn sàng. Bàn giao hồ sơ...';
+    setTimeout(() => showCaseFile(payload, messages, meta), 350);
+  }, wait);
+});
+
+restartBtn.addEventListener('click', () => {
+  showView(viewForm);
+  document.getElementById('formErrorBox').style.display = 'none';
+});
+
+// ── XUẤT LỆNH TRUY NÃ (vẽ meme canvas → tải thẳng xuống) ─────────────────────
+let currentCase = { payload: null, messages: [], meta: {}, caseCode: '', agentName: '' };
+
+const wantedBtn = document.getElementById('wantedBtn');
+const wantedToast = document.getElementById('wantedToast');
+
+function setWantedToast(msg, isErr) {
+  wantedToast.textContent = msg;
+  wantedToast.style.color = isErr ? 'var(--red)' : 'var(--lime)';
+}
+
+// helper vẽ chữ có wrap theo chiều rộng
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = String(text).split(/\s+/);
+  let line = '';
+  const lines = [];
+  for (const w of words) {
+    const test = line ? line + ' ' + w : w;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      lines.push(line);
+      line = w;
+    } else {
+      line = test;
+    }
+  }
+  if (line) lines.push(line);
+  lines.forEach((l, i) => ctx.fillText(l, x, y + i * lineHeight));
+  return lines.length * lineHeight;
+}
+
+function drawWantedPoster(p) {
+  const W = 1080, H = 1440;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  const money = formatMoneyStr(p.payload || {});
+  const name = (p.payload && p.payload.debtor) || 'ĐỐI TƯỢNG';
+  const proverb = (p.meta && p.meta.risk_assessment) || 'Ai nợ thì vui, người đòi thì vội, tiền về là mọi nẻo đẹp tươi.';
+
+  // Nền giấy cũ
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#f2e3bd');
+  grad.addColorStop(0.5, '#e8d5a4');
+  grad.addColorStop(1, '#d9c089');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Vignette + vết ố giấy
+  const vg = ctx.createRadialGradient(W/2, H/2, 200, W/2, H/2, 800);
+  vg.addColorStop(0, 'rgba(0,0,0,0)');
+  vg.addColorStop(1, 'rgba(80,50,10,0.22)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(80,50,10,0.05)';
+  for (let i = 0; i < 90; i++) {
+    const x = Math.random() * W, y = Math.random() * H, r = 3 + Math.random() * 16;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Khung viền đôi
+  const brown = '#3b2814';
+  ctx.strokeStyle = brown;
+  ctx.lineWidth = 10;
+  ctx.strokeRect(24, 24, W - 48, H - 48);
+  ctx.lineWidth = 3;
+  ctx.strokeRect(46, 46, W - 92, H - 92);
+
+  // Header
+  ctx.textAlign = 'center';
+  ctx.fillStyle = brown;
+  ctx.font = '500 30px Arial, Helvetica, sans-serif';
+  ctx.fillText('ĐẶC VỤ ĐÒI NỢ AI · VĂN PHÒNG THU HỒI', W/2, 120);
+
+  // Sao + dải băng
+  ctx.font = '36px Arial, Helvetica, sans-serif';
+  ctx.fillText('★', W/2, 185);
+  ctx.strokeStyle = brown;
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(120, 200); ctx.lineTo(W-120, 200);
+  ctx.stroke();
+
+  // Chữ TRUY NÃ to đùng
+  ctx.font = '900 150px Arial, Helvetica, sans-serif';
+  ctx.shadowColor = 'rgba(0,0,0,0.25)';
+  ctx.shadowBlur = 6;
+  ctx.shadowOffsetY = 4;
+  ctx.fillText('TRUY NÃ', W/2, 350);
+  ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+
+  ctx.font = 'italic 600 34px Arial, Helvetica, sans-serif';
+  ctx.fillStyle = '#6b1f1f';
+  ctx.fillText('WANTED · DEAD OR ALIVE (TRONG 3 NGÀY)', W/2, 395);
+
+  // "Ảnh" đối tượng — khung ảnh thẻ
+  const px = W/2, py = 590, pw = 300, ph = 330;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(px - pw/2, py - ph/2, pw, ph);
+  ctx.clip();
+  if (p.debtorImage && p.debtorImage.complete && p.debtorImage.naturalWidth) {
+    // Ảnh thật: cắt crop theo tỷ lệ ảnh thẻ + lọc ố vàng cũ kỹ
+    ctx.filter = 'sepia(0.8) grayscale(0.5) contrast(1.2)';
+    const ir = p.debtorImage.naturalWidth / p.debtorImage.naturalHeight;
+    const fr = pw / ph;
+    let sx, sy, sw, sh;
+    if (ir > fr) { sw = p.debtorImage.naturalHeight * fr; sh = p.debtorImage.naturalHeight; sx = (p.debtorImage.naturalWidth - sw) / 2; sy = 0; }
+    else { sh = p.debtorImage.naturalWidth / fr; sw = p.debtorImage.naturalWidth; sy = (p.debtorImage.naturalHeight - sh) / 2; sx = 0; }
+    ctx.drawImage(p.debtorImage, sx, sy, sw, sh, px - pw/2, py - ph/2, pw, ph);
+    ctx.filter = 'none';
+  } else {
+    // Không có ảnh: giữ icon bóng đen mặc định
+    ctx.fillStyle = 'rgba(59,40,20,0.12)';
+    ctx.fillRect(px - pw/2, py - ph/2, pw, ph);
+    ctx.fillStyle = '#3b2814';
+    ctx.beginPath(); ctx.arc(px, py - 30, 55, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(px - 95, py + 150);
+    ctx.quadraticCurveTo(px - 80, py + 20, px, py + 20);
+    ctx.quadraticCurveTo(px + 80, py + 20, px + 95, py + 150);
+    ctx.closePath(); ctx.fill();
+    ctx.fillRect(px - 78, py - 110, 156, 26);
+    ctx.beginPath(); ctx.ellipse(px, py - 88, 70, 18, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
+  // viền khung ảnh thẻ
+  ctx.strokeStyle = brown; ctx.lineWidth = 5;
+  ctx.strokeRect(px - pw/2, py - ph/2, pw, ph);
+  ctx.lineWidth = 2;
+  ctx.strokeRect(px - pw/2 + 8, py - ph/2 + 8, pw - 16, ph - 16);
+
+  // Tên đối tượng
+  ctx.font = '700 54px Arial, Helvetica, sans-serif';
+  ctx.fillStyle = brown;
+  ctx.fillText(name.toUpperCase(), W/2, 830);
+
+  // Số tiền nợ to đùng
+  ctx.font = 'italic 900 60px Arial, Helvetica, sans-serif';
+  ctx.fillStyle = '#6b1f1f';
+  ctx.fillText('NỢ: ' + money.toUpperCase(), W/2, 925);
+
+  // Khung châm ngôn
+  const boxY = 990;
+  ctx.strokeStyle = brown; ctx.lineWidth = 3;
+  ctx.strokeRect(120, boxY, W - 240, 210);
+  ctx.font = 'italic 700 34px Arial, Helvetica, sans-serif';
+  ctx.fillStyle = brown;
+  ctx.fillText('LỜI PHÁN CỦA ĐẶC VỤ', W/2, boxY + 55);
+  ctx.font = 'italic 500 30px Arial, Helvetica, sans-serif';
+  const linesH = wrapText(ctx, '“' + proverb + '”', W/2, boxY + 105, W - 320, 42);
+
+  // Chân trang
+  ctx.font = '500 26px Arial, Helvetica, sans-serif';
+  ctx.fillText('MỌI THÔNG TIN TỐ GIÁC SẼ ĐƯỢC ... GIỮ BÍ MẬT', W/2, 1330);
+  ctx.font = '500 22px Arial, Helvetica, sans-serif';
+  ctx.fillText('ĐƠN VỊ PHÁT HÀNH: ĐẶC VỤ AI · ' + p.caseCode, W/2, 1375);
+
+  // Mã QR Cổng Hoàn Lương — góc dưới cùng bên phải
+  if (p.qrImage && p.qrImage.complete && p.qrImage.naturalWidth) {
+    const qs = 150, qpad = 14, qx = W - qs - 54, qy = H - qs - 60;
+    ctx.textAlign = 'center';
+    // nhãn hướng dẫn đặt phía trên QR với khoảng trống an toàn (tránh bị QR đè)
+    ctx.fillStyle = '#6b1f1f';
+    ctx.font = 'italic 700 22px Arial, Helvetica, sans-serif';
+    ctx.fillText('QUÉT MÃ NÀY ĐỂ TRẢ NỢ', qx + qs / 2, qy - qpad - 46);
+    // khung nền giấy trắng
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(qx - qpad, qy - qpad, qs + qpad * 2, qs + qpad * 2);
+    ctx.strokeStyle = brown; ctx.lineWidth = 6;
+    ctx.strokeRect(qx - qpad, qy - qpad, qs + qpad * 2, qs + qpad * 2);
+    ctx.drawImage(p.qrImage, qx, qy, qs, qs);
+  }
+
+  return canvas;
+}
+
+function downloadCanvas(canvas, filename) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(blob => {
+      if (!blob) { reject(new Error('toBlob thất bại')); return; }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      resolve();
+    }, 'image/png');
+  });
+}
+
+wantedBtn.addEventListener('click', async () => {
+  if (!currentCase.payload) return;
+  wantedBtn.disabled = true;
+  wantedBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang in lệnh...';
+  setWantedToast('');
+  try {
+    // ưu tiên tự vẽ QR trực tiếp trên canvas (tránh phụ thuộc <img> chung)
+    if (!currentCase.qrImage && currentCase.payload) {
+      const url = qrUrl(currentCase.payload);
+      if (url) {
+        currentCase.qrImage = await loadQrImage(url);
+      }
+    }
+
+    // load ảnh chân dung con nợ (DataURL → Image) nếu người dùng đã tải lên
+    if (currentCase.debtorImage && !(currentCase.debtorImage instanceof HTMLImageElement)) {
+      currentCase.debtorImage = await loadImage(currentCase.debtorImage);
+    }
+    await new Promise(r => setTimeout(r, 60)); // để render font ổn định
+
+    const canvas = drawWantedPoster(currentCase);
+    const slug = (currentCase.payload.debtor || 'doituong').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'doituong';
+    await downloadCanvas(canvas, 'truy-na-' + slug + '.png');
+    setWantedToast('Đã xuất lệnh truy nã — kiểm tra thư mục tải về nhé!');
+  } catch (err) {
+    console.error('  [Wanted] lỗi:', err);
+    setWantedToast('Xuất ảnh lỗi, thử lại sau giây lát.', true);
+  } finally {
+    wantedBtn.disabled = false;
+    wantedBtn.innerHTML = '<i class="fa-solid fa-list"></i> Xuất Lệnh Truy Nã';
+  }
+});
+</script>
+</body>
+</html>

@@ -123,22 +123,37 @@ export function applyStateToDOM(reactionsData = null) {
 
     // ── Reactions: render DOM + cập nhật map động trong guestbook engine ─────
     if (state.reactionsConfig && Array.isArray(state.reactionsConfig) && state.reactionsConfig.length > 0) {
-        // 1. Cập nhật map động trong guestbook (EMOJI_MAP, COUNTID_MAP)
+        // 0. Chuẩn hóa BỘ CONFIG 1 LẦN DUY NHẤT → dùng cho cả step 1 (guestbook maps)
+        //    và step 2 (DOM render). Đảm bảo KHÔNG có sự lệch countId/giữa hai bước.
+        const reactionKeyToCountId = (cfg, idx) => {
+            const reactionKey = `r${idx}`;
+            const countId = cfg.countId && typeof cfg.countId === 'string' && cfg.countId.startsWith('reactionCount-')
+                ? cfg.countId
+                : `reactionCount-${reactionKey}`;
+            return { reactionKey, countId };
+        };
+        const normalizedConfig = state.reactionsConfig.map((cfg, idx) => {
+            const { reactionKey, countId } = reactionKeyToCountId(cfg, idx);
+            return { ...cfg, idx, reactionKey, countId };
+        });
+
+        // 1. Cập nhật map động trong guestbook (EMOJI_MAP, COUNTID_MAP, IDX_COUNTID…)
+        //    — DÙNG BỘ CONFIG ĐÃ CHUẨN HÓA → đảm bảo countId khớp 100% với step 2
         if (guestbookEngine?.updateReactionsConfig) {
-            guestbookEngine.updateReactionsConfig(state.reactionsConfig);
+            guestbookEngine.updateReactionsConfig(normalizedConfig);
         }
 
         // 2. Render DOM các nút reaction
-        // QUAN TRỌNG: gán đúng emoji vào đúng button THEO countId (không theo index)
-        // để tránh lỗi nhầm button khi thứ tự config thay đổi
         const reactionBtns = document.querySelectorAll('.reaction-btn');
-        state.reactionsConfig.forEach((cfg, idx) => {
+        normalizedConfig.forEach((cfg, idx) => {
             if (!reactionBtns[idx]) return;
             const btn = reactionBtns[idx];
 
-            // Gán emoji vào dataset — phải làm TRƯỚC khi guestbook dùng
-            btn.dataset.emoji = cfg.emoji || '';
-            btn.title         = cfg.title || '';
+            // ✅ CHUẨN: Gán BỀN VỮNG identifier theo INDEX (0-based) — KHÔNG BAO GIỜ đổi
+            btn.dataset.idx         = String(idx);
+            btn.dataset.reactionKey = cfg.reactionKey;
+            btn.dataset.emoji       = cfg.emoji || '';
+            btn.title               = cfg.title || '';
 
             const img = btn.querySelector('img');
             if (img) {
@@ -147,10 +162,10 @@ export function applyStateToDOM(reactionsData = null) {
                 img.style.display = cfg.imgUrl ? '' : 'none';
             }
 
-            // Gán countId: tìm span trong chính button này (không dùng document.getElementById
-            // để tránh nhầm nếu có span cũ từ lần render trước)
+            // Gán countId CHUẨN vào span — KHỚP 100% với countId trong normalizedConfig
+            // → guestbook.applyReactionCounts dùng getElementById(countId) sẽ tìm đúng span
             const countSpan = btn.querySelector('.reaction-count');
-            if (countSpan && cfg.countId) {
+            if (countSpan) {
                 countSpan.id = cfg.countId;
             }
         });
@@ -1061,3 +1076,7 @@ if (document.readyState === 'loading') {
 } else {
     initApp();
 }
+
+// ── Nút AI Giải Bài Tập — popup xử lý bên index.html (inline script) ─────────
+// Handler đã được gắn trực tiếp trong inline script ở cuối index.html
+// Không cần xử lý tại đây nữa.

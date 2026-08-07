@@ -19,6 +19,22 @@ const path = require('path');
 const url = require('url');
 const crypto = require('crypto');
 
+// ── Express sub-app cho AI Gia Sư Toán (gộp từ ai-tutor) ───────────────────────
+const express = require('express');
+const aiTutorApp = express();
+
+// Khởi tạo AI Gia Sư Toán routes (async) - trả về Promise để await trước khi listen
+async function initAiTutor() {
+    try {
+        const { mountAiTutorRoutes } = require('./ai-tutor-routes.cjs');
+        await mountAiTutorRoutes(aiTutorApp);
+        console.log('  ✅  AI Gia Sư Toán routes đã sẵn sàng (gộp vào server.js)');
+    } catch (err) {
+        console.error('  ❌  Khởi tạo AI Gia Sư Toán thất bại:', err.message);
+        throw err;
+    }
+}
+
 // ── Đặc Vụ Đòi Nợ AI (tạo tin nhắn nhắc nợ hài hước qua LLM) ──────────────────
 const debtAgentService = require('./debtAgentService.js');
 const emailService = require('./emailService.js');
@@ -395,7 +411,11 @@ const RATE_LIMITS = {
     '/api/track/event':  { max: 60,  windowMs: 60 * 1000 },       // 60 req / phút
     '/api/admin/backup/github-now': { max: 5, windowMs: 60 * 1000 }, // 5 req / phút
     '/api/debt-agent/ask':  { max: 10, windowMs: 60 * 1000 },       // 10 req / phút (LLM nên giới hạn nhẹ)
-    '/api/ai-image':        { max: 10, windowMs: 60 * 1000 },       // (unused) để dành nếu quay lại proxy
+    '/api/ai-tutor/ask':        { max: 15, windowMs: 60 * 1000 },   // 15 req / phút (chat)
+    '/api/ai-tutor/ask-file':   { max: 5,  windowMs: 60 * 1000 },   // 5 upload / phút
+    '/api/ai-tutor/health':     { max: 60, windowMs: 60 * 1000 },   // health check
+    '/api/ai-tutor/stats':      { max: 30, windowMs: 60 * 1000 },   // cache stats
+    '/api/ai-tutor/admin/*':    { max: 20, windowMs: 60 * 1000 },   // admin routes (wildcard sẽ không khớp hoàn hảo nhưng không sao)
     '/api/wordchain/challenge': { max: 5,  windowMs: 60 * 1000 },  // 5 lượt tạo bàn / phút
     '/api/wordchain/turn':      { max: 20, windowMs: 60 * 1000 },  // 20 lượt đi / phút
     '/api/wordchain/state':     { max: 60, windowMs: 60 * 1000 },  // poll state
@@ -1596,53 +1616,8 @@ function jsonResponse(res, status, data) {
     res.end(JSON.stringify(data));
 }
 
-// ── Helper: lấy IP thực ─────────────────────────────────────────────────────
 function getClientIP(req) {
     return (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
-}
-
-// ── Reverse Proxy: AI Gia Sư Toán (Express, port AI_TUTOR_PORT) ──────────────
-// server.js là cổng vào duy nhất (port 3000). Mọi request /api/ai-tutor/* được
-// dẫn chuyển sang tiến trình ai-tutor/index.js đang chạy trên port nội bộ.
-// Lợi ích: 1 URL công khai, 1 domain, không lộ thêm cổng, đơn giản CORS.
-const AI_TUTOR_PROXY_PORT = parseInt(process.env.AI_TUTOR_PORT || '3001', 10);
-
-function proxyToAiTutor(req, res, pathname) {
-    const isUpload = (pathname === '/api/ai-tutor/ask-file') || (pathname === '/api/admin/extract-file');
-    const maxBody = isUpload ? 20 * 1024 * 1024 : 1024 * 1024;
-
-    readBody(req, maxBody).then(body => {
-        const options = {
-            hostname: '127.0.0.1',
-            port: AI_TUTOR_PROXY_PORT,
-            path: req.url,
-            method: req.method,
-            headers: {
-                'Content-Type': req.headers['content-type'] || 'application/json',
-                'Content-Length': Buffer.byteLength(body),
-                'Accept': req.headers['accept'] || 'application/json',
-                'Origin': req.headers['origin'] || '',
-            },
-            timeout: isUpload ? 120000 : 60000,
-        };
-
-        const proxyReq = http.request(options, (proxyRes) => {
-            res.writeHead(proxyRes.statusCode || 502, proxyRes.headers);
-            proxyRes.pipe(res);
-        });
-        proxyReq.on('error', (err) => {
-            console.error('  🔁 [AI-Tutor Proxy] Lỗi nối tới ai-tutor:', err.message);
-            jsonResponse(res, 502, {
-                success: false,
-                message: 'AI Gia sư chưa chạy. Hãy khởi động ai-tutor/index.js (port ' + AI_TUTOR_PROXY_PORT + ') trước.',
-            });
-        });
-        proxyReq.setTimeout(options.timeout, () => proxyReq.destroy(new Error('Proxy timeout')));
-        if (body) proxyReq.write(body);
-        proxyReq.end();
-    }).catch(err => {
-        jsonResponse(res, 413, { success: false, message: err.message || 'Request body quá lớn' });
-    });
 }
 
 // ── HTTP Server ──────────────────────────────────────────────────────────────
@@ -1662,9 +1637,9 @@ const server = http.createServer(async (req, res) => {
     const pathname = parsedUrl.pathname;
     const clientIP = getClientIP(req);
 
-    // ── Reverse Proxy: AI Gia Sư Toán → ai-tutor Express ─────────────────────
+    // ── AI Gia Sư Toán (Express sub-app nhúng sẵn) ────────────────────────────
     if (pathname.startsWith('/api/ai-tutor/') || pathname === '/api/ai-tutor') {
-        return proxyToAiTutor(req, res, pathname);
+        return aiTutorApp(req, res);
     }
 
     // ── Game Nối Từ ──────────────────────────────────────────────────────────
@@ -3749,6 +3724,7 @@ if (pathname === '/api/track/ping' && req.method === 'POST') {
     }
 
     // 2. Mở cổng Server sau khi đĩa local đã có dữ liệu hoàn chỉnh
+    await initAiTutor();
     server.listen(PORT, '0.0.0.0', () => {
         console.log('===================================================');
         console.log('  🚀 YOUTH MEMORIES BACKEND SERVER ĐANG CHẠY:');

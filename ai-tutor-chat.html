@@ -724,9 +724,9 @@ html, body {
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
-const API_URL = 'http://localhost:3001/api/ai-tutor/ask';
-const HEALTH_URL = 'http://localhost:3001/api/ai-tutor/health';
-const API_FILE_URL = 'http://localhost:3001/api/ai-tutor/ask-file';
+const API_URL = '/api/ai-tutor/ask';
+const HEALTH_URL = '/api/ai-tutor/health';
+const API_FILE_URL = '/api/ai-tutor/ask-file';
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let currentTopic = '';
@@ -1251,7 +1251,7 @@ async function sendMessage() {
       <div class="msg-bubble ai-content" style="border-color:#fecaca;background:#fff5f5;color:#991b1b;max-width:78%;">
         <i class="fa-solid fa-triangle-exclamation" style="color:#f87171;margin-right:6px;"></i>
         <strong>Lỗi:</strong> ${escapeHtml(err.message)}<br>
-        <small style="color:#b91c1c;">Kiểm tra server <code>node index.js</code> đang chạy tại port 3001.</small>
+        <small style="color:#b91c1c;">Kiểm tra server <code>node server.js</code> đang chạy tại port 3000.</small>
       </div>`;
     messagesWrap.appendChild(errRow);
     scrollToBottom();

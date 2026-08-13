@@ -2659,8 +2659,12 @@ async function _upsertVisitor(db, sessionId, clientIp, uaString, extraPayload = 
     let visitor = db.visitors.find(v => v.sessionId === sessionId);
 
     // 1.5 Tìm theo visitorUuid (nếu có, độ chính xác 100% qua các lần truy cập)
-    if (!visitor && extraPayload && extraPayload.visitorUuid) {
-        visitor = db.visitors.find(v => v.visitorUuid === extraPayload.visitorUuid);
+    if (extraPayload && extraPayload.visitorUuid) {
+        const uuidMatch = db.visitors.find(v => v.visitorUuid === extraPayload.visitorUuid);
+        if (uuidMatch) {
+            visitor = uuidMatch;
+            if (sessionId) visitor.sessionId = sessionId;
+        }
     }
 
     // 2. Fallback: nếu không thấy sessionId/uuid → tìm theo IP + UA gần giống (trong 2 phút)
@@ -2773,6 +2777,11 @@ async function _upsertVisitor(db, sessionId, clientIp, uaString, extraPayload = 
             visitor.sectionsVisited.push(extraPayload.section);
         }
         if (extraPayload.visitorUuid) visitor.visitorUuid = extraPayload.visitorUuid;
+
+        if (extraPayload.isFirstVisit === false || extraPayload.isFirstVisit === 'false') {
+            visitor.isReturning = true;
+            if (extraPayload.lastVisit) visitor.lastVisitAt = extraPayload.lastVisit;
+        }
 
         // GPS enrichment (nếu client gửi tọa độ thực)
         const isRealGps = extraPayload.isGps === true && Boolean(extraPayload.lat && extraPayload.lng);

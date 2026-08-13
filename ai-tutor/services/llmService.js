@@ -37,7 +37,7 @@ let _llm = null;
  * @param {number} opts.temperature         — 0..1, thấp = nhất quán hơn
  * @param {number} opts.maxOutputTokens     — giới hạn token phản hồi
  */
-async function buildLLM({ temperature = 0.2, maxOutputTokens = 2048 } = {}) {
+async function buildLLM({ temperature = 0.2, maxOutputTokens = 8192 } = {}) {
   const provider = (process.env.LLM_PROVIDER || 'google').toLowerCase();
 
   if (provider === 'openai') {
@@ -215,7 +215,7 @@ function validateSolveSchema(obj) {
  * @param {boolean} [opts.json]        — ép responseMimeType application/json
  * @returns {Promise<string>} — text thô từ model
  */
-async function callGeminiRest({ systemPrompt, userText, temperature = 0.2, maxOutputTokens = 4096, codeExecution = false, json = true }) {
+async function callGeminiRest({ systemPrompt, userText, temperature = 0.2, maxOutputTokens = 8192, codeExecution = false, json = true }) {
   if (!process.env.GOOGLE_API_KEY) throw new Error('Thiếu GOOGLE_API_KEY');
   const model = process.env.AI_TUTOR_MODEL || process.env.GOOGLE_LLM_MODEL || 'gemini-3.5-flash';
   const key   = process.env.GOOGLE_API_KEY;
@@ -313,7 +313,7 @@ async function invokeSolver(question, history, temperature = 0.2, ctx = {}) {
     systemPrompt: SOLVER_SYSTEM_PROMPT,
     userText,
     temperature,
-    maxOutputTokens: 4096,
+    maxOutputTokens: 8192,
     codeExecution: true,   // Native Code Execution bật cho SOLVER
     json: true,
   });
@@ -435,7 +435,7 @@ ${resultB?.final_answer ?? '(trống)'}`;
     systemPrompt: CRITIC_SYSTEM_PROMPT,
     userText: humanText,
     temperature: 0.0,
-    maxOutputTokens: 2048,
+    maxOutputTokens: 8192,
     codeExecution: false,
     json: true,
   });

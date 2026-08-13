@@ -5698,6 +5698,10 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     transform: translate(calc(-50% - 134px), calc(-50%)) scale(1);
     opacity: 1; pointer-events: all;
 }
+.ai-speed-dial.open .ai-dial-item[style*="--i:4"] {
+    transform: translate(calc(-50% - 186px), calc(-50% + 40px)) scale(1);
+    opacity: 1; pointer-events: all;
+}
 
 /* Hover — giữ đúng vị trí vòng cung, chỉ scale lên */
 .ai-speed-dial.open .ai-dial-item[style*="--i:0"]:hover {
@@ -5719,6 +5723,11 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     transform: translate(calc(-50% - 134px), calc(-50%)) scale(1.15) !important;
     background: #f5f3ff; border-color: #a5b4fc; color: #4f46e5;
     box-shadow: 0 4px 18px rgba(79,70,229,0.22);
+}
+.ai-speed-dial.open .ai-dial-item[style*="--i:4"]:hover {
+    transform: translate(calc(-50% - 186px), calc(-50% + 40px)) scale(1.15) !important;
+    background: #fef2f4; border-color: #fda4af; color: #e11d48;
+    box-shadow: 0 4px 18px rgba(225,29,72,0.22);
 }
 
 /* Tooltip */
@@ -5745,6 +5754,7 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
 #aiDialDebt { color: #d97706; border-color: #fde68a; background: linear-gradient(135deg, #fffbeb, #fef3c7); }
 #aiDialAffil { color: #0891b2; border-color: #67e8f9; background: linear-gradient(135deg, #ecfeff, #cffafe); }
 #aiDialWord { color: #4f46e5; border-color: #a5b4fc; background: linear-gradient(135deg, #eef2ff, #c7d2fe); }
+#aiDialDraw { color: #e11d48; border-color: #fda4af; background: linear-gradient(135deg, #fff1f2, #fecdd3); }
 
 /* State khi popup chat đang mở — nút con highlight */
 #aiDialChat.chat-open {
@@ -5778,6 +5788,12 @@ body[data-theme="sunset"] .orb-2 { background: radial-gradient(circle, #fde047, 
     }
     .ai-speed-dial.open .ai-dial-item[style*="--i:3"]:hover {
         transform: translate(calc(-50% - 118px), calc(-50%)) scale(1.12) !important;
+    }
+    .ai-speed-dial.open .ai-dial-item[style*="--i:4"] {
+        transform: translate(calc(-50% - 162px), calc(-50% + 36px)) scale(1);
+    }
+    .ai-speed-dial.open .ai-dial-item[style*="--i:4"]:hover {
+        transform: translate(calc(-50% - 162px), calc(-50% + 36px)) scale(1.12) !important;
     }
 }
 

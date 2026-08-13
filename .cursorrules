@@ -14,3 +14,9 @@
 
 ## General UI
 - Use modern, sharp, and dynamic 3D-like elements. Do not fallback to plain static 2D emojis.
+
+## Workflow & Self-Improvement (Bắt buộc đọc trước khi code tác vụ phức tạp)
+- Xem chi tiết quy trình làm việc tại: `tasks/rules.md` (bao gồm 6 trụ cột: Plan-First, Sub-Agents, Self-Improvement Loop, Verify Before Ship, Elegance, Own the Debug).
+- Với tác vụ 3+ bước / phức tạp: lập kế hoạch trong `tasks/todo.md` (template có sẵn) trước khi sửa code.
+- Sau MỌI lần sửa lỗi / gặp bất thường: cập nhật `tasks/lessons.md` (template có sẵn + 10 bài học nền tảng đã có).
+- Đọc toàn bộ nội dung 3 file `tasks/*.md` KHI BẮT ĐẦU MỌI PHIÊN LÀM VIỆC để nhớ quy tắc và tránh lặp lại lỗi cũ.

@@ -421,6 +421,7 @@ const RATE_LIMITS = {
     '/api/wordchain/state':     { max: 60, windowMs: 60 * 1000 },  // poll state
     '/api/wordchain/pending':   { max: 60, windowMs: 60 * 1000 },  // poll bàn đang chờ
     '/api/wordchain/decline':   { max: 20, windowMs: 60 * 1000 },  // đóng bàn
+    '/api/tts':                 { max: 20, windowMs: 60 * 1000 },  // 20 lượt TTS / phút
 };
 
 // ── Game Nối Từ (in-memory) ─────────────────────────────────────────────────────
@@ -1642,6 +1643,77 @@ const server = http.createServer(async (req, res) => {
         return aiTutorApp(req, res);
     }
 
+    // ── Text-to-Speech (ElevenLabs Proxy) ────────────────────────────────────
+    if (pathname === '/api/tts' && req.method === 'POST') {
+        if (!checkRateLimit('/api/tts', clientIP)) {
+            res.writeHead(429, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ error: 'Quá nhiều yêu cầu, vui lòng thử lại sau.' }));
+        }
+        try {
+            const raw = await readBody(req, 16 * 1024);
+            const payload = JSON.parse(raw || '{}');
+            const text = sanitizeString(payload.text, 1000); // Giới hạn 1000 ký tự cho ElevenLabs free (vẫn dưới 10k/tháng)
+            // Giọng mặc định (Rachel hoặc tùy chỉnh)
+            const voiceId = sanitizeString(payload.voiceId, 50) || '21m00Tcm4TlvDq8ikWAM'; 
+
+            if (!text) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                return res.end(JSON.stringify({ error: 'Vui lòng nhập văn bản cần đọc.' }));
+            }
+
+            const apiKey = process.env.ELEVENLABS_API_KEY;
+            if (!apiKey) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                return res.end(JSON.stringify({ error: 'Chủ web chưa cấu hình API Key ElevenLabs.' }));
+            }
+
+            const apiUrl = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`;
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'xi-api-key': apiKey,
+                    'Content-Type': 'application/json',
+                    'Accept': 'audio/mpeg'
+                },
+                body: JSON.stringify({
+                    text: text,
+                    model_id: 'eleven_multilingual_v2', // Model hỗ trợ tiếng Việt cực tốt
+                    voice_settings: { stability: 0.5, similarity_boost: 0.75 }
+                })
+            });
+
+            if (!response.ok) {
+                const errText = await response.text();
+                console.error('ElevenLabs Lỗi:', errText);
+                let parseErr;
+                try { parseErr = JSON.parse(errText); } catch(e) {}
+                
+                // Trích xuất thông báo lỗi chi tiết từ ElevenLabs
+                let errorMsg = 'Lỗi từ ElevenLabs API (' + response.status + ').';
+                if (parseErr && parseErr.detail) {
+                    if (typeof parseErr.detail === 'string') errorMsg = parseErr.detail;
+                    else if (parseErr.detail.message) errorMsg = parseErr.detail.message;
+                }
+                
+                res.writeHead(response.status, { 'Content-Type': 'application/json' });
+                return res.end(JSON.stringify({ error: errorMsg }));
+            }
+
+            const arrayBuffer = await response.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            
+            res.writeHead(200, {
+                'Content-Type': 'audio/mpeg',
+                'Content-Length': buffer.length
+            });
+            return res.end(buffer);
+        } catch (err) {
+            console.error('Lỗi TTS Proxy:', err);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ error: 'Lỗi máy chủ nội bộ.' }));
+        }
+    }
+
     // ── Game Nối Từ ──────────────────────────────────────────────────────────
     // 1) POST /api/wordchain/challenge — người chơi tạo bàn, gửi email mời chủ
     // 2) GET  /api/wordchain/state?id=... — poll trạng thái bàn (cả 2 phía)
@@ -2586,20 +2658,40 @@ async function _upsertVisitor(db, sessionId, clientIp, uaString, extraPayload = 
     // 1. Tìm visitor theo sessionId
     let visitor = db.visitors.find(v => v.sessionId === sessionId);
 
-    // 2. Fallback: nếu không thấy sessionId → tìm theo IP + UA gần giống (trong 30 phút)
-    // Để capture trường hợp: server tạo record nhưng JS client tạo sessionId khác (cookie disabled)
+    // 1.5 Tìm theo visitorUuid (nếu có, độ chính xác 100% qua các lần truy cập)
+    if (!visitor && extraPayload && extraPayload.visitorUuid) {
+        visitor = db.visitors.find(v => v.visitorUuid === extraPayload.visitorUuid);
+    }
+
+    // 2. Fallback: nếu không thấy sessionId/uuid → tìm theo IP + UA gần giống (trong 2 phút)
     if (!visitor) {
-        const THIRTY_MIN_AGO = Date.now() - 30 * 60 * 1000;
+        const TWO_MIN_AGO = Date.now() - 2 * 60 * 1000;
         visitor = db.visitors.find(v =>
             v.ip === clientIp &&
             v.browser === browser &&
             v.os === os &&
-            new Date(v.lastSeen).getTime() > THIRTY_MIN_AGO
+            v.device === parsedDevice &&
+            new Date(v.lastSeen).getTime() > TWO_MIN_AGO
         );
-        // Nếu tìm được → đồng bộ sessionId mới vào để client ping sau đó match đúng
         if (visitor && sessionId) {
             visitor.sessionId = sessionId;
         }
+    }
+
+    // 3. Dọn dẹp Ghost Visitor (Khách ảo do GET / tạo ra nhưng client lại match với visitorUuid cũ do không gửi cookie)
+    if (visitor) {
+        const TWO_MIN_AGO = Date.now() - 2 * 60 * 1000;
+        db.visitors = db.visitors.filter(v => {
+            if (v.id === visitor.id) return true; // Giữ lại visitor chính
+            // Nhận diện ghost: Mới tạo < 2 phút, cùng IP/UA, chưa có visitorUuid
+            const isGhost = !v.visitorUuid && 
+                            v.ip === clientIp && 
+                            v.browser === browser && 
+                            v.os === os && 
+                            v.device === parsedDevice &&
+                            new Date(v.lastSeen).getTime() > TWO_MIN_AGO;
+            return !isGhost; // Xóa nếu là ghost
+        });
     }
 
     const now = new Date().toISOString();

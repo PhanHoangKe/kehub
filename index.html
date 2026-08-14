@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 
 <head>
@@ -79,6 +79,10 @@
             <!-- Nút con 5: Vẽ Lại Ảnh Thành Video -->
             <button class="ai-dial-item" id="aiDialDraw" data-tooltip="Vẽ Lại Ảnh Thành Video" style="--i:4">
                 <i class="fa-solid fa-palette"></i>
+            </button>
+            <!-- Nút con 6: Tạo Music Story 9:16 -->
+            <button class="ai-dial-item" id="aiDialMusicStory" data-tooltip="Tạo Music Story FB 9:16" style="--i:5">
+                <i class="fa-solid fa-music"></i>
             </button>
 
             <!-- Nút chính (trigger) -->
@@ -1710,6 +1714,7 @@ function selectDropdown(ddId, value, text, inputId) {
 var aiDialAffil = document.getElementById('aiDialAffil');
 var aiDialWord  = document.getElementById('aiDialWord');
 var aiDialDraw  = document.getElementById('aiDialDraw');
+var aiDialMusicStory = document.getElementById('aiDialMusicStory');
 var aiSpeedDial = document.getElementById('aiSpeedDial');
     var isDialOpen  = false;
 
@@ -1758,6 +1763,14 @@ var aiSpeedDial = document.getElementById('aiSpeedDial');
         closeDial();
         window.open('draw-video.html', 'drawVideoPopup');
     });
+
+    if (aiDialMusicStory) {
+        aiDialMusicStory.addEventListener('click', function (e) {
+            e.stopPropagation();
+            closeDial();
+            window.location.href = 'music-story.html';
+        });
+    }
 
     document.addEventListener('click', function (e) {
         if (isDialOpen && !aiSpeedDial.contains(e.target)) closeDial();

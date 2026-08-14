@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FB Music Note Story Generator | Thanh Xuân của Kế</title>
+
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/music-story.css">
+</head>
+
+<body class="music-story-body">
+
+    <!-- Header Navigation Bar -->
+    <header class="ms-header">
+        <div class="ms-brand">
+            <div class="ms-logo-icon">
+                <i class="fa-solid fa-music"></i>
+            </div>
+            <div class="ms-title-group">
+                <h1>FB Music Note Story Generator</h1>
+                <p>Tạo Video Story Ghi Chú Facebook 100% Chuẩn Đăng FB</p>
+            </div>
+        </div>
+        <a href="index.html" class="ms-back-btn">
+            <i class="fa-solid fa-arrow-left"></i> Trang Chủ
+        </a>
+    </header>
+
+    <!-- Main Workspace Grid Layout -->
+    <main class="ms-container">
+
+        <!-- LEFT PANEL: AVATAR, MUSIC & NOTE CONTENT -->
+        <section class="ms-panel ms-panel-left">
+
+            <!-- Story Preset Mode Switcher -->
+            <div class="ms-section-title">
+                <i class="fa-solid fa-layer-group"></i> Giao Diện Story
+            </div>
+            <div class="ms-segment-grid" id="storyModeGroup">
+                <button class="ms-seg-btn active" data-mode="fb_note"><i class="fa-solid fa-music"></i> Ghi Chú Nhạc Story</button>
+                <button class="ms-seg-btn" data-mode="modern" title="Tính năng đang được phát triển" disabled style="opacity: 0.6; cursor: not-allowed;"><i class="fa-brands fa-facebook"></i> Ghi Chú FB <small style="font-size:0.7rem; color:#f59e0b; font-weight:700;">(Đang phát triển)</small></button>
+            </div>
+
+            <!-- Avatar & Background Section -->
+            <div class="ms-section-title" style="margin-top: 10px;">
+                <i class="fa-solid fa-user-gear"></i> Ảnh Chính / Ảnh Đại Diện
+            </div>
+
+            <div class="ms-field-group">
+                <label class="ms-label">Tải Ảnh của bạn</label>
+                <div class="ms-dropzone" id="bgDropzone">
+                    <div class="ms-dropzone-icon">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <p>Kéo thả hoặc bấm để chọn Ảnh</p>
+                    <small>Tự động tạo Ảnh Tròn & Background mờ mờ</small>
+                    <input type="file" id="bgInput" accept="image/*,video/*">
+                </div>
+                <div id="bgPreviewBox" class="ms-media-preview-box" style="display:none;">
+                    <img id="bgImgPreview" src="" alt="Background Preview" style="display:none;">
+                    <video id="bgVideoPreview" src="" muted loop playsinline style="display:none;"></video>
+                    <button id="btnRemoveBg" class="ms-remove-btn" title="Xóa photo"><i
+                            class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+
+            <!-- Music & Video Audio Extraction Section -->
+            <div class="ms-section-title" style="margin-top: 10px;">
+                <i class="fa-solid fa-compact-disc"></i> Nguồn Nhạc (Nhạc MP3 / Video TikTok)
+            </div>
+
+            <div class="ms-field-group">
+                <label class="ms-label">Tải Nhạc hoặc Video (Tự động tách âm thanh)</label>
+                <div class="ms-dropzone" id="musicDropzone">
+                    <div class="ms-dropzone-icon">
+                        <i class="fa-solid fa-file-audio"></i>
+                    </div>
+                    <p>Kéo thả File Nhạc hoặc Video vào đây</p>
+                    <small>MP3 · WAV · M4A · MP4 · WebM (Tách tiếng tự động)</small>
+                    <input type="file" id="musicInput" accept="audio/*,video/*">
+                </div>
+            </div>
+
+            <!-- Online Video / TikTok Link Audio Extractor -->
+            <div class="ms-field-group">
+                <label class="ms-label">Dán Link Video / TikTok / Audio Web:</label>
+                <div style="display:flex; gap: 8px;">
+                    <input type="text" id="musicUrlInput" class="ms-input" placeholder="Dán link video/mp3 vào đây...">
+                    <button id="btnExtractUrl" class="ms-seg-btn" style="white-space:nowrap; padding: 0 14px;"><i
+                            class="fa-solid fa-wand-magic-sparkles"></i> Lấy Nhạc</button>
+                </div>
+            </div>
+
+            <!-- Audio Timeline & CapCut-Style Trimmer Card -->
+            <div id="audioTimelineCard" class="ms-audio-timeline-card" style="display:none;">
+                <div class="ms-audio-info-row">
+                    <span id="songFileName" class="ms-song-title-badge">Tên_bài_hát.mp3</span>
+                    <span id="songDurationText" class="ms-time-range-display">00:00</span>
+                </div>
+                <div class="ms-audio-controls-row">
+                    <button id="btnPlayMusicPreview" class="ms-play-btn"><i class="fa-solid fa-play"></i></button>
+                    <div class="ms-waveform-container">
+                        <canvas id="msWaveformCanvas"></canvas>
+                    </div>
+                </div>
+
+                <div class="ms-field-group">
+                    <label class="ms-label">Thời lượng phát Story: <b id="storyDurVal">15s</b></label>
+                    <div class="ms-segment-grid" id="storyDurGroup">
+                        <button class="ms-seg-btn" data-dur="5">5s</button>
+                        <button class="ms-seg-btn" data-dur="10">10s</button>
+                        <button class="ms-seg-btn active" data-dur="15">15s</button>
+                        <button class="ms-seg-btn" data-dur="30">30s</button>
+                        <button class="ms-seg-btn" data-dur="60">60s</button>
+                        <button class="ms-seg-btn" data-dur="full">Toàn bài</button>
+                    </div>
+                </div>
+
+                <div class="ms-field-group">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <label class="ms-label" style="margin:0;">Vị trí cắt nhạc (CapCut Precision):</label>
+                        <span style="font-size: 0.8rem; color: var(--ms-primary); font-weight:700;">
+                            <span id="startTimeVal">0.0s</span> ➔ <span id="endTimeVal">15.0s</span>
+                        </span>
+                    </div>
+                    <input type="range" id="startTimeRange" class="ms-range" min="0" max="100" step="0.1" value="0">
+                </div>
+            </div>
+
+            <!-- FB NOTE CUSTOMIZATION SECTION -->
+            <div class="ms-section-title" style="margin-top: 10px;">
+                <i class="fa-solid fa-music"></i> Nội Dung Ghi Chú Nhạc Story (Note Bubble)
+            </div>
+
+            <div class="ms-field-group">
+                <label class="ms-label">Dòng 1: Tên Bài Hát (kèm icon sóng nhạc |||)</label>
+                <input type="text" id="noteTitleInput" class="ms-input" placeholder="Ví dụ: Life Goes On..."
+                    value="Life Goes On">
+            </div>
+
+            <div class="ms-field-group">
+                <label class="ms-label">Dòng 2: Ca Sĩ / Nghệ Sĩ</label>
+                <input type="text" id="noteSubInput" class="ms-input" placeholder="Ví dụ: BTS..." value="BTS">
+            </div>
+
+            <div class="ms-field-group">
+                <label class="ms-label">Dòng 3: Ghi Chú Tâm Trạng (Tùy chọn - Tự động mở rộng ô)</label>
+                <input type="text" id="noteTextExtraInput" class="ms-input"
+                    placeholder="Ví dụ: Thế lại đón sinh nhật một mình r 🙄😔..." value="">
+            </div>
+
+            <div class="ms-field-group">
+                <label class="ms-label">Màu Nền Khối Ghi Chú (Bubble Color)</label>
+                <div class="ms-color-swatches" id="noteColorSwatches">
+                    <button class="ms-color-btn active" style="background:#b4804c" data-color="#b4804c"
+                        title="Nâu nhẹ FB gốc"></button>
+                    <button class="ms-color-btn" style="background:#8c592b" data-color="#8c592b"
+                        title="Nâu đất đậm"></button>
+                    <button class="ms-color-btn" style="background:#262626" data-color="#262626"
+                        title="Đen mờ FB"></button>
+                    <button class="ms-color-btn" style="background:#1e293b" data-color="#1e293b"
+                        title="Xanh đêm"></button>
+                    <button class="ms-color-btn" style="background:#3b0764" data-color="#3b0764"
+                        title="Hồng tím"></button>
+                    <input type="color" id="noteBgColorCustom" value="#b4804c" class="ms-color-picker"
+                        title="Tùy chọn màu">
+                </div>
+            </div>
+
+        </section>
+
+        <!-- CENTER PANEL: LIVE 9:16 PREVIEW -->
+        <section class="ms-panel-center">
+            <div class="ms-phone-wrapper">
+                <div class="ms-phone-notch"></div>
+                <div class="ms-phone-screen">
+                    <canvas id="msPreviewCanvas" width="1080" height="1920"></canvas>
+                    <div class="ms-preview-badge"><i class="fa-solid fa-eye"></i> Clean Video Preview 9:16</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- RIGHT PANEL: EMOTION ANIMATION & EXPORT -->
+        <section class="ms-panel ms-panel-right">
+
+            <!-- Optional UI Badge Toggle -->
+            <div class="ms-section-title" style="margin-top: 10px;">
+                <i class="fa-solid fa-sliders"></i> Chi Tiết Phụ
+            </div>
+
+            <div class="ms-toggle-row">
+                <span class="ms-toggle-label">Nút 💬 Ghi Chú góc trên trái</span>
+                <label class="ms-switch">
+                    <input type="checkbox" id="toggleNoteBadge" checked>
+                    <span class="ms-slider"></span>
+                </label>
+            </div>
+
+            <!-- Legal Reminder -->
+            <div class="ms-legal-notice" style="margin-top: auto;">
+                <i class="fa-solid fa-shield-halved"></i> <b>Tối Ưu Đăng Story:</b> Video xuất ra dạng MP4 9:16 sạch sẽ
+                để bạn upload trực tiếp lên Story Facebook / TikTok / Instagram.
+            </div>
+
+            <!-- CREATE STORY BUTTON -->
+            <button id="btnCreateStory" class="ms-btn-primary">
+                <i class="fa-solid fa-clapperboard"></i> XUẤT VIDEO STORY MP4
+            </button>
+        </section>
+
+    </main>
+
+    <!-- EXPORT PROGRESS & RENDER MODAL -->
+    <div id="exportModal" class="ms-modal-backdrop">
+        <div class="ms-modal-card">
+            <div id="exportSpinner" class="ms-spinner-lg"></div>
+            <h3 id="exportModalTitle" style="font-family: var(--font-head); font-size: 1.3rem;">Rendering Story...</h3>
+            <div class="ms-progress-bar-wrap">
+                <div id="exportProgressBar" class="ms-progress-bar-fill"></div>
+            </div>
+            <p id="exportStatusText" class="ms-progress-status-text">Preparing assets...</p>
+
+            <div id="exportActionBtns" style="display:none; width: 100%; gap: 12px; flex-direction: column;">
+                <a id="btnDownloadVideo" class="ms-btn-primary" download="fb-note-story.mp4">
+                    <i class="fa-solid fa-download"></i> Tải Video MP4 Về Máy
+                </a>
+                <button id="btnCreateAnother" class="ms-btn-secondary" style="width:100%;">
+                    <i class="fa-solid fa-rotate-left"></i> Tạo Video Khác
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/music-story.js"></script>
+</body>
+
+</html>

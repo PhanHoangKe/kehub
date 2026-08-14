@@ -3606,7 +3606,9 @@ if (pathname === '/api/track/ping' && req.method === 'POST') {
 
     const isHomePage = pathname === '/';
     let filePath;
-    if (isHomePage) {
+    if (pathname === '/music-story' || pathname === '/music-story/') {
+        filePath = path.join(__dirname, 'music-story.html');
+    } else if (isHomePage) {
         filePath = path.join(__dirname, 'index.html');
     } else {
         filePath = path.join(__dirname, pathname);

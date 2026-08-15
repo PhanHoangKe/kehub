@@ -154,9 +154,29 @@
             </div>
 
             <div class="ms-field-group">
-                <label class="ms-label">Dòng 3: Ghi Chú Tâm Trạng (Tùy chọn - Tự động mở rộng ô)</label>
+                <label class="ms-label">Dòng 3: Ghi Chú Tâm Trạng hoặc Bộ Sticker Ảnh ✨</label>
                 <input type="text" id="noteTextExtraInput" class="ms-input"
                     placeholder="Ví dụ: Thế lại đón sinh nhật một mình r 🙄😔..." value="">
+                
+                <div style="margin-top: 8px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <label for="stickerImgInput" class="ms-seg-btn" style="cursor: pointer; margin: 0; padding: 6px 12px; font-size: 0.8rem;">
+                        <i class="fa-solid fa-images"></i> Tải Sticker Ảnh (Chọn 1 hoặc nhiều ảnh)
+                    </label>
+                    <input type="file" id="stickerImgInput" accept="image/*" multiple style="display:none;">
+                </div>
+
+                <!-- Multiple Stickers Chip List -->
+                <div id="stickersListWrap" style="display:none; flex-wrap: wrap; gap: 8px; margin-top: 10px;"></div>
+            </div>
+
+            <div class="ms-field-group">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <label class="ms-label" style="margin:0;">Kích hoạt chạy chữ Dòng 1 từ độ dài:</label>
+                    <span style="font-size: 0.85rem; color: var(--ms-primary); font-weight:700;">
+                        <span id="scrollCharThresholdVal">15</span> ký tự
+                    </span>
+                </div>
+                <input type="range" id="scrollCharThresholdRange" class="ms-range" min="5" max="40" step="1" value="15">
             </div>
 
             <div class="ms-field-group">

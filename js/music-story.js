@@ -25,11 +25,13 @@
         id: 'story_' + Date.now(),
         mode: 'fb_note', // 'fb_note' | 'modern'
         showNoteBadge: true, // `Ghi chú` button top-left
+        scrollCharThreshold: 15, // Character count threshold to trigger horizontal marquee scroll
         fbNote: {
             title: 'Life Goes On',
             sub: 'BTS',
             noteText: '',
-            bgColor: '#b4804c' // Slightly lighter soft brown FB Note
+            bgColor: '#b4804c', // Slightly lighter soft brown FB Note
+            stickers: [] // Array of { id, url, imgElement }
         },
         floatingEmotions: {
             enabled: false,
@@ -99,7 +101,12 @@
     const noteTitleInput = $('noteTitleInput');
     const noteSubInput = $('noteSubInput');
     const noteTextExtraInput = $('noteTextExtraInput');
+    const stickerImgInput = $('stickerImgInput');
+    const stickersListWrap = $('stickersListWrap');
     const noteBgColorCustom = $('noteBgColorCustom');
+
+    const scrollCharThresholdRange = $('scrollCharThresholdRange');
+    const scrollCharThresholdVal = $('scrollCharThresholdVal');
 
     const toggleNoteBadge = $('toggleNoteBadge');
 
@@ -873,6 +880,53 @@
         });
     }
 
+    if (stickerImgInput) {
+        stickerImgInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                Array.from(e.target.files).forEach(file => {
+                    const url = URL.createObjectURL(file);
+                    const img = new Image();
+                    const stickerId = 'stk_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                    img.onload = () => {
+                        storyProject.fbNote.stickers.push({
+                            id: stickerId,
+                            url: url,
+                            imgElement: img
+                        });
+                        renderStickersListUI();
+                        renderPreviewFrame(0);
+                    };
+                    img.src = url;
+                });
+                stickerImgInput.value = '';
+            }
+        });
+    }
+
+    function renderStickersListUI() {
+        if (!stickersListWrap) return;
+        if (!storyProject.fbNote.stickers || storyProject.fbNote.stickers.length === 0) {
+            stickersListWrap.style.display = 'none';
+            stickersListWrap.innerHTML = '';
+            return;
+        }
+
+        stickersListWrap.style.display = 'flex';
+        stickersListWrap.innerHTML = storyProject.fbNote.stickers.map((stk, idx) => `
+            <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.08); padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.15);">
+                <img src="${stk.url}" style="width: 26px; height: 26px; object-fit: cover; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2);">
+                <span style="font-size:0.75rem; color: var(--ms-primary); font-weight: 600;">Sticker ${idx + 1}</span>
+                <button type="button" onclick="removeStickerById('${stk.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:0.85rem; padding:0 2px;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        `).join('');
+    }
+
+    window.removeStickerById = function(id) {
+        storyProject.fbNote.stickers = (storyProject.fbNote.stickers || []).filter(s => s.id !== id);
+        renderStickersListUI();
+        renderPreviewFrame(0);
+    };
+
     document.querySelectorAll('#noteColorSwatches .ms-color-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('#noteColorSwatches .ms-color-btn').forEach(b => b.classList.remove('active'));
@@ -888,6 +942,15 @@
         storyProject.fbNote.bgColor = e.target.value;
         renderPreviewFrame(0);
     });
+
+    if (scrollCharThresholdRange) {
+        scrollCharThresholdRange.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value, 10);
+            storyProject.scrollCharThreshold = val;
+            if (scrollCharThresholdVal) scrollCharThresholdVal.textContent = val;
+            renderPreviewFrame(0);
+        });
+    }
 
     if (toggleNoteBadge) {
         toggleNoteBadge.addEventListener('change', (e) => {
@@ -986,17 +1049,26 @@
         const line2W = artistName ? ctx.measureText(artistName).width : 0;
 
         let line3W = 0;
-        const hasLine3 = Boolean(moodNoteText.trim());
+        const stickers = storyProject.fbNote.stickers || [];
+        const hasStickers = stickers.length > 0;
+        const hasLine3Text = Boolean(moodNoteText.trim());
+        const hasLine3 = hasLine3Text || hasStickers;
+
+        const stickerSize = (hasLine3Text || stickers.length > 2) ? 52 : 60;
+        const stickerGap = 10;
+        const stickersTotalW = hasStickers ? (stickers.length * stickerSize + (stickers.length - 1) * stickerGap) : 0;
+
         if (hasLine3) {
             ctx.font = fbFontLine3;
-            line3W = ctx.measureText(moodNoteText).width;
+            const textW = hasLine3Text ? ctx.measureText(moodNoteText).width : 0;
+            line3W = textW + (hasStickers ? (hasLine3Text ? 14 : 0) + stickersTotalW : 0);
         }
 
         const maxContentW = Math.max(line1TotalW, line2W, line3W);
 
-        // Dynamic Bubble Width & Height (Fixed anchor for Line 1 & Line 2, expands for Line 3)
+        // Dynamic Bubble Width & Height (Max bubble width expanded to 860px for multiple stickers)
         const minBubbleW = 520;
-        const maxBubbleW = 760;
+        const maxBubbleW = 860;
         const bubbleW = Math.max(minBubbleW, Math.min(maxBubbleW, Math.round(maxContentW + 140)));
         const bubbleH = hasLine3 ? 245 : 175;
 
@@ -1027,7 +1099,8 @@
         const maxLine1TextW = bubbleW - 80 - waveW - gapBetween;
         const line1Y = bubbleY + 68;
 
-        if (line1TextW <= maxLine1TextW) {
+        const shouldScrollLine1 = (songTitle.length >= storyProject.scrollCharThreshold) || (line1TextW > maxLine1TextW);
+        if (!shouldScrollLine1) {
             // Centered layout inside shifted bubble
             const line1StartX = bubbleX + (bubbleW - line1TotalW) / 2;
 
@@ -1068,10 +1141,28 @@
             ctx.rect(clipX, bubbleY, clipW, 110);
             ctx.clip();
 
-            const speed = 70;
-            const gap = 80;
-            const loopW = line1TextW + gap;
-            const scrollOffset = (t * speed) % loopW;
+            // Authentic Facebook Marquee: Scrolls IMMEDIATELY on play, finishes 1 cycle, then pauses 1.3s
+            const speed = 60; // Smooth gliding speed (px/sec)
+            const textGap = 90; // Gap between text repetitions
+            const loopW = line1TextW + textGap;
+
+            const scrollDuration = loopW / speed; // Time taken to complete 1 full scroll loop
+            const pauseDuration = 1.3; // Pause 1.3s AFTER completing 1 full scroll cycle
+            const totalCycle = scrollDuration + pauseDuration;
+
+            const cycleTime = t % totalCycle;
+            let rawOffset = 0;
+
+            if (cycleTime < scrollDuration) {
+                // Phase 1: Runs IMMEDIATELY upon play, scrolling smoothly across
+                rawOffset = cycleTime * speed;
+            } else {
+                // Phase 2: Finished 1 full cycle -> Pauses for 1.3s at starting position
+                rawOffset = 0;
+            }
+
+            // Crisp integer pixel alignment eliminates font sub-pixel jitter/blur
+            const scrollOffset = Math.round(rawOffset);
 
             ctx.textAlign = 'left';
             ctx.fillStyle = '#ffffff';
@@ -1080,62 +1171,61 @@
             ctx.restore();
         }
 
-        // LINE 2 (MIDDLE): Ca Sĩ / Artist Name (Fixed anchor Y=124)
+        // LINE 2 (MIDDLE): Ca Sĩ / Artist Name (Fixed anchor Y=124, Static Centered)
         if (artistName) {
             ctx.font = fbFontLine2;
             const line2Y = bubbleY + 124;
             ctx.textAlign = 'center';
             ctx.fillStyle = 'rgba(255, 255, 255, 0.91)';
-
-            if (line2W <= bubbleW - 70) {
-                ctx.fillText(artistName, bubbleX + bubbleW / 2, line2Y);
-            } else {
-                const clipX = bubbleX + 35;
-                const clipW = bubbleW - 70;
-                ctx.save();
-                ctx.beginPath();
-                ctx.rect(clipX, line2Y - 30, clipW, 50);
-                ctx.clip();
-
-                const speed = 65;
-                const gap = 70;
-                const loopW = line2W + gap;
-                const scrollOffset = (t * speed) % loopW;
-
-                ctx.textAlign = 'left';
-                ctx.fillText(artistName, clipX - scrollOffset, line2Y);
-                ctx.fillText(artistName, clipX - scrollOffset + loopW, line2Y);
-                ctx.restore();
-            }
+            ctx.fillText(artistName, bubbleX + bubbleW / 2, line2Y);
         }
 
-        // LINE 3 (BOTTOM, OPTIONAL): Custom Mood Note Text
+        // LINE 3 (BOTTOM, OPTIONAL): Custom Mood Note Text or Multiple Custom Image Sticker Badges
         if (hasLine3) {
-            ctx.font = fbFontLine3;
             const line3Y = bubbleY + 188;
-            ctx.textAlign = 'center';
-            ctx.fillStyle = '#ffffff';
+            ctx.save();
 
-            if (line3W <= bubbleW - 60) {
-                ctx.fillText(moodNoteText, bubbleX + bubbleW / 2, line3Y);
-            } else {
-                const clipX = bubbleX + 30;
-                const clipW = bubbleW - 60;
-                ctx.save();
-                ctx.beginPath();
-                ctx.rect(clipX, line3Y - 40, clipW, 60);
-                ctx.clip();
-
-                const speed = 70;
-                const gap = 80;
-                const loopW = line3W + gap;
-                const scrollOffset = (t * speed) % loopW;
+            if (hasStickers && hasLine3Text) {
+                // Both Text & Multiple Custom Stickers present side-by-side
+                ctx.font = fbFontLine3;
+                const textW = ctx.measureText(moodNoteText).width;
+                const gap = 14;
+                const totalRowW = textW + gap + stickersTotalW;
+                const startX = bubbleX + (bubbleW - totalRowW) / 2;
 
                 ctx.textAlign = 'left';
-                ctx.fillText(moodNoteText, clipX - scrollOffset, line3Y);
-                ctx.fillText(moodNoteText, clipX - scrollOffset + loopW, line3Y);
-                ctx.restore();
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(moodNoteText, startX, line3Y);
+
+                let currentStkX = startX + textW + gap;
+                const stkY = line3Y - 38;
+                stickers.forEach(stk => {
+                    if (stk.imgElement) {
+                        drawCustomStickerBadge(ctx, stk.imgElement, currentStkX, stkY, stickerSize, stickerSize);
+                    }
+                    currentStkX += stickerSize + stickerGap;
+                });
+
+            } else if (hasStickers) {
+                // Multiple Custom Stickers present (no text)
+                const startX = bubbleX + (bubbleW - stickersTotalW) / 2;
+                let currentStkX = startX;
+                const stkY = line3Y - 42;
+                stickers.forEach(stk => {
+                    if (stk.imgElement) {
+                        drawCustomStickerBadge(ctx, stk.imgElement, currentStkX, stkY, stickerSize, stickerSize);
+                    }
+                    currentStkX += stickerSize + stickerGap;
+                });
+
+            } else {
+                // Plain Text only
+                ctx.font = fbFontLine3;
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(moodNoteText, bubbleX + bubbleW / 2, line3Y);
             }
+            ctx.restore();
         }
 
         ctx.restore();
@@ -1159,6 +1249,49 @@
             ctx.fillText('Ghi chú', 110, 226);
             ctx.restore();
         }
+    }
+
+    // ── CUSTOM IMAGE STICKER BADGE RENDERER FOR LINE 3 ──
+    function drawCustomStickerBadge(ctx, img, x, y, w, h) {
+        if (!img) return;
+        ctx.save();
+
+        // Soft Drop Shadow for 3D Sticker effect
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.38)';
+        ctx.shadowBlur = 14;
+        ctx.shadowOffsetY = 5;
+
+        // Clean White Rounded Sticker Border
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.roundRect(x - 4, y - 4, w + 8, h + 8, 14);
+        ctx.fill();
+
+        ctx.shadowColor = 'transparent';
+
+        // Clip Image cleanly inside border
+        ctx.beginPath();
+        ctx.roundRect(x, y, w, h, 10);
+        ctx.clip();
+
+        // Cover fit image math
+        const imgRatio = img.width / img.height;
+        const targetRatio = w / h;
+        let sw, sh, sx, sy;
+
+        if (imgRatio > targetRatio) {
+            sh = img.height;
+            sw = img.height * targetRatio;
+            sx = (img.width - sw) / 2;
+            sy = 0;
+        } else {
+            sw = img.width;
+            sh = img.width / targetRatio;
+            sx = 0;
+            sy = (img.height - sh) / 2;
+        }
+        ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+        ctx.restore();
     }
 
     // ── TIMED EMOTION BURST ENGINE (AUTHENTIC FB CIRCULAR BADGE WITH MOTION TRAIL LINE) ──
@@ -1431,28 +1564,28 @@
 
         recorder.start();
 
-        let currentFrame = 0;
+        const renderAudioStartTime = audioCtx.currentTime;
 
         function recordFrameLoop() {
-            if (currentFrame >= totalFrames) {
-                recorder.stop();
+            const elapsed = audioCtx.currentTime - renderAudioStartTime;
+            if (elapsed >= dur) {
+                renderPreviewFrame(dur);
+                if (recorder.state !== 'inactive') recorder.stop();
                 return;
             }
 
-            const t = (currentFrame / totalFrames) * dur;
-            renderPreviewFrame(t);
+            renderPreviewFrame(elapsed);
 
-            const percent = Math.floor((currentFrame / totalFrames) * 100);
-            exportProgressBar.style.width = percent + '%';
+            const percent = Math.floor((elapsed / dur) * 100);
+            exportProgressBar.style.width = Math.min(100, percent) + '%';
             if (percent < 30) exportStatusText.textContent = 'Rendering blurred background & circular avatar...';
             else if (percent < 70) exportStatusText.textContent = `Animating floating emotions (${percent}%)...`;
             else exportStatusText.textContent = 'Encoding HD video & audio tracks...';
 
-            currentFrame++;
-            setTimeout(recordFrameLoop, 1000 / 60);
+            requestAnimationFrame(recordFrameLoop);
         }
 
-        recordFrameLoop();
+        requestAnimationFrame(recordFrameLoop);
     }
 
     btnCreateAnother.addEventListener('click', () => {

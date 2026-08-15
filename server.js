@@ -38,6 +38,7 @@ async function initAiTutor() {
 // ── Đặc Vụ Đòi Nợ AI (tạo tin nhắn nhắc nợ hài hước qua LLM) ──────────────────
 const debtAgentService = require('./debtAgentService.js');
 const emailService = require('./emailService.js');
+const hdStoryService = require('./hdStoryService.js');
 
 // ── Tự đọc file .env nếu có (không cần cài dotenv) ──────────────────────────
 const envFile = path.join(__dirname, '.env');
@@ -422,6 +423,8 @@ const RATE_LIMITS = {
     '/api/wordchain/pending':   { max: 60, windowMs: 60 * 1000 },  // poll bàn đang chờ
     '/api/wordchain/decline':   { max: 20, windowMs: 60 * 1000 },  // đóng bàn
     '/api/tts':                 { max: 20, windowMs: 60 * 1000 },  // 20 lượt TTS / phút
+    '/api/hd-story/process-image': { max: 15, windowMs: 60 * 1000 }, // 15 lượt / phút
+    '/api/hd-story/process-video': { max: 5,  windowMs: 60 * 1000 }, // 5 lượt / phút
 };
 
 // ── Game Nối Từ (in-memory) ─────────────────────────────────────────────────────
@@ -1711,6 +1714,98 @@ const server = http.createServer(async (req, res) => {
             console.error('Lỗi TTS Proxy:', err);
             res.writeHead(500, { 'Content-Type': 'application/json' });
             return res.end(JSON.stringify({ error: 'Lỗi máy chủ nội bộ.' }));
+        }
+    }
+
+    // ── HD Story Enhancer (Làm nét Ảnh chuẩn FB Story 1080x1920) ──────────────
+    if (pathname === '/api/hd-story/process-image' && req.method === 'POST') {
+        if (!checkRateLimit('/api/hd-story/process-image', clientIP)) {
+            return jsonResponse(res, 429, { success: false, message: 'Quá nhiều yêu cầu, vui lòng thử lại sau.' });
+        }
+        try {
+            const raw = await readBody(req, 25 * 1024 * 1024); // Max 25MB
+            const payload = JSON.parse(raw || '{}');
+            const imageBase64 = payload.imageBase64;
+            const mode = payload.mode || 'fit_blur';
+            const sharpLevel = payload.sharpLevel || 'ultra';
+            const filter = payload.filter || 'none';
+            const cropCustom = payload.cropCustom || null;
+            const denoise = !!payload.denoise;
+
+            if (!imageBase64) {
+                return jsonResponse(res, 400, { success: false, message: 'Thiếu dữ liệu hình ảnh.' });
+            }
+
+            const matches = imageBase64.match(/^data:([^;]+);base64,(.+)$/);
+            if (!matches) {
+                return jsonResponse(res, 400, { success: false, message: 'Định dạng base64 ảnh không hợp lệ.' });
+            }
+
+            const inputBuffer = Buffer.from(matches[2], 'base64');
+            const processedBuffer = await hdStoryService.processHDImage(inputBuffer, { mode, sharpLevel, filter, cropCustom, denoise });
+            const savedUrl = await saveFile(processedBuffer, 'image/jpeg', 'hd-story');
+
+            return jsonResponse(res, 200, {
+                success: true,
+                url: savedUrl,
+                width: 1080,
+                height: 1920
+            });
+        } catch (err) {
+            console.error('  ❌ HD Story Image Processing Error:', err.message);
+            return jsonResponse(res, 500, { success: false, message: 'Lỗi xử lý làm nét ảnh: ' + err.message });
+        }
+    }
+
+    // ── HD Story Enhancer (Làm nét Video chuẩn FB Story 1080x1920 @ 8Mbps) ────
+    if (pathname === '/api/hd-story/process-video' && req.method === 'POST') {
+        if (!checkRateLimit('/api/hd-story/process-video', clientIP)) {
+            return jsonResponse(res, 429, { success: false, message: 'Quá nhiều yêu cầu, vui lòng thử lại sau.' });
+        }
+        try {
+            const raw = await readBody(req, 120 * 1024 * 1024); // Max 120MB
+            const payload = JSON.parse(raw || '{}');
+            const videoBase64 = payload.videoBase64;
+            const mode = payload.mode || 'fit_blur';
+            const fps = parseInt(payload.fps) || 30;
+            const sharpLevel = payload.sharpLevel || 'ultra';
+            const filter = payload.filter || 'none';
+            const cropCustom = payload.cropCustom || null;
+            const denoise = !!payload.denoise;
+
+            if (!videoBase64) {
+                return jsonResponse(res, 400, { success: false, message: 'Thiếu dữ liệu video.' });
+            }
+
+            const matches = videoBase64.match(/^data:([^;]+);base64,(.+)$/);
+            if (!matches) {
+                return jsonResponse(res, 400, { success: false, message: 'Định dạng base64 video không hợp lệ.' });
+            }
+
+            const videoBuffer = Buffer.from(matches[2], 'base64');
+            const tempInputPath = path.join(UPLOADS_DIR, `temp_in_${Date.now()}_${crypto.randomBytes(4).toString('hex')}.mp4`);
+            const tempOutputPath = path.join(UPLOADS_DIR, `hd_story_${Date.now()}_${crypto.randomBytes(4).toString('hex')}.mp4`);
+
+            fs.writeFileSync(tempInputPath, videoBuffer);
+
+            await hdStoryService.processHDVideo(tempInputPath, tempOutputPath, { mode, fps, sharpLevel, filter, cropCustom, denoise });
+
+            const outputBuffer = fs.readFileSync(tempOutputPath);
+            const savedUrl = await saveFile(outputBuffer, 'video/mp4', 'hd-story');
+
+            // Dọn dẹp file tạm
+            try { if (fs.existsSync(tempInputPath)) fs.unlinkSync(tempInputPath); } catch (e) {}
+            try { if (fs.existsSync(tempOutputPath)) fs.unlinkSync(tempOutputPath); } catch (e) {}
+
+            return jsonResponse(res, 200, {
+                success: true,
+                url: savedUrl,
+                width: 1080,
+                height: 1920
+            });
+        } catch (err) {
+            console.error('  ❌ HD Story Video Processing Error:', err.message);
+            return jsonResponse(res, 500, { success: false, message: 'Lỗi xử lý làm nét video: ' + err.message });
         }
     }
 

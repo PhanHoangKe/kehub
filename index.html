@@ -84,6 +84,10 @@
             <button class="ai-dial-item" id="aiDialMusicStory" data-tooltip="Tạo Music Story FB 9:16" style="--i:5">
                 <i class="fa-solid fa-music"></i>
             </button>
+            <!-- Nút con 7: HD Story Enhancer -->
+            <button class="ai-dial-item" id="aiDialHDStory" data-tooltip="Làm Nét Story FB (HD Enhancer)" style="--i:6">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+            </button>
 
             <!-- Nút chính (trigger) -->
             <button class="ai-dial-main" id="aiDialMain" data-tooltip="AI Trợ Lý">
@@ -1769,6 +1773,15 @@ var aiSpeedDial = document.getElementById('aiSpeedDial');
             e.stopPropagation();
             closeDial();
             window.location.href = 'music-story.html';
+        });
+    }
+
+    const aiDialHDStory = document.getElementById('aiDialHDStory');
+    if (aiDialHDStory) {
+        aiDialHDStory.addEventListener('click', function (e) {
+            e.stopPropagation();
+            closeDial();
+            window.location.href = 'story-hd.html';
         });
     }
 

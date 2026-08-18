@@ -3703,6 +3703,8 @@ if (pathname === '/api/track/ping' && req.method === 'POST') {
     let filePath;
     if (pathname === '/music-story' || pathname === '/music-story/') {
         filePath = path.join(__dirname, 'music-story.html');
+    } else if (pathname === '/chess-clock' || pathname === '/chess-clock/') {
+        filePath = path.join(__dirname, 'chess-clock.html');
     } else if (isHomePage) {
         filePath = path.join(__dirname, 'index.html');
     } else {

@@ -46,9 +46,10 @@
             <div class="ms-section-title">
                 <i class="fa-solid fa-layer-group"></i> Giao Diện Story
             </div>
-            <div class="ms-segment-grid" id="storyModeGroup">
-                <button class="ms-seg-btn active" data-mode="fb_note"><i class="fa-solid fa-music"></i> Ghi Chú Nhạc Story</button>
-                <button class="ms-seg-btn" data-mode="modern" title="Tính năng đang được phát triển" disabled style="opacity: 0.6; cursor: not-allowed;"><i class="fa-brands fa-facebook"></i> Ghi Chú FB <small style="font-size:0.7rem; color:#f59e0b; font-weight:700;">(Đang phát triển)</small></button>
+            <div class="ms-segment-grid" id="storyModeGroup" style="grid-template-columns: 1fr 1fr 1.2fr;">
+                <button class="ms-seg-btn active" data-mode="fb_note"><i class="fa-solid fa-music"></i> Ghi Chú</button>
+                <button class="ms-seg-btn" data-mode="movie_end"><i class="fa-solid fa-clapperboard"></i> Cinematic</button>
+                <button class="ms-seg-btn" data-mode="hd_story"><i class="fa-solid fa-gem"></i> 📸 Ảnh&Nhạc HD (Anti-Vỡ FB)</button>
             </div>
 
             <!-- Avatar & Background Section -->
@@ -138,62 +139,294 @@
             </div>
 
             <!-- FB NOTE CUSTOMIZATION SECTION -->
-            <div class="ms-section-title" style="margin-top: 10px;">
-                <i class="fa-solid fa-music"></i> Nội Dung Ghi Chú Nhạc Story (Note Bubble)
-            </div>
-
-            <div class="ms-field-group">
-                <label class="ms-label">Dòng 1: Tên Bài Hát (kèm icon sóng nhạc |||)</label>
-                <input type="text" id="noteTitleInput" class="ms-input" placeholder="Ví dụ: Life Goes On..."
-                    value="Life Goes On">
-            </div>
-
-            <div class="ms-field-group">
-                <label class="ms-label">Dòng 2: Ca Sĩ / Nghệ Sĩ</label>
-                <input type="text" id="noteSubInput" class="ms-input" placeholder="Ví dụ: BTS..." value="BTS">
-            </div>
-
-            <div class="ms-field-group">
-                <label class="ms-label">Dòng 3: Ghi Chú Tâm Trạng hoặc Bộ Sticker Ảnh ✨</label>
-                <input type="text" id="noteTextExtraInput" class="ms-input"
-                    placeholder="Ví dụ: Thế lại đón sinh nhật một mình r 🙄😔..." value="">
-                
-                <div style="margin-top: 8px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                    <label for="stickerImgInput" class="ms-seg-btn" style="cursor: pointer; margin: 0; padding: 6px 12px; font-size: 0.8rem;">
-                        <i class="fa-solid fa-images"></i> Tải Sticker Ảnh (Chọn 1 hoặc nhiều ảnh)
-                    </label>
-                    <input type="file" id="stickerImgInput" accept="image/*" multiple style="display:none;">
+            <div id="fbNoteSection">
+                <div class="ms-section-title" style="margin-top: 10px;">
+                    <i class="fa-solid fa-music"></i> Nội Dung Ghi Chú Nhạc Story (Note Bubble)
                 </div>
 
-                <!-- Multiple Stickers Chip List -->
-                <div id="stickersListWrap" style="display:none; flex-wrap: wrap; gap: 8px; margin-top: 10px;"></div>
-            </div>
-
-            <div class="ms-field-group">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <label class="ms-label" style="margin:0;">Kích hoạt chạy chữ Dòng 1 từ độ dài:</label>
-                    <span style="font-size: 0.85rem; color: var(--ms-primary); font-weight:700;">
-                        <span id="scrollCharThresholdVal">15</span> ký tự
-                    </span>
+                <div class="ms-field-group">
+                    <label class="ms-label">Dòng 1: Tên Bài Hát (kèm icon sóng nhạc |||)</label>
+                    <input type="text" id="noteTitleInput" class="ms-input" placeholder="Ví dụ: Life Goes On..."
+                        value="Life Goes On">
                 </div>
-                <input type="range" id="scrollCharThresholdRange" class="ms-range" min="5" max="40" step="1" value="15">
+
+                <div class="ms-field-group">
+                    <label class="ms-label">Dòng 2: Ca Sĩ / Nghệ Sĩ</label>
+                    <input type="text" id="noteSubInput" class="ms-input" placeholder="Ví dụ: BTS..." value="BTS">
+                </div>
+
+                <div class="ms-field-group">
+                    <label class="ms-label">Dòng 3: Ghi Chú Tâm Trạng hoặc Bộ Sticker Ảnh ✨</label>
+                    <input type="text" id="noteTextExtraInput" class="ms-input"
+                        placeholder="Ví dụ: Thế lại đón sinh nhật một mình r 🙄😔..." value="">
+                    
+                    <div style="margin-top: 8px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <label for="stickerImgInput" class="ms-seg-btn" style="cursor: pointer; margin: 0; padding: 6px 12px; font-size: 0.8rem;">
+                            <i class="fa-solid fa-images"></i> Tải Sticker Ảnh (Chọn 1 hoặc nhiều ảnh)
+                        </label>
+                        <input type="file" id="stickerImgInput" accept="image/*" multiple style="display:none;">
+                    </div>
+
+                    <!-- Multiple Stickers Chip List -->
+                    <div id="stickersListWrap" style="display:none; flex-wrap: wrap; gap: 8px; margin-top: 10px;"></div>
+                </div>
+
+                <div class="ms-field-group">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <label class="ms-label" style="margin:0;">Kích hoạt chạy chữ Dòng 1 từ độ dài:</label>
+                        <span style="font-size: 0.85rem; color: var(--ms-primary); font-weight:700;">
+                            <span id="scrollCharThresholdVal">15</span> ký tự
+                        </span>
+                    </div>
+                    <input type="range" id="scrollCharThresholdRange" class="ms-range" min="5" max="40" step="1" value="15">
+                </div>
+
+                <div class="ms-field-group">
+                    <label class="ms-label">Màu Nền Khối Ghi Chú (Bubble Color)</label>
+                    <div class="ms-color-swatches" id="noteColorSwatches">
+                        <button class="ms-color-btn active" style="background:#b4804c" data-color="#b4804c"
+                            title="Nâu nhẹ FB gốc"></button>
+                        <button class="ms-color-btn" style="background:#8c592b" data-color="#8c592b"
+                            title="Nâu đất đậm"></button>
+                        <button class="ms-color-btn" style="background:#262626" data-color="#262626"
+                            title="Đen mờ FB"></button>
+                        <button class="ms-color-btn" style="background:#1e293b" data-color="#1e293b"
+                            title="Xanh đêm"></button>
+                        <button class="ms-color-btn" style="background:#3b0764" data-color="#3b0764"
+                            title="Hồng tím"></button>
+                        <input type="color" id="noteBgColorCustom" value="#b4804c" class="ms-color-picker"
+                            title="Tùy chọn màu">
+                    </div>
+                </div>
             </div>
 
-            <div class="ms-field-group">
-                <label class="ms-label">Màu Nền Khối Ghi Chú (Bubble Color)</label>
-                <div class="ms-color-swatches" id="noteColorSwatches">
-                    <button class="ms-color-btn active" style="background:#b4804c" data-color="#b4804c"
-                        title="Nâu nhẹ FB gốc"></button>
-                    <button class="ms-color-btn" style="background:#8c592b" data-color="#8c592b"
-                        title="Nâu đất đậm"></button>
-                    <button class="ms-color-btn" style="background:#262626" data-color="#262626"
-                        title="Đen mờ FB"></button>
-                    <button class="ms-color-btn" style="background:#1e293b" data-color="#1e293b"
-                        title="Xanh đêm"></button>
-                    <button class="ms-color-btn" style="background:#3b0764" data-color="#3b0764"
-                        title="Hồng tím"></button>
-                    <input type="color" id="noteBgColorCustom" value="#b4804c" class="ms-color-picker"
-                        title="Tùy chọn màu">
+            <!-- CINEMATIC MOVIE END CUSTOMIZATION SECTION -->
+            <div id="movieEndSection" style="display: none;">
+                <div class="ms-section-title" style="margin-top: 10px;">
+                    <i class="fa-solid fa-film"></i> Cấu Hình Cinematic Hết Phim (Movie Ending)
+                </div>
+
+                <div class="ms-field-group">
+                    <label class="ms-label">Chữ Tiêu Đề Chính Giữa Ở Trên</label>
+                    <input type="text" id="movieTitleInput" class="ms-input" placeholder="Ví dụ: HẾT PHIM, THE END..." value="HẾT PHIM">
+                </div>
+
+                <div class="ms-field-group">
+                    <label class="ms-label">Kiểu Dáng Tiêu Đề (Title Typography Style)</label>
+                    <div class="ms-segment-grid" id="movieTitleStyleGroup">
+                        <button class="ms-seg-btn active" data-style="gold">✨ Vàng Ánh Kim</button>
+                        <button class="ms-seg-btn" data-style="silver">💎 Chrome Bạc</button>
+                        <button class="ms-seg-btn" data-style="vintage">🎞️ Cổ Điển Red</button>
+                        <button class="ms-seg-btn" data-style="neon">🌌 Neon Glow</button>
+                        <button class="ms-seg-btn" data-style="minimal">🤍 Minimal Sans</button>
+                    </div>
+                </div>
+
+                <div class="ms-field-group">
+                    <label class="ms-label">Chế Độ Hiển Thị Lời Hát (Lyrics Mode)</label>
+                    <div class="ms-segment-grid" id="movieLyricsModeGroup">
+                        <button class="ms-seg-btn active" data-lmode="karaoke"><i class="fa-solid fa-microphone-lines"></i> 🎙️ Hát Đến Đâu Hiện Đến Đó</button>
+                        <button class="ms-seg-btn" data-lmode="scroll"><i class="fa-solid fa-scroll"></i> 📜 Cuộn Credits Điện Ảnh</button>
+                    </div>
+                </div>
+
+                <div class="ms-field-group">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                        <label class="ms-label" style="margin:0;">Lời Bài Hát Đồng Bộ (Synchronized Lyrics):</label>
+                    </div>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
+                        <button type="button" id="btnFetchLrcLyrics" class="ms-seg-btn" style="padding:6px 10px; font-size:0.78rem; background: linear-gradient(135deg, #6366f1, #8b5cf6); color:#fff; border-color:transparent;" title="Tự động tìm lời chuẩn LRC theo tên bài hát"><i class="fa-solid fa-wand-magic-sparkles"></i> 🤖 AI Tìm Lời Tự Động 100%</button>
+                        <button type="button" id="btnAutoSyncTimestamps" class="ms-seg-btn" style="padding:6px 10px; font-size:0.78rem;" title="Tự động chia thời gian từng dòng lời hát theo nhạc đang cắt"><i class="fa-solid fa-bolt"></i> Chia Giây Tự Động</button>
+                        <button type="button" id="btnFillSampleCredits" class="ms-seg-btn" style="padding:6px 10px; font-size:0.78rem;"><i class="fa-solid fa-quote-right"></i> Mẫu Lyrics</button>
+                    </div>
+                    <textarea id="movieCreditsInput" class="ms-input" rows="7" placeholder="Dán lời bài hát hoặc file LRC [00:15.00] Lời bài hát vào đây...">[00:00.00] Life Goes On - BTS
+[00:02.50] One day the world stopped
+[00:05.50] Without any warning
+[00:08.50] Spring didn't know to wait
+[00:11.50] Showed up not even a minute late
+[00:14.50] Like an echo in the forest
+[00:17.50] Yeah life goes on...</textarea>
+
+                    <div id="activeSingingLineBadge" style="margin-top:6px; font-size:0.8rem; color: #f59e0b; font-weight:700; background:rgba(245, 158, 11, 0.1); padding: 8px 12px; border-radius: 4px; border: 1px solid rgba(245, 158, 11, 0.25); display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-microphone-lines fa-bounce" style="--fa-animation-duration: 2s;"></i> 
+                        <span>Đang hát: <b id="currentSingingText" style="color: #ffffff;">One day the world stopped...</b></span>
+                    </div>
+                </div>
+
+                <!-- 🎨 2026 RICH VISUAL & POSITION CUSTOMIZATIONS -->
+                <div class="ms-field-group" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); margin-top: 10px;">
+                    <div style="font-weight: 700; color: #f59e0b; margin-bottom: 10px; font-size: 0.88rem; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-palette"></i> Màu Sắc & Độ Sáng Khi Chữ Hát
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <div>
+                            <label class="ms-label" style="font-size:0.75rem;">Màu Khi Sáng Chữ:</label>
+                            <input type="color" id="movieActiveColorInput" value="#f59e0b" style="width: 100%; height: 36px; border: none; border-radius: 6px; cursor: pointer; background: transparent;">
+                        </div>
+                        <div>
+                            <label class="ms-label" style="font-size:0.75rem;">Màu Chữ Phụ:</label>
+                            <input type="color" id="movieInactiveColorInput" value="#ffffff" style="width: 100%; height: 36px; border: none; border-radius: 6px; cursor: pointer; background: transparent;">
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 10px;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#aaa; margin-bottom: 4px;">
+                            <span>Độ Lớn Màu Sáng (Glow / Tỏa Sáng):</span>
+                            <span id="valActiveGlowSize">25px</span>
+                        </div>
+                        <input type="range" id="movieActiveGlowSizeRange" min="0" max="60" value="25" class="ms-range">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <div>
+                            <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#aaa; margin-bottom: 4px;">
+                                <span>Cỡ Chữ Sáng:</span>
+                                <span id="valActiveFontSize">44px</span>
+                            </div>
+                            <input type="range" id="movieActiveFontSizeRange" min="28" max="65" value="44" class="ms-range">
+                        </div>
+                        <div>
+                            <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#aaa; margin-bottom: 4px;">
+                                <span>Cỡ Chữ Phụ:</span>
+                                <span id="valInactiveFontSize">34px</span>
+                            </div>
+                            <input type="range" id="movieInactiveFontSizeRange" min="20" max="50" value="34" class="ms-range">
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label class="ms-label" style="font-size:0.75rem;">Font Chữ Karaoke:</label>
+                            <select id="movieFontFamilySelect" class="ms-input" style="padding: 4px 8px; font-size: 0.8rem;">
+                                <option value="Outfit" selected>Outfit Modern</option>
+                                <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
+                                <option value="Playfair Display">Playfair Serif (Điện Ảnh)</option>
+                                <option value="Dancing Script">Dancing Script (Chữ Ký)</option>
+                                <option value="Courier Prime">Courier Vintage (Máy Đánh Chữ)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="ms-label" style="font-size:0.75rem;">Căn Lề Lời Hát:</label>
+                            <div class="ms-segment-grid" id="movieTextAlignGroup" style="grid-template-columns: 1fr 1fr 1fr;">
+                                <button class="ms-seg-btn active" data-align="center">Giữa</button>
+                                <button class="ms-seg-btn" data-align="left">Trái</button>
+                                <button class="ms-seg-btn" data-align="right">Phải</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 📐 KHUNG BỐ CỤC 4 PHÍA & KÉO THẢ VỊ TRÍ -->
+                <div class="ms-field-group" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); margin-top: 10px;">
+                    <div style="font-weight: 700; color: #38bdf8; margin-bottom: 10px; font-size: 0.88rem; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-up-down-left-right"></i> Vị Trí & Khung Vùng 4 Phía (Kéo Thả Trực Tiếp Canvas)
+                    </div>
+
+                    <div style="margin-bottom: 10px;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#aaa; margin-bottom: 4px;">
+                            <span>Vị Trí Tiêu Đề (Y Top):</span>
+                            <span id="valTitleY">310px</span>
+                        </div>
+                        <input type="range" id="movieTitleYRange" min="80" max="800" value="310" class="ms-range">
+                    </div>
+
+                    <div style="margin-bottom: 10px;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#aaa; margin-bottom: 4px;">
+                            <span>Vị Trí Khung Lời Hát (Y Center):</span>
+                            <span id="valLyricsY">1080px</span>
+                        </div>
+                        <input type="range" id="movieLyricsYRange" min="500" max="1650" value="1080" class="ms-range">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#aaa; margin-bottom: 4px;">
+                                <span>Chiều Rộng Khung 4 Phía:</span>
+                                <span id="valLyricsW">920px</span>
+                            </div>
+                            <input type="range" id="movieLyricsWidthRange" min="300" max="1040" value="920" class="ms-range">
+                        </div>
+                        <div>
+                            <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#aaa; margin-bottom: 4px;">
+                                <span>Chiều Cao Khung 4 Phía:</span>
+                                <span id="valLyricsH">650px</span>
+                            </div>
+                            <input type="range" id="movieLyricsHeightRange" min="200" max="1300" value="650" class="ms-range">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ms-field-group">
+                    <label class="ms-label">Hiệu Ứng Điện Ảnh (Cinematic FX)</label>
+                    <div class="ms-toggle-row">
+                        <span class="ms-toggle-label">🎬 Khung Viền Đen Điện Ảnh (2.39:1 Letterbox)</span>
+                        <label class="ms-switch">
+                            <input type="checkbox" id="toggleMovieLetterbox" checked>
+                            <span class="ms-slider"></span>
+                        </label>
+                    </div>
+                    <div class="ms-toggle-row">
+                        <span class="ms-toggle-label">✨ Bụi Phim & Hạt Đốm Sáng (Film Dust & Particles)</span>
+                        <label class="ms-switch">
+                            <input type="checkbox" id="toggleMovieDust" checked>
+                            <span class="ms-slider"></span>
+                        </label>
+                    </div>
+                    <div class="ms-toggle-row">
+                        <span class="ms-toggle-label">🎥 Zoom Chậm Điện Ảnh (Ken Burns Motion)</span>
+                        <label class="ms-switch">
+                            <input type="checkbox" id="toggleMovieKenBurns" checked>
+                            <span class="ms-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="ms-field-group">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <label class="ms-label" style="margin:0;">
+                            Độ Tối Nền (Đổi mờ tối để làm nổi bật chữ):
+                            <small style="color: #94a3b8; font-weight: normal; margin-left: 4px;">(Về 0% để hiện 100% ảnh/video gốc)</small>
+                        </label>
+                        <span style="font-size: 0.85rem; color: var(--ms-primary); font-weight:700;">
+                            <span id="movieDarknessVal">55</span>%
+                        </span>
+                    </div>
+                    <input type="range" id="movieDarknessRange" class="ms-range" min="0" max="95" step="1" value="55">
+                </div>
+            </div>
+
+            <!-- 📸 ULTRA HD ANTI-BLUR FB STORY SECTION -->
+            <div id="hdStorySection" style="display: none;">
+                <div class="ms-section-title" style="margin-top: 10px;">
+                    <i class="fa-solid fa-gem"></i> Cấu Hình Story Ảnh & Nhạc Siêu Nét (Anti-Blur FB 1080p)
+                </div>
+
+                <div class="ms-field-group">
+                    <label class="ms-label">Bộ Lọc Làm Nét Ảnh (Tối ưu chống vỡ mờ khi đăng FB):</label>
+                    <div class="ms-segment-grid" id="hdSharpnessGroup" style="grid-template-columns: 1fr 1fr 1fr;">
+                        <button class="ms-seg-btn active" data-sharp="crisp">✨ Sắc Nét HD (Khuyên dùng)</button>
+                        <button class="ms-seg-btn" data-sharp="vibrant">🔥 Vibrant Rực Rỡ</button>
+                        <button class="ms-seg-btn" data-sharp="raw">📷 Ảnh Gốc (Raw)</button>
+                    </div>
+                </div>
+
+                <div class="ms-field-group">
+                    <label class="ms-label">Huy Hiệu Nhạc Đăng Cùng Ảnh:</label>
+                    <div class="ms-segment-grid" id="hdBadgeStyleGroup" style="grid-template-columns: 1fr 1fr 1fr;">
+                        <button class="ms-seg-btn active" data-badge="vinyl">💿 Đĩa Than Quay</button>
+                        <button class="ms-seg-btn" data-badge="minimal">🏷️ Huy Hiệu Thủy Tinh</button>
+                        <button class="ms-seg-btn" data-badge="none">🚫 Không Hiện Gì (Chỉ Ảnh+Nhạc)</button>
+                    </div>
+                </div>
+
+                <div class="ms-field-group" style="background: rgba(16, 185, 129, 0.08); padding: 12px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2);">
+                    <div style="font-weight: 700; color: #10b981; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-shield-halved"></i> Chế Độ Chuẩn FB Story Anti-Compress 35 Mbps
+                    </div>
+                    <p style="font-size: 0.78rem; color: #cbd5e1; margin: 4px 0 0 0; line-height: 1.4;">
+                        Tự động mã hóa chuẩn 1080x1920 60FPS với Bitrate 35Mbps cực cao. Ảnh của bạn sẽ giữ nguyên độ nét đến từng chi tiết nhỏ khi Facebook nén video Story.
+                    </p>
                 </div>
             </div>
 

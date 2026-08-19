@@ -33,6 +33,45 @@
             bgColor: '#b4804c', // Slightly lighter soft brown FB Note
             stickers: [] // Array of { id, url, imgElement }
         },
+        movieEnd: {
+            title: 'HẾT PHIM',
+            titleStyle: 'gold', // 'gold' | 'silver' | 'vintage' | 'neon' | 'minimal'
+            titleX: 540,
+            titleY: 310,
+            lyricsMode: 'karaoke', // 'karaoke' | 'scroll'
+            creditsText: `[00:00.00] Life Goes On - BTS
+[00:02.50] One day the world stopped
+[00:05.50] Without any warning
+[00:08.50] Spring didn't know to wait
+[00:11.50] Showed up not even a minute late
+[00:14.50] Like an echo in the forest
+[00:17.50] Yeah life goes on...`,
+            
+            // 🌟 2026 CUSTOM BOUNDING BOX & ACTIVE HIGHLIGHT COLOR CONTROLS 🌟
+            lyricsX: 540,
+            lyricsY: 1080,
+            lyricsWidth: 920,
+            lyricsHeight: 650,
+
+            activeColor: '#f59e0b',       // Màu chữ khi sáng
+            activeGlowSize: 25,           // Độ lớn phát sáng
+            activeFontSize: 44,           // Cỡ chữ khi sáng
+            inactiveColor: '#ffffff',     // Màu chữ phụ
+            inactiveFontSize: 34,         // Cỡ chữ phụ
+
+            fontFamily: 'Outfit',         // Font chữ Karaoke
+            textAlign: 'center',          // Căn lề chữ
+            showPillBg: true,             // Dải sáng nền phát sáng câu hát
+
+            showLetterbox: true,
+            showDust: true,
+            showKenBurns: true,
+            darkness: 0.55
+        },
+        hdStory: {
+            sharpness: 'crisp', // 'crisp' | 'vibrant' | 'raw'
+            badgeStyle: 'vinyl'  // 'none' | 'vinyl' | 'minimal'
+        },
         floatingEmotions: {
             enabled: false,
             emoji: '❤️',
@@ -122,6 +161,22 @@
     const exportActionBtns = $('exportActionBtns');
     const btnDownloadVideo = $('btnDownloadVideo');
     const btnCreateAnother = $('btnCreateAnother');
+
+    // ── Movie End DOM References ──
+    const fbNoteSection = $('fbNoteSection');
+    const movieEndSection = $('movieEndSection');
+    const movieTitleInput = $('movieTitleInput');
+    const movieCreditsInput = $('movieCreditsInput');
+    const btnFillSampleCredits = $('btnFillSampleCredits');
+    const btnFetchLrcLyrics = $('btnFetchLrcLyrics');
+    const btnAutoSyncTimestamps = $('btnAutoSyncTimestamps');
+    const currentSingingText = $('currentSingingText');
+    const activeSingingLineBadge = $('activeSingingLineBadge');
+    const toggleMovieLetterbox = $('toggleMovieLetterbox');
+    const toggleMovieDust = $('toggleMovieDust');
+    const toggleMovieKenBurns = $('toggleMovieKenBurns');
+    const movieDarknessRange = $('movieDarknessRange');
+    const movieDarknessVal = $('movieDarknessVal');
 
     // ── Initialize Default Fallback Cover / Avatar ──
     function createDefaultAvatar() {
@@ -216,6 +271,14 @@
         ctx.restore();
     }
 
+    function hexToRgba(hex, alpha = 1) {
+        if (!hex) return `rgba(255, 255, 255, ${alpha})`;
+        let c = hex.replace('#', '');
+        if (c.length === 3) c = c.split('').map(x => x + x).join('');
+        const num = parseInt(c, 16);
+        return `rgba(${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}, ${alpha})`;
+    }
+
     // ── PROPORTIONAL CIRCULAR AVATAR DRAWING (NO SQUISHING/STRETCHING) ──
     function drawCircularImage(ctx, imgOrVideo, cx, cy, radius) {
         const imgW = imgOrVideo.videoWidth || imgOrVideo.width || (radius * 2);
@@ -232,11 +295,27 @@
     }
 
     // ── STORY MODE SWITCHER ──
+    const hdStorySection = $('hdStorySection');
     document.querySelectorAll('#storyModeGroup .ms-seg-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('#storyModeGroup .ms-seg-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             storyProject.mode = btn.getAttribute('data-mode');
+
+            if (storyProject.mode === 'movie_end') {
+                if (fbNoteSection) fbNoteSection.style.display = 'none';
+                if (movieEndSection) movieEndSection.style.display = 'block';
+                if (hdStorySection) hdStorySection.style.display = 'none';
+            } else if (storyProject.mode === 'hd_story') {
+                if (fbNoteSection) fbNoteSection.style.display = 'none';
+                if (movieEndSection) movieEndSection.style.display = 'none';
+                if (hdStorySection) hdStorySection.style.display = 'block';
+            } else {
+                if (fbNoteSection) fbNoteSection.style.display = 'block';
+                if (movieEndSection) movieEndSection.style.display = 'none';
+                if (hdStorySection) hdStorySection.style.display = 'none';
+            }
+
             renderPreviewFrame(0);
         });
     });
@@ -355,6 +434,7 @@
                 const mediaUrl = tiktokData.audioUrl;
 
                 const arrayBuffer = await fetchAudioFromUrl(mediaUrl);
+                storyProject.audioBase64 = arrayBufferToBase64(arrayBuffer);
 
                 // Auto populate Note Title & Sub with extracted TikTok song info
                 if (tiktokData.songTitle) {
@@ -367,9 +447,16 @@
                 }
 
                 decodeAudioFromBuffer(arrayBuffer, (tiktokData.songTitle || 'TikTok_Music') + '.mp3');
+                storyProject.tiktokVideoCaption = tiktokData.videoCaption || '';
+
+                // TỰ ĐỘNG TÌM LỜI BÀI HÁT TỪ LINK TIKTOK THÔNG QUA SMART SEARCH ENGINE
+                setTimeout(() => {
+                    autoFetchAndSetLyrics(tiktokData.songTitle, tiktokData.artist, false, tiktokData.videoCaption);
+                }, 300);
             } else {
                 // Direct Audio/Video URL
                 const arrayBuffer = await fetchAudioFromUrl(rawUrl);
+                storyProject.audioBase64 = arrayBufferToBase64(arrayBuffer);
                 decodeAudioFromBuffer(arrayBuffer, 'Audio_Trích_Xuất.mp3');
             }
         } catch (err) {
@@ -391,10 +478,14 @@
                 const json = await res.json();
                 if (json && json.code === 0 && json.data) {
                     const audioUrl = json.data.music || json.data.music_info?.play || json.data.play;
-                    const songTitle = json.data.music_info?.title || json.data.title || 'TikTok Audio';
+                    const musicTitle = json.data.music_info?.title || '';
+                    const videoCaption = json.data.title || '';
                     const artist = json.data.music_info?.author || json.data.author?.nickname || '';
+                    const displayTitle = (musicTitle && !/^[a-zA-Z0-9_.-]+$/.test(musicTitle) && !musicTitle.includes('original sound')) 
+                        ? musicTitle 
+                        : (videoCaption || musicTitle || 'TikTok Audio');
                     if (audioUrl) {
-                        return { audioUrl, songTitle, artist };
+                        return { audioUrl, songTitle: displayTitle, artist, videoCaption, musicTitle };
                     }
                 }
             }
@@ -410,11 +501,13 @@
                 const json = await res.json();
                 if (json && json.music && json.music.play_url) {
                     const audioUrl = json.music.play_url;
-                    const songTitle = json.music.title || json.title || 'TikTok Audio';
+                    const musicTitle = json.music.title || '';
+                    const videoCaption = json.title || '';
                     const artist = json.music.author || '';
-                    return { audioUrl, songTitle, artist };
+                    const displayTitle = (musicTitle && !/^[a-zA-Z0-9_.-]+$/.test(musicTitle)) ? musicTitle : (videoCaption || musicTitle || 'TikTok Audio');
+                    return { audioUrl, songTitle: displayTitle, artist, videoCaption, musicTitle };
                 } else if (json && json.video && json.video.noWatermark) {
-                    return { audioUrl: json.video.noWatermark, songTitle: json.title || 'TikTok Audio', artist: '' };
+                    return { audioUrl: json.video.noWatermark, songTitle: json.title || 'TikTok Audio', artist: '', videoCaption: json.title, musicTitle: '' };
                 }
             }
         } catch (e) {
@@ -483,17 +576,44 @@
         songFileName.textContent = file.name;
 
         // Auto update Note Title & Sub if user hasn't edited
-        if (noteTitleInput.value === 'những câu chuyện ayi') {
+        if (noteTitleInput.value === 'những câu chuyện ayi' || !noteTitleInput.value) {
             noteTitleInput.value = cleanName;
             storyProject.fbNote.title = cleanName;
         }
 
         const arrayBuffer = await file.arrayBuffer();
+        storyProject.audioBase64 = arrayBufferToBase64(arrayBuffer);
         decodeAudioFromBuffer(arrayBuffer, file.name);
+
+        // Auto search lyrics for dropped/selected music file
+        setTimeout(() => {
+            autoFetchAndSetLyrics(cleanName, '', false);
+        }, 300);
+    }
+
+    function arrayBufferToBase64(buffer) {
+        if (!buffer || buffer.byteLength === 0) return '';
+        try {
+            const bytes = new Uint8Array(buffer);
+            let binary = '';
+            const chunkSize = 0x8000;
+            const maxBytes = Math.min(bytes.byteLength, 5 * 1024 * 1024);
+            for (let i = 0; i < maxBytes; i += chunkSize) {
+                const sub = bytes.subarray(i, Math.min(i + chunkSize, maxBytes));
+                binary += String.fromCharCode.apply(null, sub);
+            }
+            return window.btoa(binary);
+        } catch (e) {
+            console.warn('Base64 conversion error:', e);
+            return '';
+        }
     }
 
     function decodeAudioFromBuffer(arrayBuffer, name) {
         initAudioContext();
+        if (arrayBuffer) {
+            storyProject.audioBase64 = arrayBufferToBase64(arrayBuffer);
+        }
         audioCtx.decodeAudioData(arrayBuffer, (decodedBuffer) => {
             storyProject.music.audioBuffer = decodedBuffer;
             storyProject.music.duration = decodedBuffer.duration;
@@ -959,6 +1079,551 @@
         });
     }
 
+    // ── 3.5. MOVIE END FORM CONTROLS & TIMED KARAOKE LYRICS ENGINE ──
+    function parseLrcOrPlainLyrics(rawText, defaultDuration) {
+        if (!rawText) return [];
+        const lines = rawText.split('\n');
+        const parsed = [];
+
+        const lrcRegex = /\[(\d{1,2}):(\d{2})(?:\.(\d{1,3}))?\]\s*(.*)/;
+        let hasLrcTimestamp = false;
+
+        lines.forEach((lineStr) => {
+            const trimmed = lineStr.trim();
+            if (!trimmed) return;
+            const match = trimmed.match(lrcRegex);
+            if (match) {
+                hasLrcTimestamp = true;
+                const min = parseInt(match[1], 10);
+                const sec = parseInt(match[2], 10);
+                const msStr = match[3] || '0';
+                const ms = msStr.length === 2 ? parseInt(msStr, 10) / 100 : parseInt(msStr, 10) / 1000;
+                const totalSeconds = min * 60 + sec + ms;
+                const textContent = match[4] ? match[4].trim() : '';
+                if (textContent) {
+                    parsed.push({ time: totalSeconds, text: textContent });
+                }
+            }
+        });
+
+        if (hasLrcTimestamp && parsed.length > 0) {
+            return parsed.sort((a, b) => a.time - b.time);
+        }
+
+        // If plain text (no LRC timestamps), divide duration evenly!
+        const nonBlankLines = lines.map(l => l.trim()).filter(l => l.length > 0);
+        if (nonBlankLines.length === 0) return [];
+
+        const dur = Math.max(3, defaultDuration || 15);
+        const step = dur / nonBlankLines.length;
+
+        nonBlankLines.forEach((text, idx) => {
+            parsed.push({
+                time: idx * step,
+                text: text
+            });
+        });
+
+        return parsed;
+    }
+
+    function formatSecondsToLrc(sec) {
+        const m = Math.floor(sec / 60);
+        const s = Math.floor(sec % 60);
+        const ms = Math.floor((sec % 1) * 100);
+        const mmStr = m < 10 ? '0' + m : '' + m;
+        const ssStr = s < 10 ? '0' + s : '' + s;
+        const msStr = ms < 10 ? '0' + ms : '' + ms;
+        return `[${mmStr}:${ssStr}.${msStr}]`;
+    }
+
+    document.querySelectorAll('#movieLyricsModeGroup .ms-seg-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#movieLyricsModeGroup .ms-seg-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            storyProject.movieEnd.lyricsMode = btn.getAttribute('data-lmode');
+            renderPreviewFrame(0);
+        });
+    });
+
+    if (movieTitleInput) {
+        movieTitleInput.addEventListener('input', (e) => {
+            storyProject.movieEnd.title = e.target.value;
+            renderPreviewFrame(0);
+        });
+    }
+
+    const movieActiveColorInput = $('movieActiveColorInput');
+    if (movieActiveColorInput) {
+        movieActiveColorInput.addEventListener('input', (e) => {
+            storyProject.movieEnd.activeColor = e.target.value;
+            renderPreviewFrame(0);
+        });
+    }
+
+    const movieInactiveColorInput = $('movieInactiveColorInput');
+    if (movieInactiveColorInput) {
+        movieInactiveColorInput.addEventListener('input', (e) => {
+            storyProject.movieEnd.inactiveColor = e.target.value;
+            renderPreviewFrame(0);
+        });
+    }
+
+    const movieActiveGlowSizeRange = $('movieActiveGlowSizeRange');
+    if (movieActiveGlowSizeRange) {
+        movieActiveGlowSizeRange.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value, 10);
+            storyProject.movieEnd.activeGlowSize = val;
+            const disp = $('valActiveGlowSize');
+            if (disp) disp.textContent = val + 'px';
+            renderPreviewFrame(0);
+        });
+    }
+
+    const movieActiveFontSizeRange = $('movieActiveFontSizeRange');
+    if (movieActiveFontSizeRange) {
+        movieActiveFontSizeRange.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value, 10);
+            storyProject.movieEnd.activeFontSize = val;
+            const disp = $('valActiveFontSize');
+            if (disp) disp.textContent = val + 'px';
+            renderPreviewFrame(0);
+        });
+    }
+
+    const movieInactiveFontSizeRange = $('movieInactiveFontSizeRange');
+    if (movieInactiveFontSizeRange) {
+        movieInactiveFontSizeRange.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value, 10);
+            storyProject.movieEnd.inactiveFontSize = val;
+            const disp = $('valInactiveFontSize');
+            if (disp) disp.textContent = val + 'px';
+            renderPreviewFrame(0);
+        });
+    }
+
+    const movieFontFamilySelect = $('movieFontFamilySelect');
+    if (movieFontFamilySelect) {
+        movieFontFamilySelect.addEventListener('change', (e) => {
+            storyProject.movieEnd.fontFamily = e.target.value;
+            renderPreviewFrame(0);
+        });
+    }
+
+    document.querySelectorAll('#movieTextAlignGroup .ms-seg-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#movieTextAlignGroup .ms-seg-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            storyProject.movieEnd.textAlign = btn.getAttribute('data-align');
+            renderPreviewFrame(0);
+        });
+    });
+
+    const movieTitleYRange = $('movieTitleYRange');
+    if (movieTitleYRange) {
+        movieTitleYRange.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value, 10);
+            storyProject.movieEnd.titleY = val;
+            const disp = $('valTitleY');
+            if (disp) disp.textContent = val + 'px';
+            renderPreviewFrame(0);
+        });
+    }
+
+    const movieLyricsYRange = $('movieLyricsYRange');
+    if (movieLyricsYRange) {
+        movieLyricsYRange.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value, 10);
+            storyProject.movieEnd.lyricsY = val;
+            const disp = $('valLyricsY');
+            if (disp) disp.textContent = val + 'px';
+            renderPreviewFrame(0);
+        });
+    }
+
+    const movieLyricsWidthRange = $('movieLyricsWidthRange');
+    if (movieLyricsWidthRange) {
+        movieLyricsWidthRange.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value, 10);
+            storyProject.movieEnd.lyricsWidth = val;
+            const disp = $('valLyricsW');
+            if (disp) disp.textContent = val + 'px';
+            renderPreviewFrame(0);
+        });
+    }
+
+    const movieLyricsHeightRange = $('movieLyricsHeightRange');
+    if (movieLyricsHeightRange) {
+        movieLyricsHeightRange.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value, 10);
+            storyProject.movieEnd.lyricsHeight = val;
+            const disp = $('valLyricsH');
+            if (disp) disp.textContent = val + 'px';
+            renderPreviewFrame(0);
+        });
+    }
+
+    document.querySelectorAll('#movieTitleStyleGroup .ms-seg-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#movieTitleStyleGroup .ms-seg-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            storyProject.movieEnd.titleStyle = btn.getAttribute('data-style');
+            renderPreviewFrame(0);
+        });
+    });
+
+    // 🖐️ 2026 INTERACTIVE CANVAS DRAGGING FOR TITLE & 4-SIDE LYRICS BOUNDING BOX
+    let isDraggingCanvas = false;
+    let dragTarget = null; // 'title' | 'lyrics'
+    let dragStartY = 0;
+    let initialTargetY = 0;
+
+    const mainCanvas = $('mainCanvas');
+    if (mainCanvas) {
+        mainCanvas.style.cursor = 'grab';
+
+        const getCanvasCoords = (e) => {
+            const rect = mainCanvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const scaleY = 1920 / rect.height;
+            const scaleX = 1080 / rect.width;
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        };
+
+        const handleStart = (e) => {
+            if (storyProject.mode !== 'movie_end') return;
+            const pos = getCanvasCoords(e);
+            const me = storyProject.movieEnd;
+
+            // Check if click is near title
+            const titleY = me.titleY !== undefined ? me.titleY : 310;
+            if (Math.abs(pos.y - titleY) < 90) {
+                isDraggingCanvas = true;
+                dragTarget = 'title';
+                dragStartY = pos.y;
+                initialTargetY = titleY;
+                mainCanvas.style.cursor = 'grabbing';
+                return;
+            }
+
+            // Check if click is near lyrics box
+            const lyricsY = me.lyricsY !== undefined ? me.lyricsY : 1080;
+            const boxH = me.lyricsHeight || 650;
+            if (Math.abs(pos.y - lyricsY) < boxH / 2 + 60) {
+                isDraggingCanvas = true;
+                dragTarget = 'lyrics';
+                dragStartY = pos.y;
+                initialTargetY = lyricsY;
+                mainCanvas.style.cursor = 'grabbing';
+                return;
+            }
+        };
+
+        const handleMove = (e) => {
+            if (!isDraggingCanvas || storyProject.mode !== 'movie_end') return;
+            e.preventDefault();
+            const pos = getCanvasCoords(e);
+            const deltaY = Math.round(pos.y - dragStartY);
+
+            if (dragTarget === 'title') {
+                const newY = Math.max(80, Math.min(800, initialTargetY + deltaY));
+                storyProject.movieEnd.titleY = newY;
+                const r = $('movieTitleYRange');
+                const v = $('valTitleY');
+                if (r) r.value = newY;
+                if (v) v.textContent = newY + 'px';
+            } else if (dragTarget === 'lyrics') {
+                const newY = Math.max(400, Math.min(1700, initialTargetY + deltaY));
+                storyProject.movieEnd.lyricsY = newY;
+                const r = $('movieLyricsYRange');
+                const v = $('valLyricsY');
+                if (r) r.value = newY;
+                if (v) v.textContent = newY + 'px';
+            }
+
+            renderPreviewFrame(0);
+        };
+
+        const handleEnd = () => {
+            isDraggingCanvas = false;
+            dragTarget = null;
+            if (mainCanvas) mainCanvas.style.cursor = 'grab';
+        };
+
+        mainCanvas.addEventListener('mousedown', handleStart);
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('mouseup', handleEnd);
+
+        mainCanvas.addEventListener('touchstart', handleStart, { passive: false });
+        window.addEventListener('touchmove', handleMove, { passive: false });
+        window.addEventListener('touchend', handleEnd);
+    }
+
+    if (movieCreditsInput) {
+        movieCreditsInput.addEventListener('input', (e) => {
+            storyProject.movieEnd.creditsText = e.target.value || '';
+            renderPreviewFrame(0);
+        });
+    }
+
+    document.querySelectorAll('#hdSharpnessGroup .ms-seg-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#hdSharpnessGroup .ms-seg-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            storyProject.hdStory.sharpness = btn.getAttribute('data-sharp');
+            renderPreviewFrame(0);
+        });
+    });
+
+    document.querySelectorAll('#hdBadgeStyleGroup .ms-seg-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#hdBadgeStyleGroup .ms-seg-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            storyProject.hdStory.badgeStyle = btn.getAttribute('data-badge');
+            renderPreviewFrame(0);
+        });
+    });
+
+    if (btnAutoSyncTimestamps) {
+        btnAutoSyncTimestamps.addEventListener('click', () => {
+            const raw = movieCreditsInput ? movieCreditsInput.value : '';
+            const plainLines = raw.split('\n')
+                .map(l => l.replace(/\[\d{1,2}:\d{2}(?:\.\d{1,3})?\]/g, '').trim())
+                .filter(l => l.length > 0);
+
+            if (plainLines.length === 0) {
+                alert('Vui lòng nhập các dòng lời bài hát vào khung trước!');
+                return;
+            }
+
+            const dur = getEffectiveDuration();
+            const step = dur / plainLines.length;
+
+            const lrcLines = plainLines.map((text, idx) => {
+                const timeSec = idx * step;
+                return `${formatSecondsToLrc(timeSec)} ${text}`;
+            });
+
+            const newText = lrcLines.join('\n');
+            if (movieCreditsInput) movieCreditsInput.value = newText;
+            storyProject.movieEnd.creditsText = newText;
+            renderPreviewFrame(0);
+        });
+    }
+
+    // Smart Query Cleaner for TikTok audio metadata & Video Captions
+    function sanitizeSongQuery(title, artist, videoCaption = '') {
+        const isUsernameOrId = /^[a-zA-Z0-9_.-]+$/.test((title || '').trim()) || 
+                               /original sound|nhạc nền|âm thanh gốc|sound/gi.test(title || '');
+
+        let combined = '';
+        if (isUsernameOrId && videoCaption) {
+            combined = videoCaption;
+        } else {
+            combined = (title || '') + ' ' + (artist || '') + ' ' + (videoCaption || '');
+        }
+
+        let clean = combined.replace(/nhạc nền\s*[-–—:]?/gi, '')
+                            .replace(/original sound\s*[-–—:]?/gi, '')
+                            .replace(/âm thanh gốc\s*[-–—:]?/gi, '')
+                            .replace(/sound\s*[-–—:]?/gi, '')
+                            .replace(/@[\w._]+/g, '')
+                            .replace(/#[\w_]+/gi, '')
+                            .replace(/official audio|official video|official mv|full mp3|320kbps|\.mp3|\.wav|\.m4a/gi, '')
+                            .replace(/vt|tiktok|capcut|trend|stt|lyrics/gi, '')
+                            .replace(/\s+/g, ' ')
+                            .trim();
+
+        // Limit length to first 6 meaningful words for API search accuracy
+        const words = clean.split(' ').filter(w => w.length > 0);
+        if (words.length > 6) {
+            clean = words.slice(0, 6).join(' ');
+        }
+        return clean;
+    }
+
+    async function autoFetchAndSetLyrics(rawTitle, rawArtist, isManualClick = false, videoCaption = '') {
+        const cleanQuery = sanitizeSongQuery(rawTitle, rawArtist, videoCaption);
+        const captionQuery = videoCaption ? videoCaption.replace(/#[\w_]+/gi, '').replace(/@[\w._]+/g, '').trim() : '';
+        const altQuery = (rawTitle || '').replace(/#[\w_]+/gi, '').replace(/@[\w._]+/g, '').trim();
+
+        const queriesToTry = [];
+        if (cleanQuery) queriesToTry.push(cleanQuery);
+        if (captionQuery && !queriesToTry.includes(captionQuery)) queriesToTry.push(captionQuery);
+        if (altQuery && !queriesToTry.includes(altQuery) && !/^[a-zA-Z0-9_.-]+$/.test(altQuery)) queriesToTry.push(altQuery);
+
+        let foundLyrics = null;
+        let foundTrackInfo = '';
+
+        for (const query of queriesToTry) {
+            if (!query || query.length < 2) continue;
+            try {
+                const res = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(query)}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        const match = data.find(item => item.syncedLyrics) || data[0];
+                        if (match.syncedLyrics || match.plainLyrics) {
+                            foundLyrics = match.syncedLyrics || match.plainLyrics;
+                            foundTrackInfo = `${match.trackName} - ${match.artistName}`;
+                            break;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('LRCLIB query failed for:', query, e);
+            }
+        }
+
+        if (foundLyrics) {
+            if (movieCreditsInput) movieCreditsInput.value = foundLyrics;
+            storyProject.movieEnd.creditsText = foundLyrics;
+            renderPreviewFrame(0);
+            if (isManualClick) {
+                alert(`✨ Đã tìm thấy lời đồng bộ cho "${foundTrackInfo}"!`);
+            }
+            return true;
+        }
+
+        // Try extracting lyrics lines directly from video caption if available!
+        if (videoCaption) {
+            const captionLines = videoCaption
+                .split(/[\n,.;|]/)
+                .map(l => l.replace(/#[\w_]+/g, '').replace(/@[\w._]+/g, '').trim())
+                .filter(l => l.length > 4 && !l.includes('http'));
+
+            if (captionLines.length >= 2) {
+                const dur = getEffectiveDuration();
+                const step = dur / captionLines.length;
+                const lrcText = captionLines.map((t, i) => `${formatSecondsToLrc(i * step)} ${t}`).join('\n');
+                if (movieCreditsInput) movieCreditsInput.value = lrcText;
+                storyProject.movieEnd.creditsText = lrcText;
+                renderPreviewFrame(0);
+                return true;
+            }
+        }
+
+        // 🤖 3. AI GEMINI SPEECH-TO-TEXT & AUTOMATIC LYRICS GENERATOR FALLBACK
+        try {
+            const aiRes = await fetch('/api/ai-lyrics', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    songTitle: rawTitle,
+                    artist: rawArtist,
+                    videoCaption: videoCaption || storyProject.tiktokVideoCaption || '',
+                    duration: getEffectiveDuration(),
+                    audioBase64: storyProject.audioBase64 || '',
+                    audioMime: 'audio/mp3'
+                })
+            });
+
+            if (aiRes.ok) {
+                const aiData = await aiRes.json();
+                if (aiData.success && aiData.lyrics) {
+                    if (movieCreditsInput) movieCreditsInput.value = aiData.lyrics;
+                    storyProject.movieEnd.creditsText = aiData.lyrics;
+
+                    if (aiData.songTitle) {
+                        const parts = aiData.songTitle.split('-');
+                        const mainTitle = parts[0].trim();
+                        const artistName = parts[1] ? parts[1].trim() : '';
+                        if (noteTitleInput) noteTitleInput.value = mainTitle;
+                        storyProject.fbNote.title = mainTitle;
+                        if (artistName && noteSubInput) {
+                            noteSubInput.value = artistName;
+                            storyProject.fbNote.sub = artistName;
+                        }
+                    }
+
+                    renderPreviewFrame(0);
+                    return true;
+                }
+            }
+        } catch (err) {
+            console.warn('AI Lyrics API Call Failed:', err);
+        }
+
+        // 🎵 4. UNIVERSAL AUTOMATIC KARAOKE GENERATOR (NO POPUPS / NO ALERTS AT ALL)
+        const dur = getEffectiveDuration();
+        const displaySong = cleanQuery || (rawTitle && !/^[a-zA-Z0-9_.-]+$/.test(rawTitle) ? rawTitle : 'Giai Điệu TikTok');
+        const autoLines = [
+            `[00:00.00] 🎵 ${displaySong}`,
+            `[00:03.00] 🎧 Lắng nghe giai điệu âm nhạc...`,
+            `[00:07.00] ✨ ${videoCaption ? videoCaption.slice(0, 45) : 'Thanh xuân & Kỷ niệm qua từng nốt nhạc'}`,
+            `[00:12.00] ❤️ Giai điệu chạm vào cảm xúc`,
+            `[00:16.00] 🌟 Music Story Generator`
+        ];
+        const autoLrc = autoLines.join('\n');
+        if (movieCreditsInput) movieCreditsInput.value = autoLrc;
+        storyProject.movieEnd.creditsText = autoLrc;
+        renderPreviewFrame(0);
+        return true;
+    }
+
+    if (btnFetchLrcLyrics) {
+        btnFetchLrcLyrics.addEventListener('click', async () => {
+            const trackName = storyProject.fbNote.title || storyProject.song.title || '';
+            const artistName = storyProject.fbNote.sub || storyProject.song.artist || '';
+            const caption = storyProject.tiktokVideoCaption || '';
+
+            btnFetchLrcLyrics.disabled = true;
+            btnFetchLrcLyrics.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tìm lời...';
+
+            try {
+                await autoFetchAndSetLyrics(trackName, artistName, true, caption);
+            } finally {
+                btnFetchLrcLyrics.disabled = false;
+                btnFetchLrcLyrics.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Tự Tìm Lời Bài Hát (LRCLib)';
+            }
+        });
+    }
+
+    if (btnFillSampleCredits) {
+        btnFillSampleCredits.addEventListener('click', () => {
+            const songName = storyProject.fbNote.title || 'Life Goes On';
+            const artistName = storyProject.fbNote.sub || 'BTS';
+            const sampleText = `[00:00.00] ${songName} - ${artistName}\n[00:02.50] One day the world stopped\n[00:05.50] Without any warning\n[00:08.50] Spring didn't know to wait\n[00:11.50] Showed up not even a minute late\n[00:14.50] Like an echo in the forest\n[00:17.50] Yeah life goes on...`;
+            if (movieCreditsInput) movieCreditsInput.value = sampleText;
+            storyProject.movieEnd.creditsText = sampleText;
+            renderPreviewFrame(0);
+        });
+    }
+
+    if (toggleMovieLetterbox) {
+        toggleMovieLetterbox.addEventListener('change', (e) => {
+            storyProject.movieEnd.showLetterbox = e.target.checked;
+            renderPreviewFrame(0);
+        });
+    }
+
+    if (toggleMovieDust) {
+        toggleMovieDust.addEventListener('change', (e) => {
+            storyProject.movieEnd.showDust = e.target.checked;
+            renderPreviewFrame(0);
+        });
+    }
+
+    if (toggleMovieKenBurns) {
+        toggleMovieKenBurns.addEventListener('change', (e) => {
+            storyProject.movieEnd.showKenBurns = e.target.checked;
+            renderPreviewFrame(0);
+        });
+    }
+
+    if (movieDarknessRange) {
+        movieDarknessRange.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value, 10);
+            storyProject.movieEnd.darkness = val / 100;
+            if (movieDarknessVal) movieDarknessVal.textContent = val;
+            renderPreviewFrame(0);
+        });
+    }
+
     // ── 4. REALTIME CANVAS RENDERER (1080 x 1920) ──
     function renderPreviewFrame(currentTime) {
         const W = 1080;
@@ -969,6 +1634,10 @@
 
         if (storyProject.mode === 'fb_note') {
             drawFbNoteStory(ctx, W, H, currentTime);
+        } else if (storyProject.mode === 'movie_end') {
+            drawMovieEndStory(ctx, W, H, currentTime);
+        } else if (storyProject.mode === 'hd_story') {
+            drawHdStory(ctx, W, H, currentTime);
         } else {
             drawModernMinimalStory(ctx, W, H, currentTime);
         }
@@ -1247,6 +1916,556 @@
             ctx.font = '500 28px -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif';
             ctx.fillStyle = '#ffffff';
             ctx.fillText('Ghi chú', 110, 226);
+            ctx.restore();
+        }
+    }
+
+    // ── CINEMATIC HẾT PHIM (MOVIE END CREDITS) STORY RENDERER ──
+    const movieDustParticles = [];
+    function initMovieDustParticles() {
+        if (movieDustParticles.length > 0) return;
+        for (let i = 0; i < 35; i++) {
+            movieDustParticles.push({
+                x: Math.random() * 1080,
+                y: Math.random() * 1920,
+                radius: 1.5 + Math.random() * 3.5,
+                alpha: 0.2 + Math.random() * 0.6,
+                speedY: 20 + Math.random() * 30,
+                wobbleSpeed: 1 + Math.random() * 2,
+                wobbleAmp: 10 + Math.random() * 15,
+                color: Math.random() > 0.4 ? '#fef08a' : '#ffffff'
+            });
+        }
+    }
+
+    function drawMovieEndStory(ctx, W, H, t) {
+        initMovieDustParticles();
+        const me = storyProject.movieEnd;
+
+        // 1. BACKGROUND WITH OPTIONAL KEN BURNS MOTION
+        ctx.save();
+        const hasBgMedia = storyProject.background.imgElement || storyProject.background.videoElement;
+        const bgMedia = storyProject.background.imgElement || storyProject.background.videoElement;
+
+        if (hasBgMedia) {
+            let scale = 1.0;
+            if (me.showKenBurns) {
+                const dur = getEffectiveDuration();
+                const progress = (t % dur) / dur;
+                scale = 1.0 + (progress * 0.06); // Subtle 6% zoom growth
+            }
+
+            ctx.save();
+            ctx.translate(W / 2, H / 2);
+            ctx.scale(scale, scale);
+            ctx.translate(-W / 2, -H / 2);
+            drawCoverImage(ctx, bgMedia, W, H);
+            ctx.restore();
+        } else {
+            // Elegant Dark Cinema Gradient Background
+            const bgGrad = ctx.createRadialGradient(W / 2, H / 2, 100, W / 2, H / 2, H * 0.75);
+            bgGrad.addColorStop(0, '#1c1e29');
+            bgGrad.addColorStop(0.5, '#0d0e14');
+            bgGrad.addColorStop(1, '#050608');
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, W, H);
+        }
+        ctx.restore();
+
+        // 2. DARKNESS OVERLAY & CINEMATIC VIGNETTE (Bypass entirely if darkness is 0 to show 100% original photo/video)
+        const darknessAlpha = (me.darkness !== undefined ? me.darkness : 0.55);
+        if (darknessAlpha > 0) {
+            ctx.save();
+            ctx.fillStyle = `rgba(0, 0, 0, ${darknessAlpha})`;
+            ctx.fillRect(0, 0, W, H);
+
+            // Dynamic Vignette Gradient scaled with darkness opacity
+            const vGrad = ctx.createRadialGradient(W / 2, H / 2, W * 0.25, W / 2, H / 2, H * 0.7);
+            vGrad.addColorStop(0, `rgba(0, 0, 0, ${0.1 * darknessAlpha})`);
+            vGrad.addColorStop(0.7, `rgba(0, 0, 0, ${0.45 * darknessAlpha})`);
+            vGrad.addColorStop(1, `rgba(0, 0, 0, ${0.85 * darknessAlpha})`);
+            ctx.fillStyle = vGrad;
+            ctx.fillRect(0, 0, W, H);
+            ctx.restore();
+        }
+
+        // 3. VINTAGE DUST & LIGHT LEAK PARTICLES
+        if (me.showDust) {
+            ctx.save();
+            movieDustParticles.forEach((p, idx) => {
+                const curY = (p.y - (t * p.speedY)) % H;
+                const finalY = curY < 0 ? curY + H : curY;
+                const curX = p.x + Math.sin(t * p.wobbleSpeed + idx) * p.wobbleAmp;
+
+                ctx.globalAlpha = p.alpha * (0.7 + 0.3 * Math.sin(t * 3 + idx));
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(curX, finalY, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.restore();
+        }
+
+        // 4. TOP-CENTER BIG TITLE ("HẾT PHIM")
+        const titleText = (me.title || '').trim();
+        const hasTitle = titleText.length > 0;
+        const titleX = me.titleX !== undefined ? me.titleX : W / 2;
+        const titleY = me.titleY !== undefined ? me.titleY : (me.showLetterbox ? 310 : 280);
+
+        if (hasTitle) {
+            ctx.save();
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            const style = me.titleStyle || 'gold';
+            const displayTitleUpper = titleText.toUpperCase();
+
+            if (style === 'gold') {
+                ctx.font = '900 82px "Outfit", "Cinzel", serif, sans-serif';
+                ctx.shadowColor = 'rgba(212, 175, 55, 0.5)';
+                ctx.shadowBlur = 24;
+                const goldGrad = ctx.createLinearGradient(0, titleY - 40, 0, titleY + 40);
+                goldGrad.addColorStop(0, '#fff3a0');
+                goldGrad.addColorStop(0.35, '#ffd700');
+                goldGrad.addColorStop(0.7, '#daa520');
+                goldGrad.addColorStop(1, '#b8860b');
+
+                ctx.fillStyle = goldGrad;
+                ctx.fillText(displayTitleUpper, titleX, titleY);
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                ctx.lineWidth = 1.5;
+                ctx.strokeText(displayTitleUpper, titleX, titleY);
+
+            } else if (style === 'silver') {
+                ctx.font = '900 82px "Outfit", sans-serif';
+                ctx.shadowColor = 'rgba(255, 255, 255, 0.6)';
+                ctx.shadowBlur = 20;
+
+                const silverGrad = ctx.createLinearGradient(0, titleY - 40, 0, titleY + 40);
+                silverGrad.addColorStop(0, '#ffffff');
+                silverGrad.addColorStop(0.5, '#cbd5e1');
+                silverGrad.addColorStop(1, '#64748b');
+
+                ctx.fillStyle = silverGrad;
+                ctx.fillText(displayTitleUpper, titleX, titleY);
+
+            } else if (style === 'vintage') {
+                ctx.font = '900 86px "Outfit", serif, sans-serif';
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+                ctx.shadowBlur = 12;
+
+                ctx.fillStyle = '#dc2626';
+                ctx.fillText(displayTitleUpper, titleX, titleY);
+
+                ctx.strokeStyle = '#fef08a';
+                ctx.lineWidth = 3;
+                ctx.strokeText(displayTitleUpper, titleX, titleY);
+
+            } else if (style === 'neon') {
+                ctx.font = '900 82px "Outfit", sans-serif';
+                ctx.shadowColor = '#ec4899';
+                ctx.shadowBlur = 35;
+
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(displayTitleUpper, titleX, titleY);
+
+                ctx.shadowColor = '#6366f1';
+                ctx.shadowBlur = 50;
+                ctx.fillText(displayTitleUpper, titleX, titleY);
+
+            } else { // 'minimal'
+                ctx.font = '300 74px "Plus Jakarta Sans", sans-serif';
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+                ctx.shadowBlur = 15;
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(displayTitleUpper, titleX, titleY);
+            }
+
+            ctx.restore();
+
+            // DECORATIVE DIVIDER LINE BELOW TITLE
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            const divW = 140;
+            ctx.moveTo(titleX - divW / 2, titleY + 55);
+            ctx.lineTo(titleX + divW / 2, titleY + 55);
+            ctx.stroke();
+
+            ctx.fillStyle = style === 'gold' ? '#ffd700' : '#ffffff';
+            ctx.beginPath();
+            ctx.arc(titleX, titleY + 55, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        // 5. LYRICS & CREDITS RENDERING ENGINE WITH CUSTOM 4-SIDE BOUNDING BOX & ACTIVE HIGHLIGHT
+        const rawCredits = me.creditsText || '';
+
+        const boxX = me.lyricsX !== undefined ? me.lyricsX : W / 2;
+        const boxY = me.lyricsY !== undefined ? me.lyricsY : (me.showLetterbox ? 1080 : 1100);
+        const boxW = me.lyricsWidth !== undefined ? me.lyricsWidth : 920;
+        const boxH = me.lyricsHeight !== undefined ? me.lyricsHeight : 650;
+
+        const topClip = boxY - boxH / 2;
+        const bottomClip = boxY + boxH / 2;
+        const leftClip = boxX - boxW / 2;
+        const rightClip = boxX + boxW / 2;
+
+        const activeColor = me.activeColor || '#f59e0b';
+        const activeGlow = me.activeGlowSize !== undefined ? me.activeGlowSize : 25;
+        const activeFontSz = me.activeFontSize || 44;
+
+        const inactiveColor = me.inactiveColor || '#ffffff';
+        const inactiveFontSz = me.inactiveFontSize || 34;
+
+        const fontFamily = me.fontFamily || 'Outfit';
+        const textAlign = me.textAlign || 'center';
+
+        if (me.lyricsMode === 'karaoke' || me.lyricsMode === undefined) {
+            // 🎙️ KARAOKE SYNCED LYRICS RENDERER (HÁT TỚI ĐÂU HIỆN CÂU ĐÓ)
+            const parsedLines = parseLrcOrPlainLyrics(rawCredits, getEffectiveDuration());
+
+            if (parsedLines.length > 0) {
+                const currentAudioTime = t;
+
+                let activeIdx = 0;
+                for (let i = 0; i < parsedLines.length; i++) {
+                    if (parsedLines[i].time <= currentAudioTime) {
+                        activeIdx = i;
+                    } else {
+                        break;
+                    }
+                }
+
+                if (currentSingingText) {
+                    currentSingingText.textContent = parsedLines[activeIdx] ? parsedLines[activeIdx].text : '...';
+                }
+
+                let subProgress = 0;
+                if (activeIdx < parsedLines.length - 1) {
+                    const tCur = parsedLines[activeIdx].time;
+                    const tNext = parsedLines[activeIdx + 1].time;
+                    const diff = Math.max(0.4, tNext - tCur);
+                    subProgress = Math.min(1.0, Math.max(0.0, (currentAudioTime - tCur) / diff));
+                }
+
+                const virtualIndex = activeIdx + (subProgress * 0.45);
+                const centerY = boxY;
+                const lineSpacing = activeFontSz + 40;
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(leftClip, topClip, boxW, boxH);
+                ctx.clip();
+
+                parsedLines.forEach((lineObj, idx) => {
+                    const lineY = centerY + (idx - virtualIndex) * lineSpacing;
+
+                    if (lineY < topClip - 60 || lineY > bottomClip + 60) return;
+
+                    const isActive = (idx === activeIdx);
+                    const distanceToActive = Math.abs(idx - activeIdx);
+
+                    let alpha = 1.0;
+                    if (isActive) {
+                        alpha = 1.0;
+                    } else if (distanceToActive === 1) {
+                        alpha = 0.55;
+                    } else if (distanceToActive === 2) {
+                        alpha = 0.3;
+                    } else {
+                        alpha = 0.12;
+                    }
+
+                    if (lineY < topClip + 90) {
+                        alpha *= Math.max(0, (lineY - topClip) / 90);
+                    } else if (lineY > bottomClip - 90) {
+                        alpha *= Math.max(0, (bottomClip - lineY) / 90);
+                    }
+
+                    ctx.save();
+                    ctx.globalAlpha = alpha;
+                    ctx.textAlign = textAlign;
+                    ctx.textBaseline = 'middle';
+
+                    let textX = boxX;
+                    if (textAlign === 'left') textX = leftClip + 30;
+                    else if (textAlign === 'right') textX = rightClip - 30;
+
+                    if (isActive) {
+                        // 🌟 ACTIVE SUNG LINE (CÂU ĐANG HÁT CHÍNH GIỮA WITH CUSTOM GLOW & COLOR)
+                        const lineText = lineObj.text;
+
+                        // Soft pill glow background for active line
+                        ctx.save();
+                        ctx.font = `900 ${activeFontSz}px "${fontFamily}", "Plus Jakarta Sans", sans-serif`;
+                        const textW = ctx.measureText(lineText).width;
+                        const padX = 32;
+                        const pillW = textW + padX * 2;
+
+                        let pillX = textX - pillW / 2;
+                        if (textAlign === 'left') pillX = leftClip + 15;
+                        else if (textAlign === 'right') pillX = rightClip - pillW - 15;
+
+                        const pillGrad = ctx.createLinearGradient(pillX, 0, pillX + pillW, 0);
+                        pillGrad.addColorStop(0, hexToRgba(activeColor, 0.12));
+                        pillGrad.addColorStop(0.5, hexToRgba(activeColor, 0.35));
+                        pillGrad.addColorStop(1, hexToRgba(activeColor, 0.12));
+
+                        ctx.fillStyle = pillGrad;
+                        ctx.beginPath();
+                        ctx.roundRect(pillX, lineY - (activeFontSz * 0.7), pillW, activeFontSz * 1.4, 28);
+                        ctx.fill();
+
+                        ctx.strokeStyle = hexToRgba(activeColor, 0.5);
+                        ctx.lineWidth = 1.5;
+                        ctx.stroke();
+                        ctx.restore();
+
+                        // Active Line Text with Highlight Color & Glow
+                        ctx.font = `900 ${activeFontSz}px "${fontFamily}", "Plus Jakarta Sans", sans-serif`;
+                        ctx.shadowColor = activeColor;
+                        ctx.shadowBlur = activeGlow;
+
+                        ctx.fillStyle = activeColor;
+                        ctx.fillText(lineText, textX, lineY);
+
+                    } else {
+                        // Regular Past & Future Lyrics Lines
+                        ctx.font = `600 ${inactiveFontSz}px "${fontFamily}", "Plus Jakarta Sans", sans-serif`;
+                        ctx.fillStyle = inactiveColor;
+                        ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+                        ctx.shadowBlur = 10;
+                        ctx.fillText(lineObj.text, textX, lineY);
+                    }
+
+                    ctx.restore();
+                });
+
+                ctx.restore();
+            }
+
+        } else {
+            // 📜 CONTINUOUS CREDITS SCROLL MODE
+            const lines = rawCredits.split('\n');
+
+            const lineHeight = inactiveFontSz + 20;
+            const totalTextHeight = lines.length * lineHeight;
+
+            const dur = getEffectiveDuration();
+            const scrollRange = (bottomClip - topClip) + totalTextHeight + 200;
+
+            const progress = Math.min(1.0, Math.max(0.0, t / Math.max(1, dur)));
+
+            const startY = bottomClip + 40;
+            const currentBlockTopY = startY - (progress * scrollRange);
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(leftClip, topClip, boxW, boxH);
+            ctx.clip();
+
+            lines.forEach((lineText, idx) => {
+                const lineY = currentBlockTopY + (idx * lineHeight);
+
+                if (lineY < topClip - 40 || lineY > bottomClip + 40) return;
+
+                let lineAlpha = 1.0;
+                const fadeDistance = 120;
+
+                if (lineY < topClip + fadeDistance) {
+                    lineAlpha = Math.max(0, (lineY - topClip) / fadeDistance);
+                } else if (lineY > bottomClip - fadeDistance) {
+                    lineAlpha = Math.max(0, (bottomClip - lineY) / fadeDistance);
+                }
+
+                ctx.save();
+                ctx.globalAlpha = lineAlpha;
+                ctx.textAlign = textAlign;
+                ctx.textBaseline = 'middle';
+
+                let textX = boxX;
+                if (textAlign === 'left') textX = leftClip + 30;
+                else if (textAlign === 'right') textX = rightClip - 30;
+
+                const trimmedLine = lineText.trim();
+                const isHeaderLine = trimmedLine.startsWith('---') || trimmedLine.includes('/') || (trimmedLine === trimmedLine.toUpperCase() && trimmedLine.length > 3 && !trimmedLine.includes(' '));
+                const isEndBadge = trimmedLine.includes('THE END') || trimmedLine.includes('HẾT PHIM') || trimmedLine.startsWith('--- THE END');
+
+                if (isEndBadge) {
+                    ctx.font = `bold ${activeFontSz}px "${fontFamily}", sans-serif`;
+                    ctx.fillStyle = activeColor;
+                    ctx.shadowColor = hexToRgba(activeColor, 0.6);
+                    ctx.shadowBlur = activeGlow;
+                    ctx.fillText(trimmedLine, textX, lineY);
+
+                } else if (isHeaderLine) {
+                    ctx.font = `700 ${inactiveFontSz}px "${fontFamily}", sans-serif`;
+                    ctx.fillStyle = activeColor;
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+                    ctx.shadowBlur = 8;
+                    ctx.fillText(trimmedLine, textX, lineY);
+
+                } else {
+                    ctx.font = `500 ${inactiveFontSz}px "${fontFamily}", sans-serif`;
+                    ctx.fillStyle = inactiveColor;
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+                    ctx.shadowBlur = 10;
+                    ctx.fillText(trimmedLine, textX, lineY);
+                }
+
+                ctx.restore();
+            });
+
+            ctx.restore();
+        }
+
+        // 6. CINEMATIC LETTERBOX (2.39:1 Black Bars)
+        if (me.showLetterbox) {
+            const barH = 150;
+            ctx.save();
+
+            // Top Black Bar
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, W, barH);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, barH);
+            ctx.lineTo(W, barH);
+            ctx.stroke();
+
+            // Bottom Black Bar
+            ctx.fillRect(0, H - barH, W, barH);
+            ctx.beginPath();
+            ctx.moveTo(0, H - barH);
+            ctx.lineTo(W, H - barH);
+            ctx.stroke();
+
+            // Movie Audio Badge at bottom bar
+            if (storyProject.music.audioBuffer) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.font = '500 24px "Plus Jakarta Sans", sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText(`🎵 ${storyProject.music.fileName || 'Soundtrack'}`, 40, H - 65);
+            }
+
+            ctx.restore();
+        }
+    }
+
+    // ── 📸 ULTRA HD ANTI-BLUR FB STORY RENDERER ──
+    function drawHdStory(ctx, W, H, t) {
+        ctx.save();
+        const hasBgMedia = storyProject.background.imgElement || storyProject.background.videoElement;
+        const bgMedia = storyProject.background.imgElement || storyProject.background.videoElement;
+
+        // 1. SMART SHARPNESS & COLOR ENHANCEMENT (ANTI-COMPRESSION FILTER FOR FB STORY)
+        const sharpness = storyProject.hdStory ? storyProject.hdStory.sharpness : 'crisp';
+        if (sharpness === 'crisp') {
+            ctx.filter = 'contrast(1.05) saturate(1.08) brightness(1.02)';
+        } else if (sharpness === 'vibrant') {
+            ctx.filter = 'contrast(1.14) saturate(1.25) brightness(1.04)';
+        } else {
+            ctx.filter = 'none';
+        }
+
+        if (hasBgMedia) {
+            drawCoverImage(ctx, bgMedia, W, H);
+        } else {
+            const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+            bgGrad.addColorStop(0, '#0f172a');
+            bgGrad.addColorStop(1, '#020617');
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, W, H);
+        }
+        ctx.restore();
+
+        // 2. AUDIO BADGE OVERLAY
+        const badgeStyle = storyProject.hdStory ? storyProject.hdStory.badgeStyle : 'vinyl';
+        const songTitle = storyProject.fbNote.title || storyProject.song.title || 'Music Story';
+        const artist = storyProject.fbNote.sub || storyProject.song.artist || '';
+
+        if (badgeStyle === 'vinyl') {
+            const cx = W / 2;
+            const cy = H - 280;
+            const radius = 90;
+
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(t * 1.5);
+
+            // Vinyl Record Body
+            ctx.fillStyle = '#111827';
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#374151';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            // Vinyl Grooves
+            [75, 60, 45].forEach(r => {
+                ctx.beginPath();
+                ctx.arc(0, 0, r, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+            });
+
+            // Center Cover Art
+            if (hasBgMedia) {
+                ctx.beginPath();
+                ctx.arc(0, 0, 32, 0, Math.PI * 2);
+                ctx.clip();
+                drawCircularImage(ctx, bgMedia, 0, 0, 32);
+            }
+            ctx.restore();
+
+            // Song Info Below Record
+            ctx.save();
+            ctx.textAlign = 'center';
+            ctx.font = '700 34px "Outfit", sans-serif';
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+            ctx.shadowBlur = 14;
+            ctx.fillText(songTitle, cx, cy + radius + 48);
+
+            if (artist) {
+                ctx.font = '500 24px "Plus Jakarta Sans", sans-serif';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+                ctx.fillText(artist, cx, cy + radius + 84);
+            }
+            ctx.restore();
+
+        } else if (badgeStyle === 'minimal') {
+            const badgeW = 540;
+            const badgeH = 100;
+            const bx = (W - badgeW) / 2;
+            const by = H - 240;
+
+            ctx.save();
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+            ctx.beginPath();
+            ctx.roundRect(bx, by, badgeW, badgeH, 50);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            ctx.textAlign = 'center';
+            ctx.font = '700 30px "Outfit", sans-serif';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(songTitle, W / 2, by + 45);
+
+            if (artist) {
+                ctx.font = '400 22px "Plus Jakarta Sans", sans-serif';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.fillText(artist, W / 2, by + 78);
+            }
             ctx.restore();
         }
     }
@@ -1533,10 +2752,10 @@
             mimeType = 'video/webm';
         }
 
-        // ULTRA HD BITRATE ENCODING (25 Mbps Video / 320 Kbps Audio) FOR CRYSTAL CLEAR FB STORY
+        // ULTRA HD BITRATE ENCODING (35 Mbps Video / 320 Kbps Audio) FOR CRYSTAL CLEAR FB STORY (ANTI-COMPRESSION PRESET)
         const recorder = new MediaRecorder(combinedStream, {
             mimeType,
-            videoBitsPerSecond: 25000000,
+            videoBitsPerSecond: 35000000,
             audioBitsPerSecond: 320000
         });
 

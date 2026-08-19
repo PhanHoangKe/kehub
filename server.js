@@ -3039,6 +3039,130 @@ if (pathname === '/api/track/ping' && req.method === 'POST') {
         return;
     }
 
+    // ── POST /api/ai-lyrics — State-of-the-Art AI Song Identification & Karaoke Lyrics Engine 2026 ──
+    if (pathname === '/api/ai-lyrics' && req.method === 'POST') {
+        try {
+            const body = await readBody(req, 15 * 1024 * 1024);
+            const payload = JSON.parse(body || '{}');
+
+            const rawTitle = sanitizeString(payload.songTitle || '', 300);
+            const artist = sanitizeString(payload.artist || '', 200);
+            const videoCaption = sanitizeString(payload.videoCaption || '', 1000);
+            const duration = parseFloat(payload.duration) || 20;
+            const audioBase64 = typeof payload.audioBase64 === 'string' ? payload.audioBase64 : '';
+            const audioMime = typeof payload.audioMime === 'string' ? payload.audioMime : 'audio/mp3';
+
+            const apiKey = process.env.GOOGLE_API_KEY;
+            if (!apiKey) {
+                jsonResponse(res, 500, { success: false, message: 'Thiếu GOOGLE_API_KEY trên server' });
+                return;
+            }
+
+            const model = process.env.GOOGLE_LLM_MODEL || 'gemini-3.5-flash';
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+            const systemPrompt = `Bạn là Chuyên Gia Âm Nhạc AI Siêu Việt 2026 (AI Song Identifier & Karaoke Synced Lyrics Engine).
+Nhiệm vụ của bạn:
+1. Nhận diện BÀI HÁT GỐC CHÍNH XÁC 100% dựa vào âm thanh (audio), caption TikTok ("${videoCaption}"), hoặc audio tag ("${rawTitle}").
+   - Ví dụ: Audio tag "28_04.bh" hoặc caption "ngày đẹp nhất là ngày..." -> Bài hát gốc là "28/4 - Vũ".
+2. Trả về định dạng JSON duy nhất chứa:
+   - "identifiedSong": Tên bài hát + ca sĩ gốc (ví dụ: "28/4 - Vũ")
+   - "lyrics": Lời bài hát dạng đồng bộ Karaoke [.lrc] có mốc thời gian [mm:ss.ms] rải đều trong khoảng ${Math.round(duration)} giây.
+
+QUY TẮC PHẢN HỒI:
+Trả về CHÍNH XÁC một chuỗi JSON hợp lệ không bọc markdown, dạng:
+{
+  "identifiedSong": "Tên Bài Hát - Ca Sĩ",
+  "lyrics": "[00:00.00] Tên Bài Hát - Ca Sĩ\\n[00:02.50] Câu hát 1\\n[00:05.80] Câu hát 2"
+}`;
+
+            const userPromptText = `Phân tích đoạn nhạc TikTok này:
+- Audio Tag: "${rawTitle}"
+- Ca sĩ/Author: "${artist}"
+- Video Caption: "${videoCaption}"
+- Thời lượng: ${Math.round(duration)} giây
+
+Hãy nhận diện bài hát gốc và trích xuất/tạo Lời Bài Hát đồng bộ Karaoke (.lrc) chính xác nhất!`;
+
+            const parts = [];
+            if (audioBase64) {
+                const cleanB64 = audioBase64.replace(/^data:audio\/\w+;base64,/, '');
+                parts.push({
+                    inlineData: {
+                        mimeType: audioMime.includes('webm') ? 'audio/webm' : (audioMime.includes('wav') ? 'audio/wav' : 'audio/mp3'),
+                        data: cleanB64
+                    }
+                });
+            }
+            parts.push({ text: userPromptText });
+
+            const geminiRes = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    generationConfig: {
+                        temperature: 0.1,
+                        maxOutputTokens: 2048,
+                        responseMimeType: "application/json"
+                    }
+                })
+            });
+
+            if (!geminiRes.ok) {
+                const errData = await geminiRes.json().catch(() => ({}));
+                throw new Error(`Gemini API Error: ${errData.error?.message || geminiRes.statusText}`);
+            }
+
+            const geminiData = await geminiRes.json();
+            const rawJsonText = (geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+
+            let parsedResult = null;
+            try {
+                parsedResult = JSON.parse(rawJsonText);
+            } catch (pErr) {
+                parsedResult = { identifiedSong: rawTitle, lyrics: rawJsonText };
+            }
+
+            const identifiedSong = parsedResult.identifiedSong || rawTitle;
+            let finalLyrics = parsedResult.lyrics || '';
+
+            // Phase 2: Try fetching high-precision official LRC from LRCLIB using Gemini's identified song title
+            if (identifiedSong && identifiedSong !== rawTitle) {
+                try {
+                    const lrcUrl = `https://lrclib.net/api/search?q=${encodeURIComponent(identifiedSong)}`;
+                    const lrcRes = await fetch(lrcUrl);
+                    if (lrcRes.ok) {
+                        const lrcData = await lrcRes.json();
+                        if (Array.isArray(lrcData) && lrcData.length > 0) {
+                            const bestMatch = lrcData.find(item => item.syncedLyrics) || lrcData[0];
+                            if (bestMatch && (bestMatch.syncedLyrics || bestMatch.plainLyrics)) {
+                                finalLyrics = bestMatch.syncedLyrics || bestMatch.plainLyrics;
+                            }
+                        }
+                    }
+                } catch (lrcErr) {
+                    console.warn('LRCLIB fallback check failed:', lrcErr.message);
+                }
+            }
+
+            if (finalLyrics && finalLyrics.includes('[')) {
+                jsonResponse(res, 200, {
+                    success: true,
+                    songTitle: identifiedSong,
+                    lyrics: finalLyrics
+                });
+            } else {
+                jsonResponse(res, 400, { success: false, message: 'Không thể tạo lời bài hát' });
+            }
+        } catch (e) {
+            console.error('Lỗi /api/ai-lyrics:', e.message);
+            jsonResponse(res, 500, { success: false, message: e.message || 'Lỗi server AI' });
+        }
+        return;
+    }
+
     // ── POST /api/admin/visitors/delete — Xóa 1 nhật ký khách (Admin only) ────
     if (pathname === '/api/admin/visitors/delete' && req.method === 'POST') {
         const token = getTokenFromRequest(req);
